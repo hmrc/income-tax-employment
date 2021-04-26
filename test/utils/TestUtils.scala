@@ -22,6 +22,8 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
+import models.{CustomerEmploymentModel, GetEmploymentListModel, HmrcEmploymentModel}
+import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
@@ -76,7 +78,7 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
     Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, "1234567890")), "Activated")))
 
   //noinspection ScalaStyle
-  def mockAuth(enrolments: Enrolments = individualEnrolments) = {
+  def mockAuth(enrolments: Enrolments = individualEnrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
 
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, Retrievals.affinityGroup, *, *)
@@ -93,7 +95,7 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
   ))
 
   //noinspection ScalaStyle
-  def mockAuthAsAgent(enrolments: Enrolments = agentEnrolments) = {
+  def mockAuthAsAgent(enrolments: Enrolments = agentEnrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
 
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, Retrievals.affinityGroup, *, *)
@@ -105,10 +107,44 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
   }
 
   //noinspection ScalaStyle
-  def mockAuthReturnException(exception: Exception) = {
+  def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *)
       .returning(Future.failed(exception))
   }
+
+  val hmrcEmploymentModel: HmrcEmploymentModel =
+    HmrcEmploymentModel(
+      employmentId = "00000000-0000-1000-8000-000000000000",
+      employerRef = Some("123/abc 001<Q>"),
+      employerName = "Vera Lynn",
+      payrollId = Some("123345657"),
+      startDate = Some("2020-06-17"),
+      cessationDate = Some("2020-06-17"),
+      dateIgnored = Some("2020-06-17T10:53:38Z")
+    )
+
+  val customerEmploymentModel: CustomerEmploymentModel =
+    CustomerEmploymentModel(
+      employmentId = "00000000-0000-1000-8000-000000000000",
+      employerRef = Some("123/abc 001<Q>"),
+      employerName = "Vera Lynn",
+      payrollId = Some("123345657"),
+      startDate = Some("2020-06-17"),
+      cessationDate = Some("2020-06-17"),
+      submittedOn = "2020-06-17T10:53:38Z"
+    )
+
+  val getEmploymentListModelExample: GetEmploymentListModel =
+    GetEmploymentListModel(
+      employments = Seq(hmrcEmploymentModel),
+      customerDeclaredEmployments = Seq(customerEmploymentModel)
+    )
+
+  val getEmploymentListModelExampleWithNoData: GetEmploymentListModel =
+    GetEmploymentListModel(
+      employments = Seq(),
+      customerDeclaredEmployments = Seq()
+    )
 }
 
