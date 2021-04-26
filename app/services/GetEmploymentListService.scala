@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package models
+package services
 
-import play.api.libs.json.{Json, OFormat}
+import connectors.GetEmploymentListConnector
+import connectors.httpParsers.GetEmploymentListHttpParser.GetEmploymentListResponse
+import uk.gov.hmrc.http.HeaderCarrier
 
-case class SubmittedDividendsModel (ukDividends: Option[BigDecimal],
-                                   otherUkDividends: Option[BigDecimal])
+import javax.inject.Inject
+import scala.concurrent.Future
 
-object SubmittedDividendsModel{
-  implicit val formats: OFormat[SubmittedDividendsModel] = Json.format[SubmittedDividendsModel]
+class GetEmploymentListService @Inject()(connector: GetEmploymentListConnector) {
+
+  def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String])(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] =
+    connector.getEmploymentList(nino, taxYear, employmentId)
+
 }
