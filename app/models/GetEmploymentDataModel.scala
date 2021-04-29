@@ -23,7 +23,7 @@ case class GetEmploymentDataModel(
                                    source: Option[String],
                                    customerAdded: Option[String],
                                    dateIgnored: Option[String],
-                                   employment: EmploymentModel,
+                                   employment: EmploymentModel
                                  )
 
 object GetEmploymentDataModel {
