@@ -16,22 +16,22 @@
 
 package connectors.httpParsers
 
-import models.{DesErrorModel, GetEmploymentListModel}
+import models.{DesErrorModel, GetEmploymentDataModel}
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object GetEmploymentListHttpParser extends DESParser{
-  type GetEmploymentListResponse = Either[DesErrorModel, GetEmploymentListModel]
+object GetEmploymentDataHttpParser extends DESParser{
+  type GetEmploymentDataResponse = Either[DesErrorModel, GetEmploymentDataModel]
 
-  override val parserName: String = "GetEmploymentListHttpParser"
+  override val parserName: String = "GetEmploymentDataHttpParser"
 
-  implicit object GetEmploymentListHttpReads extends HttpReads[GetEmploymentListResponse] {
+  implicit object GetEmploymentDataHttpReads extends HttpReads[GetEmploymentDataResponse] {
 
-    override def read(method: String, url: String, response: HttpResponse): GetEmploymentListResponse = {
+    override def read(method: String, url: String, response: HttpResponse): GetEmploymentDataResponse = {
       response.status match {
-        case OK => response.json.validate[GetEmploymentListModel].fold[GetEmploymentListResponse](
+        case OK => response.json.validate[GetEmploymentDataModel].fold[GetEmploymentDataResponse](
           _ => badSuccessJsonFromDES,
           parsedModel => Right(parsedModel)
         )
@@ -41,7 +41,7 @@ object GetEmploymentListHttpParser extends DESParser{
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
           handleDESError(response)
-        case BAD_REQUEST | NOT_FOUND =>
+        case BAD_REQUEST | NOT_FOUND | UNPROCESSABLE_ENTITY=>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response)
         case _ =>

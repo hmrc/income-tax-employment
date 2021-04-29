@@ -22,7 +22,7 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
-import models.{CustomerEmploymentModel, GetEmploymentListModel, HmrcEmploymentModel}
+import models.{CustomerEmploymentModel, EmployerModel, EmploymentModel, GetEmploymentDataModel, GetEmploymentListModel, HmrcEmploymentModel, PayModel}
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
@@ -145,6 +145,70 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
     GetEmploymentListModel(
       employments = Seq(),
       customerDeclaredEmployments = Seq()
+    )
+
+  val getEmploymentDataModelExample: GetEmploymentDataModel =
+    GetEmploymentDataModel(
+      submittedOn = "2020-01-04T05:01:01Z",
+      source = Some("CUSTOMER"),
+      customerAdded = Some("2020-04-04T01:01:01Z"),
+      dateIgnored = Some("2020-04-04T01:01:01Z"),
+      employment = EmploymentModel(
+        employmentSequenceNumber = Some("1002"),
+        payrollId = Some("123456789999"),
+        companyDirector = Some(false),
+        closeCompany = Some(true),
+        directorshipCeasedDate = Some("2020-02-12"),
+        startDate = Some("2019-04-21"),
+        cessationDate = Some("2020-03-11"),
+        occPen = Some(false),
+        disguisedRemuneration = Some(false),
+        employer = EmployerModel(
+          employerRef = Some("223/AB12399"),
+          employerName = "maggie"
+        ),
+        pay = PayModel(
+          taxablePayToDate = 34234.15,
+          totalTaxToDate = 6782.92,
+          tipsAndOtherPayments = Some(67676),
+          payFrequency = "CALENDAR MONTHLY",
+          paymentDate = "2020-04-23",
+          taxWeekNo = Some(32),
+          taxMonthNo = Some(2)
+        )
+      )
+    )
+
+  val getEmploymentDataModelOnlyRequiredExample: GetEmploymentDataModel =
+    GetEmploymentDataModel(
+      submittedOn = "2020-01-04T05:01:01Z",
+      source = None,
+      customerAdded = None,
+      dateIgnored = None,
+      employment = EmploymentModel(
+        employmentSequenceNumber = None,
+        payrollId = None,
+        companyDirector = None,
+        closeCompany = None,
+        directorshipCeasedDate = None,
+        startDate = None,
+        cessationDate = None,
+        occPen = None,
+        disguisedRemuneration = None,
+        employer = EmployerModel(
+          employerRef = None,
+          employerName = "maggie"
+        ),
+        pay = PayModel(
+          taxablePayToDate = 34234.15,
+          totalTaxToDate = 6782.92,
+          tipsAndOtherPayments = None,
+          payFrequency = "CALENDAR MONTHLY",
+          paymentDate = "2020-04-23",
+          taxWeekNo = None,
+          taxMonthNo = None,
+        )
+      )
     )
 }
 
