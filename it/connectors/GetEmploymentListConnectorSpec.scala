@@ -18,7 +18,7 @@ package connectors
 
 import connectors.GetEmploymentListConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
 import helpers.WiremockSpec
-import models.{DesErrorBodyModel, DesErrorModel, GetEmploymentListModel}
+import models.{DesErrorBodyModel, DesErrorModel, EmploymentList}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -36,7 +36,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
   ".GetEmploymentListConnector" should {
     "return a GetEmploymentListModel" when {
       "only nino and taxYear are present" in {
-        val expectedResult = Json.parse(expectedResponseBody).as[GetEmploymentListModel]
+        val expectedResult = Json.parse(expectedResponseBody).as[EmploymentList]
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -47,7 +47,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
       }
 
       "nino, taxYear and employmentId are present" in {
-        val expectedResult = Json.parse(filteredExpectedResponseBody).as[GetEmploymentListModel]
+        val expectedResult = Json.parse(filteredExpectedResponseBody).as[EmploymentList]
 
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}\\?employmentId=$employmentId",
           OK, filteredExpectedResponseBody)

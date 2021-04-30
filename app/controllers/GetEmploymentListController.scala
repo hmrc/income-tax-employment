@@ -17,7 +17,7 @@
 package controllers
 
 import controllers.predicates.AuthorisedAction
-import models.GetEmploymentListModel
+import models.EmploymentList
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.GetEmploymentListService
@@ -34,7 +34,7 @@ class GetEmploymentListController @Inject()(
 
   def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String]): Action[AnyContent] = auth.async { implicit user =>
     service.getEmploymentList(nino,taxYear, employmentId).map{
-      case Right(GetEmploymentListModel(employments,customerDeclaredEmployments)) if employments.isEmpty && customerDeclaredEmployments.isEmpty => NoContent
+      case Right(EmploymentList(employments,customerDeclaredEmployments)) if employments.isEmpty && customerDeclaredEmployments.isEmpty => NoContent
       case Right(model) => Ok(Json.toJson(model))
       case Left(errorModel) => Status(errorModel.status)(errorModel.toJson)
     }

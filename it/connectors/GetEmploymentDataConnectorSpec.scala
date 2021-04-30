@@ -18,7 +18,7 @@ package connectors
 
 import connectors.GetEmploymentDataConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
 import helpers.WiremockSpec
-import models.{DesErrorBodyModel, DesErrorModel, GetEmploymentDataModel}
+import models.{DesErrorBodyModel, DesErrorModel, EmploymentData}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -38,7 +38,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
   ".GetEmploymentDataConnector" should {
     "return a GetEmploymentDataModel" when {
       "all values are present in the url" in {
-        val expectedResult = Json.parse(expectedResponseBody).as[GetEmploymentDataModel]
+        val expectedResult = Json.parse(expectedResponseBody).as[EmploymentData]
         stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -51,7 +51,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
         result.submittedOn mustBe expectedResult.submittedOn
       }
       "only the required values are returned in the response body" in {
-        val expectedResult = Json.parse(filteredExpectedResponseBody).as[GetEmploymentDataModel]
+        val expectedResult = Json.parse(filteredExpectedResponseBody).as[EmploymentData]
         stubGetWithResponseBody(getEmploymentDataUrl, OK, filteredExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()

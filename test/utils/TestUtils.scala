@@ -22,7 +22,7 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
-import models.{CustomerEmploymentModel, EmployerModel, EmploymentModel, GetEmploymentDataModel, GetEmploymentListModel, HmrcEmploymentModel, PayModel}
+import models.{CustomerEmployment, Employer, EmploymentDetails, EmploymentData, EmploymentList, HmrcEmployment, Pay}
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
@@ -113,8 +113,8 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       .returning(Future.failed(exception))
   }
 
-  val hmrcEmploymentModel: HmrcEmploymentModel =
-    HmrcEmploymentModel(
+  val hmrcEmploymentModel: HmrcEmployment =
+    HmrcEmployment(
       employmentId = "00000000-0000-1000-8000-000000000000",
       employerRef = Some("123/abc 001<Q>"),
       employerName = "Vera Lynn",
@@ -124,8 +124,8 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       dateIgnored = Some("2020-06-17T10:53:38Z")
     )
 
-  val customerEmploymentModel: CustomerEmploymentModel =
-    CustomerEmploymentModel(
+  val customerEmploymentModel: CustomerEmployment =
+    CustomerEmployment(
       employmentId = "00000000-0000-1000-8000-000000000000",
       employerRef = Some("123/abc 001<Q>"),
       employerName = "Vera Lynn",
@@ -135,25 +135,25 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       submittedOn = "2020-06-17T10:53:38Z"
     )
 
-  val getEmploymentListModelExample: GetEmploymentListModel =
-    GetEmploymentListModel(
+  val getEmploymentListModelExample: EmploymentList =
+    EmploymentList(
       employments = Seq(hmrcEmploymentModel),
       customerDeclaredEmployments = Seq(customerEmploymentModel)
     )
 
-  val getEmploymentListModelExampleWithNoData: GetEmploymentListModel =
-    GetEmploymentListModel(
+  val getEmploymentListModelExampleWithNoData: EmploymentList =
+    EmploymentList(
       employments = Seq(),
       customerDeclaredEmployments = Seq()
     )
 
-  val getEmploymentDataModelExample: GetEmploymentDataModel =
-    GetEmploymentDataModel(
+  val getEmploymentDataModelExample: EmploymentData =
+    EmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = Some("CUSTOMER"),
       customerAdded = Some("2020-04-04T01:01:01Z"),
       dateIgnored = Some("2020-04-04T01:01:01Z"),
-      employment = EmploymentModel(
+      employment = EmploymentDetails(
         employmentSequenceNumber = Some("1002"),
         payrollId = Some("123456789999"),
         companyDirector = Some(false),
@@ -163,11 +163,11 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
         cessationDate = Some("2020-03-11"),
         occPen = Some(false),
         disguisedRemuneration = Some(false),
-        employer = EmployerModel(
+        employer = Employer(
           employerRef = Some("223/AB12399"),
           employerName = "maggie"
         ),
-        pay = PayModel(
+        pay = Pay(
           taxablePayToDate = 34234.15,
           totalTaxToDate = 6782.92,
           tipsAndOtherPayments = Some(67676),
@@ -179,13 +179,13 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       )
     )
 
-  val getEmploymentDataModelOnlyRequiredExample: GetEmploymentDataModel =
-    GetEmploymentDataModel(
+  val getEmploymentDataModelOnlyRequiredExample: EmploymentData =
+    EmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = None,
       customerAdded = None,
       dateIgnored = None,
-      employment = EmploymentModel(
+      employment = EmploymentDetails(
         employmentSequenceNumber = None,
         payrollId = None,
         companyDirector = None,
@@ -195,11 +195,11 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
         cessationDate = None,
         occPen = None,
         disguisedRemuneration = None,
-        employer = EmployerModel(
+        employer = Employer(
           employerRef = None,
           employerName = "maggie"
         ),
-        pay = PayModel(
+        pay = Pay(
           taxablePayToDate = 34234.15,
           totalTaxToDate = 6782.92,
           tipsAndOtherPayments = None,

@@ -16,25 +16,28 @@
 
 package connectors.httpParsers
 
-import models.{DesErrorModel, EmploymentList}
+import models.{DesErrorModel, EmploymentExpenses}
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object GetEmploymentListHttpParser extends DESParser with Logging {
-  type GetEmploymentListResponse = Either[DesErrorModel, Option[EmploymentList]]
+object GetEmploymentExpensesHttpParser extends DESParser with Logging {
+  type GetEmploymentExpensesResponse = Either[DesErrorModel, Option[EmploymentExpenses]]
 
-  override val parserName: String = "GetEmploymentListHttpParser"
+  override val parserName: String = "GetEmploymentBenefitsHttpParser"
 
-  implicit object GetEmploymentListHttpReads extends HttpReads[GetEmploymentListResponse] {
+  implicit object GetEmploymentExpensesHttpReads extends HttpReads[GetEmploymentExpensesResponse] {
 
-    override def read(method: String, url: String, response: HttpResponse): GetEmploymentListResponse = {
+    override def read(method: String, url: String, response: HttpResponse): GetEmploymentExpensesResponse = {
       response.status match {
-        case OK => response.json.validate[EmploymentList].fold[GetEmploymentListResponse](
+        case OK => response.json.validate[EmploymentExpenses].fold[GetEmploymentExpensesResponse](
           _ => badSuccessJsonFromDES,
-          parsedModel => Right(Some(parsedModel))
+          {
+            case EmploymentExpenses(_,_,_,_,None) => Right(None)
+            case parsedModel => Right(Some(parsedModel))
+          }
         )
         case NOT_FOUND =>
           logger.info(logMessage(response))
@@ -45,7 +48,7 @@ object GetEmploymentListHttpParser extends DESParser with Logging {
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
           handleDESError(response)
-        case BAD_REQUEST =>
+        case BAD_REQUEST | UNPROCESSABLE_ENTITY=>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response)
         case _ =>
