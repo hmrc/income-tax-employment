@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package models
+package models.shared
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Json, OFormat, __}
+import play.api.libs.json.{OFormat, __}
 
 case class Benefits(accommodation: Option[BigDecimal] = None,
                     assets: Option[BigDecimal] = None,
@@ -46,8 +46,7 @@ case class Benefits(accommodation: Option[BigDecimal] = None,
                     incomeTaxPaidByDirector: Option[BigDecimal] = None,
                     travelAndSubsistence: Option[BigDecimal] = None,
                     vouchersAndCreditCards: Option[BigDecimal] = None,
-                    nonCash: Option[BigDecimal] = None
-                   )
+                    nonCash: Option[BigDecimal] = None)
 
 object Benefits {
   val firstSetOfFields: OFormat[(Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
@@ -118,20 +117,4 @@ object Benefits {
         )
     })
   }
-}
-
-case class EmploymentBenefitsData(benefitsInKind: Option[Benefits] = None)
-
-object EmploymentBenefitsData {
-  implicit val formats: OFormat[EmploymentBenefitsData] = Json.format[EmploymentBenefitsData]
-}
-
-case class EmploymentBenefits(submittedOn: String,
-                              customerAdded: Option[String] = None,
-                              dateIgnored: Option[String] = None,
-                              source: Option[String] = None,
-                              employment: EmploymentBenefitsData)
-
-object EmploymentBenefits {
-  implicit val formats: OFormat[EmploymentBenefits] = Json.format[EmploymentBenefits]
 }

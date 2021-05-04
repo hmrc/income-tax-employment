@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package services
+package models.DES
 
-import connectors.GetEmploymentDataConnector
-import connectors.httpParsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
-import uk.gov.hmrc.http.HeaderCarrier
+import models.shared.Expenses
+import play.api.libs.json.{Json, OFormat}
 
-import javax.inject.Inject
-import scala.concurrent.Future
+case class DESEmploymentExpenses(submittedOn: Option[String],
+                                 dateIgnored: Option[String],
+                                 source: Option[String],
+                                 totalExpenses: Option[BigDecimal],
+                                 expenses: Option[Expenses])
 
-class GetEmploymentDataService @Inject()(connector: GetEmploymentDataConnector) {
-
-  def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] =
-    connector.getEmploymentData(nino, taxYear, employmentId, view)
-
+object DESEmploymentExpenses {
+  implicit val format: OFormat[DESEmploymentExpenses] = Json.format[DESEmploymentExpenses]
 }

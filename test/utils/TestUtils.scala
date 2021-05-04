@@ -22,7 +22,8 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
-import models.{CustomerEmployment, Employer, EmploymentDetails, EmploymentData, EmploymentList, HmrcEmployment, Pay}
+import models.CustomerEmployment
+import models.DES.{CustomerEmployment, Employer, DESEmploymentData, DESEmploymentDetails, DESEmploymentList, HmrcEmployment, Pay}
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
@@ -135,25 +136,25 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       submittedOn = "2020-06-17T10:53:38Z"
     )
 
-  val getEmploymentListModelExample: EmploymentList =
-    EmploymentList(
+  val getEmploymentListModelExample: DESEmploymentList =
+    DESEmploymentList(
       employments = Seq(hmrcEmploymentModel),
       customerDeclaredEmployments = Seq(customerEmploymentModel)
     )
 
-  val getEmploymentListModelExampleWithNoData: EmploymentList =
-    EmploymentList(
+  val getEmploymentListModelExampleWithNoData: DESEmploymentList =
+    DESEmploymentList(
       employments = Seq(),
       customerDeclaredEmployments = Seq()
     )
 
-  val getEmploymentDataModelExample: EmploymentData =
-    EmploymentData(
+  val getEmploymentDataModelExample: DESEmploymentData =
+    DESEmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = Some("CUSTOMER"),
       customerAdded = Some("2020-04-04T01:01:01Z"),
       dateIgnored = Some("2020-04-04T01:01:01Z"),
-      employment = EmploymentDetails(
+      employment = DESEmploymentDetails(
         employmentSequenceNumber = Some("1002"),
         payrollId = Some("123456789999"),
         companyDirector = Some(false),
@@ -179,13 +180,13 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       )
     )
 
-  val getEmploymentDataModelOnlyRequiredExample: EmploymentData =
-    EmploymentData(
+  val getEmploymentDataModelOnlyRequiredExample: DESEmploymentData =
+    DESEmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = None,
       customerAdded = None,
       dateIgnored = None,
-      employment = EmploymentDetails(
+      employment = DESEmploymentDetails(
         employmentSequenceNumber = None,
         payrollId = None,
         companyDirector = None,

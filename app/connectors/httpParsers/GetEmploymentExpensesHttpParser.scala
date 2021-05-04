@@ -16,7 +16,8 @@
 
 package connectors.httpParsers
 
-import models.{DesErrorModel, EmploymentExpenses}
+import models.DES.DESEmploymentExpenses
+import models.DesErrorModel
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -24,18 +25,19 @@ import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
 object GetEmploymentExpensesHttpParser extends DESParser with Logging {
-  type GetEmploymentExpensesResponse = Either[DesErrorModel, Option[EmploymentExpenses]]
+  type GetEmploymentExpensesResponse = Either[DesErrorModel, Option[DESEmploymentExpenses]]
 
   override val parserName: String = "GetEmploymentBenefitsHttpParser"
+  override val isDesAPI: Boolean = false
 
   implicit object GetEmploymentExpensesHttpReads extends HttpReads[GetEmploymentExpensesResponse] {
 
     override def read(method: String, url: String, response: HttpResponse): GetEmploymentExpensesResponse = {
       response.status match {
-        case OK => response.json.validate[EmploymentExpenses].fold[GetEmploymentExpensesResponse](
+        case OK => response.json.validate[DESEmploymentExpenses].fold[GetEmploymentExpensesResponse](
           _ => badSuccessJsonFromDES,
           {
-            case EmploymentExpenses(_,_,_,_,None) => Right(None)
+            case DESEmploymentExpenses(_,_,_,_,None) => Right(None)
             case parsedModel => Right(Some(parsedModel))
           }
         )

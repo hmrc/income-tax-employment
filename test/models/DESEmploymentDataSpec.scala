@@ -17,10 +17,11 @@
 package models
 
 import com.codahale.metrics.SharedMetricRegistries
+import models.DES.DESEmploymentData
 import play.api.libs.json.{JsObject, Json}
 import utils.TestUtils
 
-class EmploymentDataSpec extends TestUtils {
+class DESEmploymentDataSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
   val jsonModel: JsObject = Json.obj(
@@ -76,7 +77,7 @@ class EmploymentDataSpec extends TestUtils {
     }
 
     "parse from Json" in {
-      jsonModel.as[EmploymentData]
+      jsonModel.as[DESEmploymentData]
     }
   }
 
@@ -87,7 +88,7 @@ class EmploymentDataSpec extends TestUtils {
     }
 
     "parse from Json" in {
-      jsonModelWithOnlyRequired.as[EmploymentData]
+      jsonModelWithOnlyRequired.as[DESEmploymentData]
     }
   }
 

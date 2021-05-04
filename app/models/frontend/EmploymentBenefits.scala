@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package services
+package models.frontend
 
-import connectors.GetEmploymentListConnector
-import connectors.httpParsers.GetEmploymentListHttpParser.GetEmploymentListResponse
-import uk.gov.hmrc.http.HeaderCarrier
+import models.shared.Benefits
+import play.api.libs.json.{Json, OFormat}
 
-import javax.inject.Inject
-import scala.concurrent.Future
+case class EmploymentBenefits(submittedOn: String,
+                              benefits: Option[Benefits])
 
-class GetEmploymentListService @Inject()(connector: GetEmploymentListConnector) {
-
-  def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String])(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] =
-    connector.getEmploymentList(nino, taxYear, employmentId)
-
+object EmploymentBenefits {
+  implicit val formats: OFormat[EmploymentBenefits] = Json.format[EmploymentBenefits]
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models
+package models.shared
 
 import play.api.libs.json.{Json, OFormat}
 
@@ -29,14 +29,4 @@ case class Expenses(businessTravelCosts: Option[BigDecimal],
 
 object Expenses {
   implicit val format: OFormat[Expenses] = Json.format[Expenses]
-}
-
-case class EmploymentExpenses(submittedOn: Option[String],
-                              dateIgnored: Option[String],
-                              source: Option[String],
-                              totalExpenses: Option[BigDecimal],
-                              expenses: Option[Expenses])
-
-object EmploymentExpenses {
-  implicit val format: OFormat[EmploymentExpenses] = Json.format[EmploymentExpenses]
 }
