@@ -41,7 +41,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get.get
 
         result.employments mustBe expectedResult.employments
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
@@ -54,7 +54,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
           OK, filteredExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentList(nino, taxYear, Some(employmentId))(hc)).right.get
+        val result = await(connector.getEmploymentList(nino, taxYear, Some(employmentId))(hc)).right.get.get
 
         result.employments mustBe expectedResult.employments
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments

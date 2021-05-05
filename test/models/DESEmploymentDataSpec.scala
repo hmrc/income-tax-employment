@@ -73,7 +73,7 @@ class DESEmploymentDataSpec extends TestUtils {
   "GetEmploymentDataModel with all values" should {
 
     "parse to Json" in {
-      Json.toJson(getEmploymentDataModelExample) mustBe jsonModel
+      Json.toJson(customerEmploymentDataModelExample) mustBe jsonModel
     }
 
     "parse from Json" in {

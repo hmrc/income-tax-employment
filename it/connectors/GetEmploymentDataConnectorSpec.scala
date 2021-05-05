@@ -43,7 +43,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
         stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get
+        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get.get
 
         result.customerAdded mustBe expectedResult.customerAdded
         result.dateIgnored mustBe expectedResult.dateIgnored
@@ -56,7 +56,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
         stubGetWithResponseBody(getEmploymentDataUrl, OK, filteredExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get
+        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get.get
 
         result.employment mustBe expectedResult.employment
         result.submittedOn mustBe expectedResult.submittedOn

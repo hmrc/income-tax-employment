@@ -26,6 +26,7 @@ class DESParserSpec extends TestUtils{
 
   object FakeParser extends DESParser {
     override val parserName: String = "TestParser"
+    override val isDesAPI: Boolean = true
   }
 
   def httpResponse(json: JsValue =
