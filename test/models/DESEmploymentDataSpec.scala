@@ -41,7 +41,7 @@ class DESEmploymentDataSpec extends TestUtils {
       "disguisedRemuneration" -> false,
       "employer" -> Json.obj(
         "employerRef" -> "223/AB12399",
-        "employerName" -> "maggie"
+        "employerName" -> "Business 1"
       ),
       "pay" -> Json.obj(
         "taxablePayToDate" -> 34234.15,

@@ -22,8 +22,7 @@ import connectors.httpParsers.GetEmploymentDataHttpParser.GetEmploymentDataRespo
 import connectors.httpParsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.httpParsers.GetEmploymentListHttpParser.GetEmploymentListResponse
 import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector}
-import models.frontend.{AllEmploymentData, EmploymentBenefits, EmploymentData, EmploymentExpenses, EmploymentSource}
-import models.shared.{Benefits, Expenses, Pay}
+import models.{DesErrorBodyModel, DesErrorModel}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
@@ -45,110 +44,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample))
       val taxYear = 2022
       val nino = "AA123456A"
-
-      val finalResult = Right(
-        AllEmploymentData(
-          Seq(
-            EmploymentSource(
-              employmentId = "00000000-0000-0000-1111-000000000000",
-              employerRef = Some("666/66666"),
-              employerName = "Business",
-              payrollId = Some("1234567890"),
-              startDate = Some("2020-01-01"),
-              cessationDate = Some("2020-01-01"),
-              dateIgnored = Some("2020-01-01T10:00:38Z"),
-              submittedOn = None,
-              employmentData = Some(EmploymentData(
-                "2020-01-04T05:01:01Z",
-                employmentSequenceNumber = Some("1002"),
-                companyDirector = Some(false),
-                closeCompany = Some(true),
-                directorshipCeasedDate = Some("2020-02-12"),
-                occPen = Some(false),
-                disguisedRemuneration = Some(false),
-                Pay(
-                  taxablePayToDate = 34234.15,
-                  totalTaxToDate = 6782.92,
-                  tipsAndOtherPayments = Some(67676),
-                  payFrequency = "CALENDAR MONTHLY",
-                  paymentDate = "2020-04-23",
-                  taxWeekNo = Some(32),
-                  taxMonthNo = Some(2)
-                )
-              )),
-              employmentBenefits = Some(
-                EmploymentBenefits(
-                  "2020-01-04T05:01:01Z",
-                  benefits = Some(Benefits(
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-                  ))
-                )
-              ),
-              employmentExpenses = Some(
-                EmploymentExpenses(
-                  Some("2020-01-04T05:01:01Z"),
-                  totalExpenses = Some(800),
-                  expenses = Some(Expenses(
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-                  ))
-                )
-              )
-            )
-          ),Seq(
-            EmploymentSource(
-              employmentId = "00000000-0000-0000-2222-000000000000",
-              employerRef = Some("666/66666"),
-              employerName = "Business",
-              payrollId = Some("1234567890"),
-              startDate = Some("2020-01-01"),
-              cessationDate = Some("2020-01-01"),
-              dateIgnored = None,
-              submittedOn = Some("2020-01-01T10:00:38Z"),
-              employmentData = Some(
-                EmploymentData(
-                  "2020-01-04T05:01:01Z",
-                  employmentSequenceNumber = Some("1002"),
-                  companyDirector = Some(false),
-                  closeCompany = Some(true),
-                  directorshipCeasedDate = Some("2020-02-12"),
-                  occPen = Some(false),
-                  disguisedRemuneration = Some(false),
-                  Pay(
-                    taxablePayToDate = 34234.15,
-                    totalTaxToDate = 6782.92,
-                    tipsAndOtherPayments = Some(67676),
-                    payFrequency = "CALENDAR MONTHLY",
-                    paymentDate = "2020-04-23",
-                    taxWeekNo = Some(32),
-                    taxMonthNo = Some(2)
-                  )
-                )
-              ),
-              employmentBenefits = Some(
-                EmploymentBenefits(
-                  "2020-01-04T05:01:01Z",
-                  benefits = Some(Benefits(
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-                  ))
-                )
-              ),
-              employmentExpenses = Some(
-                EmploymentExpenses(
-                  Some("2020-01-04T05:01:01Z"),
-                  totalExpenses = Some(800),
-                  expenses = Some(Expenses(
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-                  ))
-                )
-              )
-            )
-          )
-        )
-      )
 
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
       val customerExpectedResult: GetEmploymentDataResponse = Right(Some(customerEmploymentDataModelExample))
@@ -189,8 +84,132 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       val result = await(service.getAllEmploymentData(nino, taxYear))
 
-      result mustBe finalResult
+      result mustBe Right(allEmploymentData)
+    }
+    "get all the data and return an error" in {
 
+      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample))
+      val taxYear = 2022
+      val nino = "AA123456A"
+
+      val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
+      val customerExpectedResult: GetEmploymentDataResponse = Left(DesErrorModel(500,DesErrorBodyModel.parsingError()))
+
+      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
+      val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
+
+      (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
+        .expects(nino, taxYear, None, *)
+        .returning(Future.successful(listExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(customerExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcBenefitsExpectedResult))
+
+      (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpensesExpectedResult))
+
+      val result = await(service.getAllEmploymentData(nino, taxYear))
+
+      result mustBe customerExpectedResult
+    }
+    "get all the data and return an error if expenses call fails" in {
+
+      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample))
+      val taxYear = 2022
+      val nino = "AA123456A"
+
+      val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
+      val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Left(DesErrorModel(500,DesErrorBodyModel.parsingError()))
+
+      (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
+        .expects(nino, taxYear, None, *)
+        .returning(Future.successful(listExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpectedResult))
+
+      (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpensesExpectedResult))
+
+      val result = await(service.getAllEmploymentData(nino, taxYear))
+
+      result mustBe hmrcExpensesExpectedResult
+    }
+    "get all the data and form the correct model when only hmrc data exists" in {
+
+      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(customerDeclaredEmployments = Seq())))
+      val taxYear = 2022
+      val nino = "AA123456A"
+
+      val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
+
+      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
+
+      val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
+
+      (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
+        .expects(nino, taxYear, None, *)
+        .returning(Future.successful(listExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcBenefitsExpectedResult))
+
+      (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpensesExpectedResult))
+
+      val result = await(service.getAllEmploymentData(nino, taxYear))
+
+      result mustBe Right(allEmploymentData.copy(customerEmploymentData = Seq()))
+    }
+    "get all the data and form the correct model when only customer data exists" in {
+
+      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(employments = Seq())))
+      val taxYear = 2022
+      val nino = "AA123456A"
+
+      val customerExpectedResult: GetEmploymentDataResponse = Right(Some(customerEmploymentDataModelExample))
+
+      val customerBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(customerBenefits))
+
+      val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
+
+      (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
+        .expects(nino, taxYear, None, *)
+        .returning(Future.successful(listExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(customerExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(customerBenefitsExpectedResult))
+
+      (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "CUSTOMER", *)
+        .returning(Future.successful(customerExpensesExpectedResult))
+
+      val result = await(service.getAllEmploymentData(nino, taxYear))
+
+      result mustBe Right(allEmploymentData.copy(hmrcEmploymentData = Seq()))
     }
   }
 }

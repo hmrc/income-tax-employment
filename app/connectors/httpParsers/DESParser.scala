@@ -33,7 +33,7 @@ trait DESParser {
 
   def badSuccessJsonFromDES[Response]: Either[DesErrorModel, Response] = {
     pagerDutyLog(BAD_SUCCESS_JSON_FROM_DES, s"[$parserName][read] Invalid Json from ${if(isDesAPI) "DES" else "API"}.")
-    Left(DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError))
+    Left(DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(isDesAPI)))
   }
 
   def handleDESError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[DesErrorModel, Response] = {
@@ -51,10 +51,10 @@ trait DESParser {
         case (_, Some(desErrors)) => Left(DesErrorModel(status, desErrors))
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, s"[$parserName][read] Unexpected Json from ${if(isDesAPI) "DES" else "API"}.")
-          Left(DesErrorModel(status, DesErrorBodyModel.parsingError))
+          Left(DesErrorModel(status, DesErrorBodyModel.parsingError(isDesAPI)))
       }
     } catch {
-      case _: Exception => Left(DesErrorModel(status, DesErrorBodyModel.parsingError))
+      case _: Exception => Left(DesErrorModel(status, DesErrorBodyModel.parsingError(isDesAPI)))
     }
   }
 }

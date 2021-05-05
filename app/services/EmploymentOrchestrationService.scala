@@ -75,7 +75,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
 
   private def returnError(response: Seq[Either[DesErrorModel,EmploymentSource]]): Either[DesErrorModel, AllEmploymentData] ={
     val errors: Seq[DesErrorModel] = response.collect{ case Left(errors) => errors }
-    Left(errors.headOption.getOrElse(DesErrorModel(INTERNAL_SERVER_ERROR, parsingError)))
+    Left(errors.headOption.getOrElse(DesErrorModel(INTERNAL_SERVER_ERROR, parsingError())))
   }
 
   private def orchestrateHmrcEmploymentDataRetrieval(nino: String, taxYear: Int, hmrcEmploymentData: Seq[HmrcEmployment])
@@ -93,7 +93,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
     })
   }
 
-  private def orchestrateCustomerEmploymentDataRetrieval[E](nino: String, taxYear: Int, customerEmploymentData: Seq[CustomerEmployment])
+  private def orchestrateCustomerEmploymentDataRetrieval(nino: String, taxYear: Int, customerEmploymentData: Seq[CustomerEmployment])
                                         (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[Either[DesErrorModel, EmploymentSource]]] = {
     val view = CUSTOMER
     Future.sequence(customerEmploymentData.map{

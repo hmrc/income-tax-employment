@@ -36,7 +36,8 @@ class GetEmploymentDataController @Inject()(service: EmploymentOrchestrationServ
   def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String): Action[AnyContent] = auth.async { implicit user =>
     if(isValid(view)) {
       service.getEmploymentData(nino, taxYear, employmentId, view).map {
-        case Right(model) => Ok(Json.toJson(model))
+        case Right(Some(model)) => Ok(Json.toJson(model))
+        case Right(None) => NoContent
         case Left(errorModel) => Status(errorModel.status)(errorModel.toJson)
       }
     } else {
