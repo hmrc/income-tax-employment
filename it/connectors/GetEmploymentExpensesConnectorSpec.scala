@@ -45,9 +45,6 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         val result2 = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
         val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
-        println(result)
-        println(result2)
-
         result.right.get.get.dateIgnored mustBe expectedResult.dateIgnored
         result.right.get.get.expenses mustBe expectedResult.expenses
         result.right.get.get.totalExpenses mustBe expectedResult.totalExpenses
