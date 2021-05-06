@@ -16,6 +16,7 @@
 
 package models.DES
 
+import models.frontend.EmploymentExpenses
 import models.shared.Expenses
 import play.api.libs.json.{Json, OFormat}
 
@@ -23,7 +24,12 @@ case class DESEmploymentExpenses(submittedOn: Option[String],
                                  dateIgnored: Option[String],
                                  source: Option[String],
                                  totalExpenses: Option[BigDecimal],
-                                 expenses: Option[Expenses])
+                                 expenses: Option[Expenses]){
+
+  def toEmploymentExpenses: EmploymentExpenses = {
+    EmploymentExpenses(submittedOn,totalExpenses,expenses)
+  }
+}
 
 object DESEmploymentExpenses {
   implicit val format: OFormat[DESEmploymentExpenses] = Json.format[DESEmploymentExpenses]

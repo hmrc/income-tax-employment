@@ -84,22 +84,22 @@ class AllEmploymentDataModelSpec extends TestUtils {
               "vouchersAndCreditCards" -> 100,
               "nonCash" -> 100
             )
-          ),
-          "employmentExpenses" -> Json.obj(
-            "submittedOn" -> "2020-01-04T05:01:01Z",
-            "totalExpenses" -> 800,
-            "expenses" -> Json.obj(
-              "businessTravelCosts" -> 100,
-              "jobExpenses" -> 100,
-              "flatRateJobExpenses" -> 100,
-              "professionalSubscriptions" -> 100,
-              "hotelAndMealExpenses" -> 100,
-              "otherAndCapitalAllowances" -> 100,
-              "vehicleExpenses" -> 100,
-              "mileageAllowanceRelief" -> 100
-            )
           )
         )),
+    "hmrcExpenses" -> Json.obj(
+      "submittedOn" -> "2020-01-04T05:01:01Z",
+      "totalExpenses" -> 800,
+      "expenses" -> Json.obj(
+        "businessTravelCosts" -> 100,
+        "jobExpenses" -> 100,
+        "flatRateJobExpenses" -> 100,
+        "professionalSubscriptions" -> 100,
+        "hotelAndMealExpenses" -> 100,
+        "otherAndCapitalAllowances" -> 100,
+        "vehicleExpenses" -> 100,
+        "mileageAllowanceRelief" -> 100
+      )
+    ),
       "customerEmploymentData" -> Json.arr(
         Json.obj(
           "employmentId" -> "00000000-0000-0000-2222-000000000000",
@@ -159,22 +159,23 @@ class AllEmploymentDataModelSpec extends TestUtils {
               "vouchersAndCreditCards" -> 100,
               "nonCash" -> 100
             )
-          ),
-          "employmentExpenses" -> Json.obj(
-            "submittedOn" -> "2020-01-04T05:01:01Z",
-            "totalExpenses" -> 800,
-            "expenses" -> Json.obj(
-              "businessTravelCosts" -> 100,
-              "jobExpenses" -> 100,
-              "flatRateJobExpenses" -> 100,
-              "professionalSubscriptions" -> 100,
-              "hotelAndMealExpenses" -> 100,
-              "otherAndCapitalAllowances" -> 100,
-              "vehicleExpenses" -> 100,
-              "mileageAllowanceRelief" -> 100
-            )
           )
-        )))
+        )),
+    "customerExpenses" -> Json.obj(
+      "submittedOn" -> "2020-01-04T05:01:01Z",
+      "totalExpenses" -> 800,
+      "expenses" -> Json.obj(
+        "businessTravelCosts" -> 100,
+        "jobExpenses" -> 100,
+        "flatRateJobExpenses" -> 100,
+        "professionalSubscriptions" -> 100,
+        "hotelAndMealExpenses" -> 100,
+        "otherAndCapitalAllowances" -> 100,
+        "vehicleExpenses" -> 100,
+        "mileageAllowanceRelief" -> 100
+      )
+    )
+  )
 
   "AllEmploymentData" should {
 

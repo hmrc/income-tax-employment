@@ -16,7 +16,7 @@
 
 package models.DES
 
-import models.frontend.{EmploymentBenefits, EmploymentData, EmploymentExpenses, EmploymentSource}
+import models.frontend.{EmploymentBenefits, EmploymentData, EmploymentSource}
 import play.api.libs.json.{Json, OFormat}
 
 case class DESEmploymentList(employments: Seq[HmrcEmployment],
@@ -35,7 +35,6 @@ case class HmrcEmployment(employmentId: String,
                           dateIgnored: Option[String]) {
 
   def toEmploymentSource(employmentData: Option[DESEmploymentData],
-                         employmentExpenses: Option[DESEmploymentExpenses],
                          employmentBenefits: Option[DESEmploymentBenefits]): EmploymentSource = {
     EmploymentSource(
       employmentId, employerName, employerRef, payrollId, startDate, cessationDate, dateIgnored,
@@ -50,13 +49,6 @@ case class HmrcEmployment(employmentId: String,
           occPen = e.employment.occPen,
           disguisedRemuneration = e.employment.disguisedRemuneration,
           pay = e.employment.pay
-        )
-      },
-      employmentExpenses = employmentExpenses.map { e =>
-        EmploymentExpenses(
-          submittedOn = e.submittedOn,
-          e.totalExpenses,
-          e.expenses
         )
       },
       employmentBenefits = employmentBenefits.map { e =>
@@ -82,7 +74,6 @@ case class CustomerEmployment(employmentId: String,
                               submittedOn: String) {
 
   def toEmploymentSource(employmentData: Option[DESEmploymentData],
-                         employmentExpenses: Option[DESEmploymentExpenses],
                          employmentBenefits: Option[DESEmploymentBenefits]): EmploymentSource = {
     EmploymentSource(
       employmentId, employerName, employerRef, payrollId, startDate, cessationDate,
@@ -100,13 +91,6 @@ case class CustomerEmployment(employmentId: String,
             disguisedRemuneration = e.employment.disguisedRemuneration,
             pay = e.employment.pay
           )
-      },
-      employmentExpenses = employmentExpenses.map { e =>
-        EmploymentExpenses(
-          submittedOn = e.submittedOn,
-          e.totalExpenses,
-          e.expenses
-        )
       },
       employmentBenefits = employmentBenefits.map { e =>
         EmploymentBenefits(

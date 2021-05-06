@@ -129,6 +129,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val nino = "AA123456A"
 
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
+      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Left(DesErrorModel(500,DesErrorBodyModel.parsingError()))
 
       (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
@@ -139,6 +140,10 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpectedResult))
 
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String,  _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcBenefitsExpectedResult))
+
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
@@ -147,7 +152,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       result mustBe hmrcExpensesExpectedResult
     }
-    "get all the data and form the correct model when only hmrc data exists" in {
+    "get all the data and form the correct model when only hmrc data exists but still get customer expenses" in {
 
       val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(customerDeclaredEmployments = Seq())))
       val taxYear = 2022
@@ -158,6 +163,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
 
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
+      val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
 
       (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
         .expects(nino, taxYear, None, *)
@@ -175,11 +181,15 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
 
+      (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "CUSTOMER", *)
+        .returning(Future.successful(customerExpensesExpectedResult))
+
       val result = await(service.getAllEmploymentData(nino, taxYear))
 
       result mustBe Right(allEmploymentData.copy(customerEmploymentData = Seq()))
     }
-    "get all the data and form the correct model when only customer data exists" in {
+    "get all the data and form the correct model when only customer data exists but still get hmrc expenses" in {
 
       val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(employments = Seq())))
       val taxYear = 2022
@@ -190,6 +200,8 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val customerBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(customerBenefits))
 
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
+
+      val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
 
       (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
         .expects(nino, taxYear, None, *)
@@ -206,6 +218,10 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "CUSTOMER", *)
         .returning(Future.successful(customerExpensesExpectedResult))
+
+      (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "HMRC-HELD", *)
+        .returning(Future.successful(hmrcExpensesExpectedResult))
 
       val result = await(service.getAllEmploymentData(nino, taxYear))
 
