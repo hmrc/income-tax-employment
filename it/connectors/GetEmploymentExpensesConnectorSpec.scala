@@ -42,7 +42,6 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result2 = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
         val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
         result.right.get.get.dateIgnored mustBe expectedResult.dateIgnored
