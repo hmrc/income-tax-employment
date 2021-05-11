@@ -24,8 +24,8 @@ import utils.DESTaxYearHelper.desTaxYearConverter
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetEmploymentListConnector @Inject() (val http: HttpClient,
-                                             val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
+class GetEmploymentListConnector @Inject()(val http: HttpClient,
+                                           val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
 
   def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String])(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
 

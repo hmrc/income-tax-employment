@@ -17,36 +17,37 @@
 package models
 
 import com.codahale.metrics.SharedMetricRegistries
+import models.DES.DESEmploymentList
 import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.TestUtils
 
-class GetEmploymentListModelSpec extends TestUtils {
+class DESEmploymentListSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
   val jsonModel: JsObject = Json.obj(
     "employments" -> JsArray(
       Seq(
         Json.obj(
-          "employmentId" -> "00000000-0000-1000-8000-000000000000",
-          "employerRef" -> "123/abc 001<Q>",
-          "employerName" -> "Vera Lynn",
-          "payrollId" -> "123345657",
-          "startDate" -> "2020-06-17",
-          "cessationDate" -> "2020-06-17",
-          "dateIgnored" -> "2020-06-17T10:53:38Z"
+          "employmentId" -> "00000000-0000-0000-1111-000000000000",
+          "employerRef" -> "666/66666",
+          "employerName" -> "Business",
+          "payrollId" -> "1234567890",
+          "startDate" -> "2020-01-01",
+          "cessationDate" -> "2020-01-01",
+          "dateIgnored" -> "2020-01-01T10:00:38Z"
         )
       )
     ),
     "customerDeclaredEmployments" -> JsArray(
       Seq(
         Json.obj(
-          "employmentId" -> "00000000-0000-1000-8000-000000000000",
-          "employerRef" -> "123/abc 001<Q>",
-          "employerName" -> "Vera Lynn",
-          "payrollId" -> "123345657",
-          "startDate" -> "2020-06-17",
-          "cessationDate" -> "2020-06-17",
-          "submittedOn" -> "2020-06-17T10:53:38Z"
+          "employmentId" -> "00000000-0000-0000-2222-000000000000",
+          "employerRef" -> "666/66666",
+          "employerName" -> "Business",
+          "payrollId" -> "1234567890",
+          "startDate" -> "2020-01-01",
+          "cessationDate" -> "2020-01-01",
+          "submittedOn" -> "2020-01-01T10:00:38Z"
         )
       )
     )
@@ -59,7 +60,7 @@ class GetEmploymentListModelSpec extends TestUtils {
     }
 
     "parse from Json" in {
-      jsonModel.as[GetEmploymentListModel]
+      jsonModel.as[DESEmploymentList]
     }
   }
 

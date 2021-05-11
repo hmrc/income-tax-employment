@@ -16,7 +16,7 @@
 
 package connectors.httpParsers
 
-import models.DES.DESEmploymentData
+import models.DES.DESEmploymentExpenses
 import models.DesErrorModel
 import play.api.Logging
 import play.api.http.Status._
@@ -24,19 +24,22 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object GetEmploymentDataHttpParser extends DESParser with Logging{
-  type GetEmploymentDataResponse = Either[DesErrorModel, Option[DESEmploymentData]]
+object GetEmploymentExpensesHttpParser extends DESParser with Logging {
+  type GetEmploymentExpensesResponse = Either[DesErrorModel, Option[DESEmploymentExpenses]]
 
-  override val parserName: String = "GetEmploymentDataHttpParser"
-  override val isDesAPI: Boolean = true
+  override val parserName: String = "GetEmploymentBenefitsHttpParser"
+  override val isDesAPI: Boolean = false
 
-  implicit object GetEmploymentDataHttpReads extends HttpReads[GetEmploymentDataResponse] {
+  implicit object GetEmploymentExpensesHttpReads extends HttpReads[GetEmploymentExpensesResponse] {
 
-    override def read(method: String, url: String, response: HttpResponse): GetEmploymentDataResponse = {
+    override def read(method: String, url: String, response: HttpResponse): GetEmploymentExpensesResponse = {
       response.status match {
-        case OK => response.json.validate[DESEmploymentData].fold[GetEmploymentDataResponse](
+        case OK => response.json.validate[DESEmploymentExpenses].fold[GetEmploymentExpensesResponse](
           _ => badSuccessJsonFromDES,
-          parsedModel => Right(Some(parsedModel))
+          {
+            case DESEmploymentExpenses(_,_,_,_,None) => Right(None)
+            case parsedModel => Right(Some(parsedModel))
+          }
         )
         case NOT_FOUND =>
           logger.info(logMessage(response))

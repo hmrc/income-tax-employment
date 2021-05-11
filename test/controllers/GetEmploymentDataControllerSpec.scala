@@ -21,7 +21,7 @@ import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status._
 import play.api.test.FakeRequest
-import services.GetEmploymentDataService
+import services.EmploymentOrchestrationService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 import play.api.libs.json.Json
@@ -30,7 +30,7 @@ import scala.concurrent.Future
 
 class GetEmploymentDataControllerSpec extends TestUtils {
 
-  val getEmploymentDataService: GetEmploymentDataService = mock[GetEmploymentDataService]
+  val getEmploymentDataService: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
   val getEmploymentDataController = new GetEmploymentDataController(getEmploymentDataService,authorisedAction, mockControllerComponents)
   val nino :String = "123456789"
   val mtdItID :String = "123123123"
@@ -44,7 +44,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
   private val fakeGetRequest = FakeRequest("GET", "/").withHeaders("MTDITID" -> "1234567890")
 
   def mockGetEmploymentDataValid(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
-    val validEmploymentData: GetEmploymentDataResponse = Right(getEmploymentDataModelExample)
+    val validEmploymentData: GetEmploymentDataResponse = Right(Some(customerEmploymentDataModelExample))
     (getEmploymentDataService.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
       .expects(*, *, *, *,*)
       .returning(Future.successful(validEmploymentData))
@@ -58,10 +58,9 @@ class GetEmploymentDataControllerSpec extends TestUtils {
   }
 
   def mockGetEmploymentDataNotFound(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
-    val invalidEmploymentData: GetEmploymentDataResponse = Left(DesErrorModel(NOT_FOUND, notFoundModel))
     (getEmploymentDataService.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
       .expects(*, *, *, *,*)
-      .returning(Future.successful(invalidEmploymentData))
+      .returning(Future.successful(Right(None)))
   }
 
   def mockGetEmploymentDataServerError(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
@@ -104,14 +103,13 @@ class GetEmploymentDataControllerSpec extends TestUtils {
 
     "without existing data" should {
 
-      "return an NotFound response when called as an individual" in {
+      "return an NoContent response when called as an individual" in {
         val result = {
           mockAuth()
           mockGetEmploymentDataNotFound()
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
-        status(result) mustBe NOT_FOUND
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"NOT_FOUND_INCOME_SOURCE","reason":"Can't find income source"}""".stripMargin)
+        status(result) mustBe NO_CONTENT
       }
 
       "return an NotFound response when called as an agent" in {
@@ -120,8 +118,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           mockGetEmploymentDataNotFound()
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
-        status(result) mustBe NOT_FOUND
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"NOT_FOUND_INCOME_SOURCE","reason":"Can't find income source"}""".stripMargin)
+        status(result) mustBe NO_CONTENT
       }
 
     }

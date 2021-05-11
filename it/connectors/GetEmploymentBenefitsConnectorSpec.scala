@@ -16,34 +16,45 @@
 
 package connectors
 
-import connectors.GetEmploymentDataConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
+import connectors.GetEmploymentBenefitsConnectorSpec.{expectedResponseBody,emptyExpectedResponseBody}
 import helpers.WiremockSpec
-import models.DES.DESEmploymentData
+import models.DES.DESEmploymentBenefits
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.DESTaxYearHelper.desTaxYearConverter
 
-class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
+class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec{
 
-  lazy val connector: GetEmploymentDataConnector = app.injector.instanceOf[GetEmploymentDataConnector]
+  lazy val connector: GetEmploymentBenefitsConnector = app.injector.instanceOf[GetEmploymentBenefitsConnector]
 
-  val nino: String = "123456789"
-  val taxYear: Int = 1999
+  val nino: String = "AA123456A"
+  val taxYear: Int = 2022
   val employmentId: String = "00000000-0000-1000-8000-000000000000"
   val view: String = "CUSTOMER"
-  val getEmploymentDataUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId\\?view=$view"
+  val url = s"/income-tax-benefits/income-tax/nino/$nino/sources/$employmentId\\?view=$view&taxYear=$taxYear"
 
-  ".GetEmploymentDataConnector" should {
-    "return a GetEmploymentDataModel" when {
+  ".GetEmploymentBenefitsConnector" should {
+
+    "return an empty DESEmploymentBenefits" when {
       "all values are present in the url" in {
-        val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentData]
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
+        stubGetWithResponseBody(url, OK, emptyExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get.get
+        val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
+
+        result.right.get mustBe None
+      }
+    }
+
+    "return a DESEmploymentBenefits" when {
+      "all values are present in the url" in {
+        val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentBenefits]
+        stubGetWithResponseBody(url, OK, expectedResponseBody)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+        val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc)).right.get.get
 
         result.customerAdded mustBe expectedResult.customerAdded
         result.dateIgnored mustBe expectedResult.dateIgnored
@@ -51,39 +62,28 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
         result.source mustBe expectedResult.source
         result.submittedOn mustBe expectedResult.submittedOn
       }
-      "only the required values are returned in the response body" in {
-        val expectedResult = Json.parse(filteredExpectedResponseBody).as[DESEmploymentData]
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, filteredExpectedResponseBody)
-
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get.get
-
-        result.employment mustBe expectedResult.employment
-        result.submittedOn mustBe expectedResult.submittedOn
-      }
     }
-
 
     "return a Parsing error INTERNAL_SERVER_ERROR response" in {
       val invalidJson = Json.obj(
         "employments" -> ""
       )
 
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, OK, invalidJson.toString())
+      stubGetWithResponseBody(url, OK, invalidJson.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
 
     "return a NO_CONTENT" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, NO_CONTENT, "{}")
+      stubGetWithResponseBody(url, NO_CONTENT, "{}")
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -95,9 +95,9 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       )
       val expectedResult = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_NINO", "Nino is invalid"))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, BAD_REQUEST, responseBody.toString())
+      stubGetWithResponseBody(url, BAD_REQUEST, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -108,9 +108,9 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
         "reason" -> "Can't find income source"
       )
 
-      stubGetWithResponseBody(getEmploymentDataUrl, NOT_FOUND, responseBody.toString())
+      stubGetWithResponseBody(url, NOT_FOUND, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Right(None)
     }
@@ -122,9 +122,9 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       )
       val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVER_ERROR", "Internal server error"))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, INTERNAL_SERVER_ERROR, responseBody.toString())
+      stubGetWithResponseBody(url, INTERNAL_SERVER_ERROR, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -136,19 +136,19 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       )
       val expectedResult = DesErrorModel(SERVICE_UNAVAILABLE, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, SERVICE_UNAVAILABLE, responseBody.toString())
+      stubGetWithResponseBody(url, SERVICE_UNAVAILABLE, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
 
     "return an Internal Server Error when DES throws an unexpected result" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
 
-      stubGetWithoutResponseBody(getEmploymentDataUrl, NO_CONTENT)
+      stubGetWithoutResponseBody(url, NO_CONTENT)
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -160,9 +160,9 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       )
       val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
+      stubGetWithResponseBody(url, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -171,18 +171,18 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel.parsingError())
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel.parsingError(false))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
+      stubGetWithResponseBody(url, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+      val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
       result mustBe Left(expectedResult)
     }
   }
 }
 
-object GetEmploymentDataConnectorSpec {
+object GetEmploymentBenefitsConnectorSpec {
   val expectedResponseBody: String =
     """
       {
@@ -253,23 +253,17 @@ object GetEmploymentDataConnectorSpec {
       |}
       |""".stripMargin
 
-  val filteredExpectedResponseBody: String =
+  val emptyExpectedResponseBody: String =
     """
-      |{
+      {
       |  "submittedOn": "2020-01-04T05:01:01Z",
+      |  "source": "CUSTOMER",
+      |  "customerAdded": "2020-04-04T01:01:01Z",
+      |  "dateIgnored": "2020-04-04T01:01:01Z",
       |  "employment": {
-      |    "employer": {
-      |      "employerName": "maggie"
-      |    },
-      |    "pay": {
-      |      "taxablePayToDate": 34234.15,
-      |      "totalTaxToDate": 6782.92,
-      |      "payFrequency": "CALENDAR MONTHLY",
-      |      "paymentDate": "2020-04-23"
-      |    }
       |  }
       |}
-      |
       |""".stripMargin
 }
+
 

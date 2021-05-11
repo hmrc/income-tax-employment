@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package utils
+package models.frontend
 
-object ViewParameterValidation {
-  def isValid(view: String): Boolean = {
-    view match {
-      case HMRC_HELD | CUSTOMER | LATEST => true
-      case _ => false
-    }
-  }
+import models.shared.Expenses
+import play.api.libs.json.{Json, OFormat}
 
-  val HMRC_HELD = "HMRC-HELD"
-  val CUSTOMER = "CUSTOMER"
-  val LATEST = "LATEST"
+case class EmploymentExpenses(submittedOn: Option[String],
+                              totalExpenses: Option[BigDecimal],
+                              expenses: Option[Expenses])
+
+object EmploymentExpenses {
+  implicit val format: OFormat[EmploymentExpenses] = Json.format[EmploymentExpenses]
 }

@@ -25,14 +25,15 @@ import utils.PagerDutyHelper.{getCorrelationId, pagerDutyLog}
 trait DESParser {
 
   val parserName : String
+  val isDesAPI: Boolean
 
   def logMessage(response:HttpResponse): String ={
-    s"[$parserName][read] Received ${response.status} from DES. Body:${response.body}" + getCorrelationId(response)
+    s"[$parserName][read] Received ${response.status} from ${if(isDesAPI) "DES" else "API"}. Body:${response.body}" + getCorrelationId(response)
   }
 
   def badSuccessJsonFromDES[Response]: Either[DesErrorModel, Response] = {
-    pagerDutyLog(BAD_SUCCESS_JSON_FROM_DES, s"[$parserName][read] Invalid Json from DES.")
-    Left(DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError))
+    pagerDutyLog(BAD_SUCCESS_JSON_FROM_DES, s"[$parserName][read] Invalid Json from ${if(isDesAPI) "DES" else "API"}.")
+    Left(DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(isDesAPI)))
   }
 
   def handleDESError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[DesErrorModel, Response] = {
@@ -49,11 +50,11 @@ trait DESParser {
         case (Some(desError), _) => Left(DesErrorModel(status, desError))
         case (_, Some(desErrors)) => Left(DesErrorModel(status, desErrors))
         case _ =>
-          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, s"[$parserName][read] Unexpected Json from DES.")
-          Left(DesErrorModel(status, DesErrorBodyModel.parsingError))
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, s"[$parserName][read] Unexpected Json from ${if(isDesAPI) "DES" else "API"}.")
+          Left(DesErrorModel(status, DesErrorBodyModel.parsingError(isDesAPI)))
       }
     } catch {
-      case _: Exception => Left(DesErrorModel(status, DesErrorBodyModel.parsingError))
+      case _: Exception => Left(DesErrorModel(status, DesErrorBodyModel.parsingError(isDesAPI)))
     }
   }
 }

@@ -22,7 +22,9 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
-import models.{CustomerEmploymentModel, EmployerModel, EmploymentModel, GetEmploymentDataModel, GetEmploymentListModel, HmrcEmploymentModel, PayModel}
+import models.DES._
+import models.frontend.{AllEmploymentData, EmploymentBenefits, EmploymentData, EmploymentExpenses, EmploymentSource}
+import models.shared.{Benefits, Expenses, Pay}
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
@@ -113,47 +115,151 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       .returning(Future.failed(exception))
   }
 
-  val hmrcEmploymentModel: HmrcEmploymentModel =
-    HmrcEmploymentModel(
-      employmentId = "00000000-0000-1000-8000-000000000000",
-      employerRef = Some("123/abc 001<Q>"),
-      employerName = "Vera Lynn",
-      payrollId = Some("123345657"),
-      startDate = Some("2020-06-17"),
-      cessationDate = Some("2020-06-17"),
-      dateIgnored = Some("2020-06-17T10:53:38Z")
+  val allEmploymentData =
+    AllEmploymentData(
+      Seq(
+        EmploymentSource(
+          employmentId = "00000000-0000-0000-1111-000000000000",
+          employerRef = Some("666/66666"),
+          employerName = "Business",
+          payrollId = Some("1234567890"),
+          startDate = Some("2020-01-01"),
+          cessationDate = Some("2020-01-01"),
+          dateIgnored = Some("2020-01-01T10:00:38Z"),
+          submittedOn = None,
+          employmentData = Some(EmploymentData(
+            "2020-01-04T05:01:01Z",
+            employmentSequenceNumber = Some("1002"),
+            companyDirector = Some(false),
+            closeCompany = Some(true),
+            directorshipCeasedDate = Some("2020-02-12"),
+            occPen = Some(false),
+            disguisedRemuneration = Some(false),
+            Pay(
+              taxablePayToDate = 34234.15,
+              totalTaxToDate = 6782.92,
+              tipsAndOtherPayments = Some(67676),
+              payFrequency = "CALENDAR MONTHLY",
+              paymentDate = "2020-04-23",
+              taxWeekNo = Some(32),
+              taxMonthNo = Some(2)
+            )
+          )),
+          employmentBenefits = Some(
+            EmploymentBenefits(
+              "2020-01-04T05:01:01Z",
+              benefits = Some(Benefits(
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+              ))
+            )
+          )
+        )
+      ),
+      hmrcExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          ))
+        )
+      ),
+      Seq(
+        EmploymentSource(
+          employmentId = "00000000-0000-0000-2222-000000000000",
+          employerRef = Some("666/66666"),
+          employerName = "Business",
+          payrollId = Some("1234567890"),
+          startDate = Some("2020-01-01"),
+          cessationDate = Some("2020-01-01"),
+          dateIgnored = None,
+          submittedOn = Some("2020-01-01T10:00:38Z"),
+          employmentData = Some(
+            EmploymentData(
+              "2020-01-04T05:01:01Z",
+              employmentSequenceNumber = Some("1002"),
+              companyDirector = Some(false),
+              closeCompany = Some(true),
+              directorshipCeasedDate = Some("2020-02-12"),
+              occPen = Some(false),
+              disguisedRemuneration = Some(false),
+              Pay(
+                taxablePayToDate = 34234.15,
+                totalTaxToDate = 6782.92,
+                tipsAndOtherPayments = Some(67676),
+                payFrequency = "CALENDAR MONTHLY",
+                paymentDate = "2020-04-23",
+                taxWeekNo = Some(32),
+                taxMonthNo = Some(2)
+              )
+            )
+          ),
+          employmentBenefits = Some(
+            EmploymentBenefits(
+              "2020-01-04T05:01:01Z",
+              benefits = Some(Benefits(
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+              ))
+            )
+          )
+        )
+      ),
+      customerExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          ))
+        )
+      )
     )
 
-  val customerEmploymentModel: CustomerEmploymentModel =
-    CustomerEmploymentModel(
-      employmentId = "00000000-0000-1000-8000-000000000000",
-      employerRef = Some("123/abc 001<Q>"),
-      employerName = "Vera Lynn",
-      payrollId = Some("123345657"),
-      startDate = Some("2020-06-17"),
-      cessationDate = Some("2020-06-17"),
-      submittedOn = "2020-06-17T10:53:38Z"
+  val hmrcEmploymentModel: HmrcEmployment =
+    HmrcEmployment(
+      employmentId = "00000000-0000-0000-1111-000000000000",
+      employerRef = Some("666/66666"),
+      employerName = "Business",
+      payrollId = Some("1234567890"),
+      startDate = Some("2020-01-01"),
+      cessationDate = Some("2020-01-01"),
+      dateIgnored = Some("2020-01-01T10:00:38Z")
     )
 
-  val getEmploymentListModelExample: GetEmploymentListModel =
-    GetEmploymentListModel(
+  val customerEmploymentModel: CustomerEmployment =
+    CustomerEmployment(
+      employmentId = "00000000-0000-0000-2222-000000000000",
+      employerRef = Some("666/66666"),
+      employerName = "Business",
+      payrollId = Some("1234567890"),
+      startDate = Some("2020-01-01"),
+      cessationDate = Some("2020-01-01"),
+      submittedOn = "2020-01-01T10:00:38Z"
+    )
+
+  val getEmploymentListModelExample: DESEmploymentList =
+    DESEmploymentList(
       employments = Seq(hmrcEmploymentModel),
       customerDeclaredEmployments = Seq(customerEmploymentModel)
     )
 
-  val getEmploymentListModelExampleWithNoData: GetEmploymentListModel =
-    GetEmploymentListModel(
+  val getEmploymentListModelExampleWithNoData: DESEmploymentList =
+    DESEmploymentList(
       employments = Seq(),
       customerDeclaredEmployments = Seq()
     )
 
-  val getEmploymentDataModelExample: GetEmploymentDataModel =
-    GetEmploymentDataModel(
+  val customerEmploymentDataModelExample: DESEmploymentData =
+    DESEmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = Some("CUSTOMER"),
       customerAdded = Some("2020-04-04T01:01:01Z"),
       dateIgnored = Some("2020-04-04T01:01:01Z"),
-      employment = EmploymentModel(
+      employment = DESEmploymentDetails(
         employmentSequenceNumber = Some("1002"),
         payrollId = Some("123456789999"),
         companyDirector = Some(false),
@@ -163,11 +269,11 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
         cessationDate = Some("2020-03-11"),
         occPen = Some(false),
         disguisedRemuneration = Some(false),
-        employer = EmployerModel(
+        employer = Employer(
           employerRef = Some("223/AB12399"),
-          employerName = "maggie"
+          employerName = "Business 1"
         ),
-        pay = PayModel(
+        pay = Pay(
           taxablePayToDate = 34234.15,
           totalTaxToDate = 6782.92,
           tipsAndOtherPayments = Some(67676),
@@ -179,13 +285,93 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
       )
     )
 
-  val getEmploymentDataModelOnlyRequiredExample: GetEmploymentDataModel =
-    GetEmploymentDataModel(
+  val hmrcEmploymentDataModelExample: DESEmploymentData =
+    DESEmploymentData(
+      submittedOn = "2020-01-04T05:01:01Z",
+      source = Some("HMRC-HELD"),
+      customerAdded = Some("2020-04-04T01:01:01Z"),
+      dateIgnored = Some("2020-04-04T01:01:01Z"),
+      employment = DESEmploymentDetails(
+        employmentSequenceNumber = Some("1002"),
+        payrollId = Some("123456789999"),
+        companyDirector = Some(false),
+        closeCompany = Some(true),
+        directorshipCeasedDate = Some("2020-02-12"),
+        startDate = Some("2019-04-21"),
+        cessationDate = Some("2020-03-11"),
+        occPen = Some(false),
+        disguisedRemuneration = Some(false),
+        employer = Employer(
+          employerRef = Some("223/AB12399"),
+          employerName = "Business 1"
+        ),
+        pay = Pay(
+          taxablePayToDate = 34234.15,
+          totalTaxToDate = 6782.92,
+          tipsAndOtherPayments = Some(67676),
+          payFrequency = "CALENDAR MONTHLY",
+          paymentDate = "2020-04-23",
+          taxWeekNo = Some(32),
+          taxMonthNo = Some(2)
+        )
+      )
+    )
+
+  val hmrcBenefits: DESEmploymentBenefits = DESEmploymentBenefits(
+    submittedOn = "2020-01-04T05:01:01Z",
+    source = Some("HMRC-HELD"),
+    customerAdded = None,
+    dateIgnored = None,
+    employment = EmploymentBenefitsData(
+      benefitsInKind = Some(Benefits(
+        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+        Some(100),Some(100),Some(100),Some(100)
+      ))
+    )
+  )
+
+  val customerBenefits: DESEmploymentBenefits = DESEmploymentBenefits(
+    submittedOn = "2020-01-04T05:01:01Z",
+    source = Some("CUSTOMER"),
+    customerAdded = Some("2020-01-04T05:01:01Z"),
+    dateIgnored = None,
+    employment = EmploymentBenefitsData(
+      benefitsInKind = Some(Benefits(
+        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+        Some(100),Some(100),Some(100),Some(100)
+      ))
+    )
+  )
+
+  val hmrcExpenses: DESEmploymentExpenses = DESEmploymentExpenses(
+    submittedOn = Some("2020-01-04T05:01:01Z"),
+    source = Some("HMRC-HELD"),
+    dateIgnored = None,
+    totalExpenses = Some(800),
+    expenses = Some(Expenses(
+      Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+    ))
+  )
+
+  val customerExpenses: DESEmploymentExpenses = DESEmploymentExpenses(
+    submittedOn = Some("2020-01-04T05:01:01Z"),
+    source = Some("CUSTOMER"),
+    dateIgnored = None,
+    totalExpenses = Some(800),
+    expenses = Some(Expenses(
+      Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+    ))
+  )
+
+  val getEmploymentDataModelOnlyRequiredExample: DESEmploymentData =
+    DESEmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = None,
       customerAdded = None,
       dateIgnored = None,
-      employment = EmploymentModel(
+      employment = DESEmploymentDetails(
         employmentSequenceNumber = None,
         payrollId = None,
         companyDirector = None,
@@ -195,11 +381,11 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
         cessationDate = None,
         occPen = None,
         disguisedRemuneration = None,
-        employer = EmployerModel(
+        employer = Employer(
           employerRef = None,
           employerName = "maggie"
         ),
-        pay = PayModel(
+        pay = Pay(
           taxablePayToDate = 34234.15,
           totalTaxToDate = 6782.92,
           tipsAndOtherPayments = None,
