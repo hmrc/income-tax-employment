@@ -25,6 +25,7 @@ import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, G
 import models.{DesErrorBodyModel, DesErrorModel}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 
 import scala.concurrent.Future
 
@@ -86,6 +87,11 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       result mustBe Right(allEmploymentData)
     }
+
+    "forcing an error in the returnError method by sending an empty Seq" in {
+      service.returnError(Seq()) mustBe Left(DesErrorModel(INTERNAL_SERVER_ERROR,DesErrorBodyModel.parsingError()))
+    }
+
     "get all the data and return an error" in {
 
       val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample))
@@ -93,7 +99,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val nino = "AA123456A"
 
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
-      val customerExpectedResult: GetEmploymentDataResponse = Left(DesErrorModel(500,DesErrorBodyModel.parsingError()))
+      val customerExpectedResult: GetEmploymentDataResponse = Left(DesErrorModel(INTERNAL_SERVER_ERROR,DesErrorBodyModel.parsingError()))
 
       val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
@@ -130,7 +136,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
       val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
-      val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Left(DesErrorModel(500,DesErrorBodyModel.parsingError()))
+      val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Left(DesErrorModel(INTERNAL_SERVER_ERROR,DesErrorBodyModel.parsingError()))
 
       (listConnector.getEmploymentList(_: String, _: Int, _:Option[String])(_: HeaderCarrier))
         .expects(nino, taxYear, None, *)

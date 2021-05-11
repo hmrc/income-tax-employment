@@ -42,13 +42,13 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
 
     getEmploymentList(nino, taxYear).flatMap {
-      case Right(Some(DESEmploymentList(hmrc, customer))) => getDataAndFormEmploymentModel(nino, taxYear, hmrc, customer)
+      case Right(Some(DESEmploymentList(hmrc, customer))) => getDataAndCreateEmploymentModel(nino, taxYear, hmrc, customer)
       case Right(None) => Future(Right(AllEmploymentData(Seq.empty, None, Seq.empty, None)))
       case Left(error) => Future.successful(Left(error))
     }
   }
 
-  private def getDataAndFormEmploymentModel(nino: String, taxYear: Int, hmrc: Seq[HmrcEmployment], customer: Seq[CustomerEmployment])
+  private def getDataAndCreateEmploymentModel(nino: String, taxYear: Int, hmrc: Seq[HmrcEmployment], customer: Seq[CustomerEmployment])
                                            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
 
     orchestrateHmrcEmploymentDataRetrieval(nino, taxYear, hmrc).flatMap { hmrcResponse =>
@@ -86,7 +86,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
     }
   }
 
-  private def returnError[T](response: Seq[Either[DesErrorModel, T]]): Either[DesErrorModel, AllEmploymentData] = {
+  private[services] def returnError[T](response: Seq[Either[DesErrorModel, T]]): Either[DesErrorModel, AllEmploymentData] = {
     val errors: Seq[DesErrorModel] = response.collect { case Left(errors) => errors }
     Left(errors.headOption.getOrElse(DesErrorModel(INTERNAL_SERVER_ERROR, parsingError())))
   }
