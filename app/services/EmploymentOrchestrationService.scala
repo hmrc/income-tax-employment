@@ -38,27 +38,28 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
                                                getEmploymentBenefitsConnector: GetEmploymentBenefitsConnector,
                                                getEmploymentExpensesConnector: GetEmploymentExpensesConnector) {
 
-  def getAllEmploymentData(nino: String, taxYear: Int)
+  def getAllEmploymentData(nino: String, taxYear: Int, mtditid: String)
                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
 
     getEmploymentList(nino, taxYear).flatMap {
-      case Right(Some(DESEmploymentList(hmrc, customer))) => getDataAndCreateEmploymentModel(nino, taxYear, hmrc, customer)
+      case Right(Some(DESEmploymentList(hmrc, customer))) => getDataAndCreateEmploymentModel(nino, taxYear, hmrc, customer, mtditid)
       case Right(None) => Future(Right(AllEmploymentData(Seq.empty, None, Seq.empty, None)))
       case Left(error) => Future.successful(Left(error))
     }
   }
 
-  private def getDataAndCreateEmploymentModel(nino: String, taxYear: Int, hmrc: Seq[HmrcEmployment], customer: Seq[CustomerEmployment])
+  private def getDataAndCreateEmploymentModel(nino: String, taxYear: Int, hmrc: Seq[HmrcEmployment], customer: Seq[CustomerEmployment],
+                                              mtditid: String)
                                            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
 
-    orchestrateHmrcEmploymentDataRetrieval(nino, taxYear, hmrc).flatMap { hmrcResponse =>
+    orchestrateHmrcEmploymentDataRetrieval(nino, taxYear, hmrc, mtditid).flatMap { hmrcResponse =>
       if (hmrcResponse.forall(_.isRight)) {
-        getExpenses(nino, taxYear, HMRC_HELD).flatMap { hmrcExpenses =>
+        getExpenses(nino, taxYear, HMRC_HELD, mtditid).flatMap { hmrcExpenses =>
           if (hmrcExpenses.isRight) {
             val hmrcEmployments: Seq[EmploymentSource] = hmrcResponse.collect { case Right(employment) => employment }
-            orchestrateCustomerEmploymentDataRetrieval(nino, taxYear, customer).flatMap { customerResponse => {
+            orchestrateCustomerEmploymentDataRetrieval(nino, taxYear, customer, mtditid).flatMap { customerResponse => {
               if (customerResponse.forall(_.isRight)) {
-                getExpenses(nino, taxYear, CUSTOMER).map { customerExpenses =>
+                getExpenses(nino, taxYear, CUSTOMER, mtditid).map { customerExpenses =>
                   if (customerExpenses.isRight) {
                     val customerEmployments: Seq[EmploymentSource] = customerResponse.collect { case Right(employment) => employment }
                     Right(AllEmploymentData(
@@ -91,14 +92,14 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
     Left(errors.headOption.getOrElse(DesErrorModel(INTERNAL_SERVER_ERROR, parsingError())))
   }
 
-  private def orchestrateHmrcEmploymentDataRetrieval(nino: String, taxYear: Int, hmrcEmploymentData: Seq[HmrcEmployment])
+  private def orchestrateHmrcEmploymentDataRetrieval(nino: String, taxYear: Int, hmrcEmploymentData: Seq[HmrcEmployment], mtditid: String)
                                                     (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[Either[DesErrorModel, EmploymentSource]]] = {
     val view = HMRC_HELD
     Future.sequence(hmrcEmploymentData.map {
       hmrcEmployment =>
         (for {
           employmentData <- FutureEitherOps[DesErrorModel, Option[DESEmploymentData]](getEmploymentData(nino, taxYear, hmrcEmployment.employmentId, view))
-          benefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, hmrcEmployment.employmentId, view))
+          benefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, hmrcEmployment.employmentId, view, mtditid))
         } yield {
           hmrcEmployment.toEmploymentSource(employmentData, benefits)
         }).value
@@ -110,12 +111,12 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
     getEmploymentDataConnector.getEmploymentData(nino, taxYear, employmentId, view)
   }
 
-  private def getBenefits(nino: String, taxYear: Int, employmentId: String, view: String)
+  private def getBenefits(nino: String, taxYear: Int, employmentId: String, view: String, mtditid: String)
                          (implicit hc: HeaderCarrier): Future[GetEmploymentBenefitsResponse] = {
-    getEmploymentBenefitsConnector.getEmploymentBenefits(nino, taxYear, employmentId, view)
+    getEmploymentBenefitsConnector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc.withExtraHeaders("mtditid" -> mtditid))
   }
 
-  private def orchestrateCustomerEmploymentDataRetrieval(nino: String, taxYear: Int, customerEmploymentData: Seq[CustomerEmployment])
+  private def orchestrateCustomerEmploymentDataRetrieval(nino: String, taxYear: Int, customerEmploymentData: Seq[CustomerEmployment], mtditid: String)
                                                         (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[Either[DesErrorModel,
     EmploymentSource]]] = {
 
@@ -124,16 +125,16 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
       customerEmployment =>
         (for {
           employmentData <- FutureEitherOps[DesErrorModel, Option[DESEmploymentData]](getEmploymentData(nino, taxYear, customerEmployment.employmentId, view))
-          benefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, customerEmployment.employmentId, view))
+          benefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, customerEmployment.employmentId, view, mtditid))
         } yield {
           customerEmployment.toEmploymentSource(employmentData, benefits)
         }).value
     })
   }
 
-  private def getExpenses(nino: String, taxYear: Int, view: String)
+  private def getExpenses(nino: String, taxYear: Int, view: String, mtditid: String)
                          (implicit hc: HeaderCarrier): Future[GetEmploymentExpensesResponse] = {
-    getEmploymentExpensesConnector.getEmploymentExpenses(nino, taxYear, view)
+    getEmploymentExpensesConnector.getEmploymentExpenses(nino, taxYear, view)(hc.withExtraHeaders("mtditid" -> mtditid))
   }
 
   private def getEmploymentList(nino: String, taxYear: Int)

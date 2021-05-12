@@ -32,6 +32,8 @@ import scala.concurrent.Future
 class EmploymentOrchestrationServiceSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
+  val mtditid = "1234567890"
+
   val listConnector: GetEmploymentListConnector = mock[GetEmploymentListConnector]
   val dataConnector: GetEmploymentDataConnector = mock[GetEmploymentDataConnector]
   val benefitsConnector: GetEmploymentBenefitsConnector = mock[GetEmploymentBenefitsConnector]
@@ -83,7 +85,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
 
-      val result = await(service.getAllEmploymentData(nino, taxYear))
+      val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
       result mustBe Right(allEmploymentData)
     }
@@ -124,7 +126,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
 
-      val result = await(service.getAllEmploymentData(nino, taxYear))
+      val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
       result mustBe customerExpectedResult
     }
@@ -154,7 +156,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
 
-      val result = await(service.getAllEmploymentData(nino, taxYear))
+      val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
       result mustBe hmrcExpensesExpectedResult
     }
@@ -191,7 +193,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "CUSTOMER", *)
         .returning(Future.successful(customerExpensesExpectedResult))
 
-      val result = await(service.getAllEmploymentData(nino, taxYear))
+      val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
       result mustBe Right(allEmploymentData.copy(customerEmploymentData = Seq()))
     }
@@ -229,7 +231,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
 
-      val result = await(service.getAllEmploymentData(nino, taxYear))
+      val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
       result mustBe Right(allEmploymentData.copy(hmrcEmploymentData = Seq()))
     }

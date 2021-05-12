@@ -32,7 +32,7 @@ class GetEmploymentsController @Inject()(service: EmploymentOrchestrationService
                                         (implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def getEmployments(nino: String, taxYear: Int): Action[AnyContent] = auth.async { implicit user =>
-    service.getAllEmploymentData(nino, taxYear).map {
+    service.getAllEmploymentData(nino, taxYear, user.mtditid).map {
       case Right(AllEmploymentData(hmrcEmployments, None, customerEmployments, None)) if hmrcEmployments.isEmpty && customerEmployments.isEmpty => NoContent
       case Right(model) => Ok(Json.toJson(model))
       case Left(errorModel) => Status(errorModel.status)(errorModel.toJson)
