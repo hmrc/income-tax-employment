@@ -17,21 +17,24 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
-import connectors.httpParsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesHttpReads
-import javax.inject.Inject
+import connectors.httpParsers.GetEmploymentExpensesHttpParser.{GetEmploymentExpensesHttpReads, GetEmploymentExpensesResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentExpensesConnector @Inject()(val http: HttpClient,
-                                               val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
+                                               val appConfig: AppConfig)(implicit ec:ExecutionContext) extends Connector {
 
   def getEmploymentExpenses(nino: String, taxYear: Int, view: String)
                            (implicit hc: HeaderCarrier): Future[GetEmploymentExpensesResponse] = {
 
     val incomeSourcesUri: String = appConfig.expensesBaseUrl + s"/income-tax-expenses/income-tax/nino/$nino/sources?view=$view&taxYear=$taxYear"
 
-    http.GET[GetEmploymentExpensesResponse](incomeSourcesUri)
+    def call(implicit hc: HeaderCarrier): Future[GetEmploymentExpensesResponse] = {
+      http.GET[GetEmploymentExpensesResponse](incomeSourcesUri)
+    }
+
+    call(headerCarrier(incomeSourcesUri))
   }
 }

@@ -16,9 +16,7 @@
 
 package utils
 
-import org.scalatestplus.play.PlaySpec
-
-class ViewParameterValidationSpec extends PlaySpec {
+class ViewParameterValidationSpec extends TestUtils {
 
   "ViewParameterValidation" should {
 

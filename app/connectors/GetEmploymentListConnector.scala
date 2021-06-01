@@ -36,6 +36,6 @@ class GetEmploymentListConnector @Inject()(val http: HttpClient,
       http.GET[GetEmploymentListResponse](incomeSourcesUri)
     }
 
-    desCall(desHeaderCarrier)
+    desCall(desHeaderCarrier(incomeSourcesUri))
   }
 }

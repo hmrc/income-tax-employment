@@ -16,19 +16,28 @@
 
 package connectors
 
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import config.AppConfig
 import connectors.GetEmploymentDataConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
 import helpers.WiremockSpec
 import models.DES.DESEmploymentData
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
 
 class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
 
   lazy val connector: GetEmploymentDataConnector = app.injector.instanceOf[GetEmploymentDataConnector]
+
+  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  }
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -37,6 +46,40 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
   val getEmploymentDataUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId\\?view=$view"
 
   ".GetEmploymentDataConnector" should {
+    "include internal headers" when {
+      val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentData])
+
+      val headersSentToDes = Seq(
+        new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
+        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
+      )
+
+      val internalHost = "localhost"
+      val externalHost = "127.0.0.1"
+
+      "the host for DES is 'Internal'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new GetEmploymentDataConnector(httpClient, appConfig(internalHost))
+
+        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToDes)
+
+        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "the host for DES is 'External'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new GetEmploymentDataConnector(httpClient, appConfig(externalHost))
+
+        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToDes)
+
+        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+    }
+
     "return a GetEmploymentDataModel" when {
       "all values are present in the url" in {
         val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentData]
