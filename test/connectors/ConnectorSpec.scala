@@ -33,12 +33,11 @@ class ConnectorSpec extends TestUtils{
     "host is Internal" should {
       val internalHost = "http://localhost"
 
-      "add the correct environment" in {
-        val hc = HeaderCarrier()
+      "extraHeaders is empty when the host is external and no extraHeaders were added" in {
+        val hc = HeaderCarrier(sessionId = Some(SessionId("sessionIdHeaderValue")))
         val result = connector.headerCarrierTest(internalHost)(hc)
-        result.extraHeaders mustBe List(
-          "Environment" -> mockAppConfig.environment
-        )
+
+        result.extraHeaders.isEmpty mustBe true
       }
     }
 
@@ -49,9 +48,8 @@ class ConnectorSpec extends TestUtils{
         val hc = HeaderCarrier(sessionId = Some(SessionId("sessionIdHeaderValue")))
         val result = connector.headerCarrierTest(externalHost)(hc)
 
-        result.extraHeaders.size mustBe  3
+        result.extraHeaders.size mustBe 2
         result.extraHeaders.contains(xSessionId -> "sessionIdHeaderValue") mustBe true
-        result.extraHeaders.contains("Environment" -> mockAppConfig.environment) mustBe true
         result.extraHeaders.exists(x => x._1.equalsIgnoreCase(xRequestChain)) mustBe true
       }
     }

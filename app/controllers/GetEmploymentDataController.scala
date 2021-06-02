@@ -17,21 +17,21 @@
 package controllers
 
 import controllers.predicates.AuthorisedAction
-import javax.inject.Inject
 import models.DesErrorBodyModel.invalidView
-import play.api.Logger.logger
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.EmploymentOrchestrationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ViewParameterValidation.isValid
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentDataController @Inject()(service: EmploymentOrchestrationService,
                                             auth: AuthorisedAction,
                                             cc: ControllerComponents)
-                                           (implicit ec: ExecutionContext) extends BackendController(cc) {
+                                           (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String): Action[AnyContent] = auth.async { implicit user =>
     if(isValid(view)) {

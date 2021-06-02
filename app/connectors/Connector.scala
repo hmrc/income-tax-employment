@@ -34,9 +34,9 @@ trait Connector {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
 
     if(isInternalHost) {
-      hc.withExtraHeaders("Environment" -> appConfig.environment)
+      hc
     } else {
-      hc.withExtraHeaders(("Environment" -> appConfig.environment) +: hc.toSeq: _*)
+      hc.withExtraHeaders(hc.toExplicitHeaders: _*)
     }
   }
 }
