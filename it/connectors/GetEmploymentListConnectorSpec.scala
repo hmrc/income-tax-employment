@@ -16,25 +16,68 @@
 
 package connectors
 
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import config.AppConfig
 import connectors.GetEmploymentListConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
 import helpers.WiremockSpec
 import models.DES.DESEmploymentList
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
 
 class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
 
   lazy val connector: GetEmploymentListConnector = app.injector.instanceOf[GetEmploymentListConnector]
 
+  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  }
+
   val nino: String = "123456789"
   val taxYear: Int = 1999
   val employmentId: String = "00000000-0000-1000-8000-000000000000"
 
   ".GetEmploymentListConnector" should {
+    "include internal headers" when {
+      val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentList])
+
+      val headersSentToDes = Seq(
+        new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
+        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
+      )
+
+      val internalHost = "localhost"
+      val externalHost = "127.0.0.1"
+
+      "the host for DES is 'Internal'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new GetEmploymentListConnector(httpClient, appConfig(internalHost))
+
+        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody, headersSentToDes)
+
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "the host for DES is 'External'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new GetEmploymentListConnector(httpClient, appConfig(externalHost))
+
+        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody, headersSentToDes)
+
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+    }
+
     "return a GetEmploymentListModel" when {
       "only nino and taxYear are present" in {
         val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentList]

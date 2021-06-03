@@ -16,18 +16,27 @@
 
 package connectors
 
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import config.AppConfig
 import connectors.GetEmploymentExpensesConnectorSpec.expectedResponseBody
 import helpers.WiremockSpec
 import models.DES.DESEmploymentExpenses
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val connector: GetEmploymentExpensesConnector = app.injector.instanceOf[GetEmploymentExpensesConnector]
+
+  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  def appConfig(expensesHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
+  }
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -36,6 +45,39 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
   val getEmploymentDataUrl = s"/income-tax-expenses/income-tax/nino/$nino/sources\\?view=$view&taxYear=$taxYear"
 
   ".GetEmploymentExpensesConnector" should {
+    "include internal headers" when {
+      val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentExpenses])
+
+      val headersSentToExpenses = Seq(
+        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
+      )
+
+      val internalHost = "localhost"
+      val externalHost = "127.0.0.1"
+
+      "the host for Expenses is 'Internal'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new GetEmploymentExpensesConnector(httpClient, appConfig(internalHost))
+
+        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToExpenses)
+
+        val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "the host for Expenses is 'External'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new GetEmploymentExpensesConnector(httpClient, appConfig(externalHost))
+
+        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToExpenses)
+
+        val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+    }
+
     "return a DESEmploymentExpenses" when {
       "all values are present in the url" in {
         val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentExpenses]
