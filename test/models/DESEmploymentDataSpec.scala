@@ -63,9 +63,7 @@ class DESEmploymentDataSpec extends TestUtils {
       ),
       "pay" -> Json.obj(
         "taxablePayToDate" -> 34234.15,
-        "totalTaxToDate" -> 6782.92,
-        "payFrequency" -> "CALENDAR MONTHLY",
-        "paymentDate" -> "2020-04-23"
+        "totalTaxToDate" -> 6782.92
       )
     )
   )
