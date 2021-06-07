@@ -162,7 +162,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
     }
     "get all the data and form the correct model when only hmrc data exists but still get customer expenses" in {
 
-      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(customerDeclaredEmployments = Seq())))
+      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(customerDeclaredEmployments = None)))
       val taxYear = 2022
       val nino = "AA123456A"
 
@@ -199,7 +199,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
     }
     "get all the data and form the correct model when only customer data exists but still get hmrc expenses" in {
 
-      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(employments = Seq())))
+      val listExpectedResult: GetEmploymentListResponse = Right(Some(getEmploymentListModelExample.copy(employments = Some(Seq()))))
       val taxYear = 2022
       val nino = "AA123456A"
 
