@@ -180,7 +180,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
     "return a Right None when both empty" in {
       val expectedResult = Json.parse("""{}""")
 
-      stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", NOT_FOUND, expectedResult.toString())
+      stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResult.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
 
