@@ -244,14 +244,14 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
 
   val getEmploymentListModelExample: DESEmploymentList =
     DESEmploymentList(
-      employments = Seq(hmrcEmploymentModel),
-      customerDeclaredEmployments = Seq(customerEmploymentModel)
+      employments = Some(Seq(hmrcEmploymentModel)),
+      customerDeclaredEmployments = Some(Seq(customerEmploymentModel))
     )
 
   val getEmploymentListModelExampleWithNoData: DESEmploymentList =
     DESEmploymentList(
-      employments = Seq(),
-      customerDeclaredEmployments = Seq()
+      employments = None,
+      customerDeclaredEmployments = None
     )
 
   val customerEmploymentDataModelExample: DESEmploymentData =

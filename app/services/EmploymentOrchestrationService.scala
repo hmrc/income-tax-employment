@@ -42,7 +42,9 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
 
     getEmploymentList(nino, taxYear).flatMap {
-      case Right(Some(DESEmploymentList(hmrc, customer))) => getDataAndCreateEmploymentModel(nino, taxYear, hmrc, customer, mtditid)
+      case Right(Some(DESEmploymentList(hmrc, customer))) => getDataAndCreateEmploymentModel(
+        nino, taxYear, hmrc.getOrElse(Seq()), customer.getOrElse(Seq()), mtditid
+      )
       case Right(None) => Future(Right(AllEmploymentData(Seq.empty, None, Seq.empty, None)))
       case Left(error) => Future.successful(Left(error))
     }

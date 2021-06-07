@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
-import connectors.GetEmploymentListConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
+import connectors.GetEmploymentListConnectorSpec.{customerExpectedResponseBody, expectedResponseBody, filteredExpectedResponseBody, hmrcExpectedResponseBody}
 import helpers.WiremockSpec
 import models.DES.DESEmploymentList
 import models.{DesErrorBodyModel, DesErrorModel}
@@ -90,6 +90,28 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
       }
 
+      "when customer is empty" in {
+        val expectedResult = Json.parse(hmrcExpectedResponseBody).as[DESEmploymentList]
+        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, hmrcExpectedResponseBody)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get.get
+
+        result.employments mustBe expectedResult.employments
+        result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
+      }
+
+      "when hmrc is empty" in {
+        val expectedResult = Json.parse(customerExpectedResponseBody).as[DESEmploymentList]
+        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, customerExpectedResponseBody)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get.get
+
+        result.employments mustBe expectedResult.employments
+        result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
+      }
+
       "nino, taxYear and employmentId are present" in {
         val expectedResult = Json.parse(filteredExpectedResponseBody).as[DESEmploymentList]
 
@@ -150,6 +172,15 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec{
       )
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", NOT_FOUND, responseBody.toString())
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
+
+      result mustBe Right(None)
+    }
+    "return a Right None when both empty" in {
+      val expectedResult = Json.parse("""{}""")
+
+      stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", NOT_FOUND, expectedResult.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
 
@@ -247,6 +278,58 @@ object GetEmploymentListConnectorSpec {
       |			"dateIgnored": "2020-06-17T10:53:38Z"
       |		}
       |	],
+      |	"customerDeclaredEmployments": [
+      |		{
+      |			"employmentId": "00000000-0000-1000-8000-000000000003",
+      |			"employerName": "Vera Lynn",
+      |			"employerRef": "123/abc 001<Q>",
+      |			"payrollId": "123345657",
+      |			"startDate": "2020-06-17",
+      |			"cessationDate": "2020-06-17",
+      |			"submittedOn": "2020-06-17T10:53:38Z"
+      |		},
+      |  	{
+      |			"employmentId": "00000000-0000-2000-8000-000000000003",
+      |			"employerName": "Jackie Lynn",
+      |			"employerRef": "123/abc 001<Q>",
+      |			"payrollId": "123145657",
+      |			"startDate": "2020-06-18",
+      |			"cessationDate": "2020-06-17",
+      |			"submittedOn": "2020-06-17T10:53:38Z"
+      |		}
+      |	]
+      |}
+      |
+      |""".stripMargin
+  val hmrcExpectedResponseBody: String =
+    """
+      |{
+      |	"employments": [
+      |		{
+      |			"employmentId": "00000000-0000-1000-8000-000000000000",
+      |			"employerName": "Vera Lynn",
+      |			"employerRef": "123/abc 001<Q>",
+      |			"payrollId": "123345657",
+      |			"startDate": "2020-06-17",
+      |			"cessationDate": "2020-06-17",
+      |			"dateIgnored": "2020-06-17T10:53:38Z"
+      |		},
+      |  	{
+      |			"employmentId": "00000000-0000-2000-8000-000000000000",
+      |			"employerName": "Jackie Lynn",
+      |			"employerRef": "123/abc 001<Q>",
+      |			"payrollId": "123145657",
+      |			"startDate": "2020-06-18",
+      |			"cessationDate": "2020-06-17",
+      |			"dateIgnored": "2020-06-17T10:53:38Z"
+      |		}
+      |	]
+      |}
+      |
+      |""".stripMargin
+  val customerExpectedResponseBody: String =
+    """
+      |{
       |	"customerDeclaredEmployments": [
       |		{
       |			"employmentId": "00000000-0000-1000-8000-000000000003",

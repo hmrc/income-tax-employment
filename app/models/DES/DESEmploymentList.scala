@@ -19,8 +19,8 @@ package models.DES
 import models.frontend.{EmploymentBenefits, EmploymentData, EmploymentSource}
 import play.api.libs.json.{Json, OFormat}
 
-case class DESEmploymentList(employments: Seq[HmrcEmployment],
-                             customerDeclaredEmployments: Seq[CustomerEmployment])
+case class DESEmploymentList(employments: Option[Seq[HmrcEmployment]],
+                             customerDeclaredEmployments: Option[Seq[CustomerEmployment]])
 
 object DESEmploymentList {
   implicit val formats: OFormat[DESEmploymentList] = Json.format[DESEmploymentList]
