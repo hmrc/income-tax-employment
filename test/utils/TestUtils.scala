@@ -136,15 +136,15 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
             directorshipCeasedDate = Some("2020-02-12"),
             occPen = Some(false),
             disguisedRemuneration = Some(false),
-            Pay(
-              taxablePayToDate = 34234.15,
-              totalTaxToDate = 6782.92,
+            Some(Pay(
+              taxablePayToDate = Some(34234.15),
+              totalTaxToDate = Some(6782.92),
               tipsAndOtherPayments = Some(67676),
               payFrequency = Some("CALENDAR MONTHLY"),
               paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
               taxMonthNo = Some(2)
-            )
+            ))
           )),
           employmentBenefits = Some(
             EmploymentBenefits(
@@ -186,15 +186,15 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
               directorshipCeasedDate = Some("2020-02-12"),
               occPen = Some(false),
               disguisedRemuneration = Some(false),
-              Pay(
-                taxablePayToDate = 34234.15,
-                totalTaxToDate = 6782.92,
+              Some(Pay(
+                taxablePayToDate = Some(34234.15),
+                totalTaxToDate = Some(6782.92),
                 tipsAndOtherPayments = Some(67676),
                 payFrequency = Some("CALENDAR MONTHLY"),
                 paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
                 taxMonthNo = Some(2)
-              )
+              ))
             )
           ),
           employmentBenefits = Some(
@@ -274,16 +274,16 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           employerRef = Some("223/AB12399"),
           employerName = "Business 1"
         ),
-        pay = Pay(
-          taxablePayToDate = 34234.15,
-          totalTaxToDate = 6782.92,
+        pay = Some(Pay(
+          taxablePayToDate = Some(34234.15),
+          totalTaxToDate = Some(6782.92),
           tipsAndOtherPayments = Some(67676),
           payFrequency = Some("CALENDAR MONTHLY"),
           paymentDate = Some("2020-04-23"),
           taxWeekNo = Some(32),
           taxMonthNo = Some(2)
         )
-      )
+      ))
     )
 
   val hmrcEmploymentDataModelExample: DESEmploymentData =
@@ -306,15 +306,15 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           employerRef = Some("223/AB12399"),
           employerName = "Business 1"
         ),
-        pay = Pay(
-          taxablePayToDate = 34234.15,
-          totalTaxToDate = 6782.92,
+        pay = Some(Pay(
+          taxablePayToDate = Some(34234.15),
+          totalTaxToDate = Some(6782.92),
           tipsAndOtherPayments = Some(67676),
           payFrequency = Some("CALENDAR MONTHLY"),
           paymentDate = Some("2020-04-23"),
           taxWeekNo = Some(32),
           taxMonthNo = Some(2)
-        )
+        ))
       )
     )
 
@@ -386,16 +386,16 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           employerRef = None,
           employerName = "maggie"
         ),
-        pay = Pay(
-          taxablePayToDate = 34234.15,
-          totalTaxToDate = 6782.92,
+        pay = Some(Pay(
+          taxablePayToDate = Some(34234.15),
+          totalTaxToDate = Some(6782.92),
           tipsAndOtherPayments = None,
           payFrequency = None,
           paymentDate = None,
           taxWeekNo = None,
           taxMonthNo = None,
         )
-      )
+      ))
     )
 }
 

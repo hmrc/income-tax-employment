@@ -39,7 +39,7 @@ case class DESEmploymentDetails(employmentSequenceNumber: Option[String],
                                 occPen: Option[Boolean],
                                 disguisedRemuneration: Option[Boolean],
                                 employer: Employer,
-                                pay: Pay)
+                                pay: Option[Pay])
 
 object DESEmploymentDetails {
   implicit val formats: OFormat[DESEmploymentDetails] = Json.format[DESEmploymentDetails]
