@@ -29,7 +29,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec{
+class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val connector: GetEmploymentBenefitsConnector = app.injector.instanceOf[GetEmploymentBenefitsConnector]
 
