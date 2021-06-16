@@ -16,32 +16,23 @@
 
 package controllers
 
-import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import controllers.predicates.AuthorisedAction
-import models.shared.AddEmploymentRequestModel
-import play.api.libs.json.{JsSuccess, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.EmploymentService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-class CreateEmploymentController @Inject()(service: EmploymentService,
+class DeleteEmploymentController @Inject()(service: EmploymentService,
                                            authorisedAction: AuthorisedAction,
                                            cc: ControllerComponents)
                                           (implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def createEmployment(nino: String, taxYear:Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-    user.request.body.asJson.map(_.validate[AddEmploymentRequestModel]) match {
-      case Some(JsSuccess(model, _)) => responseHandler(service.createEmployment(nino, taxYear, model))
-      case _ => Future.successful(BadRequest)
-    }
-  }
-
-  private def responseHandler(serviceResponse: Future[CreateEmploymentResponse]): Future[Result] ={
-    serviceResponse.map {
-      case Right(responseModel) => Ok(Json.toJson(responseModel))
+  def deleteEmployment(nino: String, taxYear:Int, employmentId: String): Action[AnyContent] = authorisedAction.async { implicit user =>
+    service.deleteEmployment(nino, taxYear, employmentId).map {
+      case Right(_) => NoContent
       case Left(errorModel) => Status(errorModel.status)(Json.toJson(errorModel.toJson))
     }
   }

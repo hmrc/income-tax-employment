@@ -16,31 +16,35 @@
 
 package services
 
-import connectors.CreateEmploymentConnector
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector}
 import models.shared.{AddEmploymentRequestModel, AddEmploymentResponseModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
 import scala.concurrent.Future
 
-class CreateEmploymentServiceSpec extends TestUtils {
+class EmploymentServiceSpec extends TestUtils {
 
-  val mockConnector = mock[CreateEmploymentConnector]
-  val createEmploymentService = new CreateEmploymentService(mockConnector)
+  private val mockCreateEmploymentConnector = mock[CreateEmploymentConnector]
+  private val mockDeleteEmploymentConnector = mock[DeleteEmploymentConnector]
+  private val createEmploymentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector)
+
+  val nino = "entity_id"
+  val taxYear = 2022
+  val employmentId = "employment_id"
 
   "createEmployment" should {
 
-    val nino = "entity_id"
-    val taxYear = 2022
     val addEmploymentRequestModel = AddEmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
     val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
     "return Right containing employmentId" when {
 
       "createEmployment connector call succeeds" in {
-        (mockConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
+        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Right(addEmploymentResponseModel)))
 
@@ -52,13 +56,43 @@ class CreateEmploymentServiceSpec extends TestUtils {
 
     "return Left containing DesError" when {
       "the createEmployment connector call fails" in {
-        val desError = DesErrorModel(500, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
-        (mockConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
+        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Left(desError)))
 
         val result = createEmploymentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
+
+        await(result) mustBe Left(desError)
+      }
+    }
+  }
+
+  "deleteEmployment" should {
+
+    "return Right" when {
+
+      "deleteEmployment connector call succeeds" in {
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = createEmploymentService.deleteEmployment(nino, taxYear, employmentId)
+
+        await(result) mustBe Right(())
+      }
+    }
+
+    "return Left containing DesError" when {
+      "the deleteEmployment connector call fails" in {
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = createEmploymentService.deleteEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Left(desError)
       }
