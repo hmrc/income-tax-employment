@@ -4,4 +4,3 @@ GET   /income-tax/nino/:nino/sources/:employmentId   controllers.GetEmploymentDa
 
 
 GET   /income-tax/nino/:nino/sources   controllers.GetEmploymentsController.getEmployments(nino: String, taxYear: Int)
-

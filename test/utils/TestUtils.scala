@@ -116,7 +116,64 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       .returning(Future.failed(exception))
   }
 
-  val allEmploymentData =
+  val minFinancialData: DESEmploymentFinancialData =
+    DESEmploymentFinancialData(
+      Employment(
+        PayModel(
+          100.00,
+          100.00,
+          None
+        ),
+        None,
+        None,
+        None
+      )
+    )
+
+  val maxFinancialData: DESEmploymentFinancialData =
+    DESEmploymentFinancialData(
+      Employment(
+        PayModel(
+          100.00,
+          100.00,
+          Some(100.00)
+        ),
+        Some(LumpSums(
+          taxableLumpSumsAndCertainIncome = Some(TaxableLumpSumsAndCertainIncome(
+            amount = 100.00,
+            taxPaid = Some(10.00),
+            taxTakenOffInEmployment = Some(true)
+          )),
+          benefitFromEmployerFinancedRetirementScheme = Some(BenefitFromEmployerFinancedRetirementScheme(
+            amount = 100.00,
+            taxPaid = Some(10.00),
+            exemptAmount = Some(100.00),
+            taxTakenOffInEmployment = Some(true)
+          )),
+          redundancyCompensationPaymentsOverExemption = Some(RedundancyCompensationPaymentsOverExemption(
+            amount = 100.00,
+            taxPaid = Some(10.00),
+            taxTakenOffInEmployment = Some(true)
+          )),
+          redundancyCompensationPaymentsUnderExemption = Some(RedundancyCompensationPaymentsUnderExemption(
+            amount = 100.00
+          ))
+        )),
+        Some(Deductions(
+          studentLoans = Some(StudentLoans(
+            uglDeductionAmount = Some(100.00),
+            pglDeductionAmount = Some(100.00)
+          ))
+        )),
+        Some(Benefits(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+        ))
+      )
+    )
+
+  val allEmploymentData: AllEmploymentData =
     AllEmploymentData(
       Seq(
         EmploymentSource(
