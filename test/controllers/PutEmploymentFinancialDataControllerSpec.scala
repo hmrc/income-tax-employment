@@ -43,7 +43,7 @@ class PutEmploymentFinancialDataControllerSpec extends TestUtils {
   private val fakePutRequest = FakeRequest("PUT", s"/income-tax/income/employments/$nino/$taxYear/$employmentId").withHeaders("MTDITID" -> "1234567890")
 
   val jsonBody: JsValue = Json.parse("""{"employment":{"pay":{"taxablePayToDate":0,"totalTaxToDate":-99999999999.99}}}""")
-
+  val invalidJsonBody: JsValue = Json.parse("""{"employment":{"chicken":{"taxablePayToDate":0,"totalTaxToDate":-99999999999.99}}}""")
 
   def mockPutEmploymentFinancialDataValid(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
     Future[Either[DesErrorModel, Unit]]] = {
@@ -96,6 +96,22 @@ class PutEmploymentFinancialDataControllerSpec extends TestUtils {
           controller.createOrUpdateEmploymentFinancialData(nino, taxYear, employmentId)(fakePutRequest.withJsonBody(jsonBody))
         }
         status(result) mustBe NO_CONTENT
+      }
+
+      "return a BAD_REQUEST when called as an individual with invalid json data" in {
+        val result = {
+          mockAuth()
+          controller.createOrUpdateEmploymentFinancialData(nino, taxYear, employmentId)(fakePutRequest.withJsonBody(invalidJsonBody))
+        }
+        status(result) mustBe BAD_REQUEST
+      }
+
+      "return a BAD_REQUEST when called as an agent with invalid json data" in {
+        val result = {
+          mockAuthAsAgent()
+          controller.createOrUpdateEmploymentFinancialData(nino, taxYear, employmentId)(fakePutRequest.withJsonBody(invalidJsonBody))
+        }
+        status(result) mustBe BAD_REQUEST
       }
     }
 
