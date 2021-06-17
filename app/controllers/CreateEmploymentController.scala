@@ -21,13 +21,13 @@ import controllers.predicates.AuthorisedAction
 import models.shared.AddEmploymentRequestModel
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.CreateEmploymentService
+import services.EmploymentService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CreateEmploymentController @Inject()(service: CreateEmploymentService,
+class CreateEmploymentController @Inject()(service: EmploymentService,
                                            authorisedAction: AuthorisedAction,
                                            cc: ControllerComponents)
                                           (implicit ec: ExecutionContext) extends BackendController(cc) {

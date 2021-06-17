@@ -24,7 +24,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
-import services.CreateEmploymentService
+import services.EmploymentService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
@@ -32,7 +32,7 @@ import scala.concurrent.Future
 
 class CreateEmploymentControllerSpec extends TestUtils {
 
-  val createEmploymentService: CreateEmploymentService = mock[CreateEmploymentService]
+  val createEmploymentService: EmploymentService = mock[EmploymentService]
   val createEmploymentController = new CreateEmploymentController(createEmploymentService, authorisedAction, mockControllerComponents)
 
   val nino = "tax_entity_id"
