@@ -48,6 +48,6 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
                                    (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
 
-    deleteEmploymentFinancialDataConnector.deleteEmploymentFinancial(nino, taxYear, employmentId)
+    deleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(nino, taxYear, employmentId)
   }
 }

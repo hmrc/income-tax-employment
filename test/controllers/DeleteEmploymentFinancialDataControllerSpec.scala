@@ -16,6 +16,96 @@
 
 package controllers
 
-class DeleteEmploymentFinancialDataControllerSpec {
+import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
+import models.{DesErrorBodyModel, DesErrorModel}
+import org.scalamock.handlers.CallHandler4
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE, UNAUTHORIZED, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
+import services.EmploymentService
+import uk.gov.hmrc.http.HeaderCarrier
+import utils.TestUtils
 
+import scala.concurrent.Future
+
+class DeleteEmploymentFinancialDataControllerSpec extends TestUtils {
+
+  val employmentService: EmploymentService = mock[EmploymentService]
+  val deleteEmploymentFinancialDataController = new DeleteEmploymentFinancialDataController(employmentService, authorisedAction, mockControllerComponents)
+
+  val nino = "tax_entity_id"
+  val employmentId = "employment_id"
+  val taxYear = 2020
+
+  "deleteEmploymentFinancialData" when {
+
+    def mockDeleteEmploymentFinancialDataSuccess(): CallHandler4[String, Int, String, HeaderCarrier, Future[DeleteEmploymentFinancialDataResponse]] = {
+      val response: DeleteEmploymentFinancialDataResponse = Right(())
+      (employmentService.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+        .expects(*, *, *, *)
+        .returning(Future.successful(response))
+    }
+
+    def mockDeleteEmploymentFinancialDataFailure(httpStatus: Int): CallHandler4[String, Int, String,
+      HeaderCarrier, Future[DeleteEmploymentFinancialDataResponse]] = {
+      val error: DeleteEmploymentFinancialDataResponse = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
+      (employmentService.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+        .expects(*, *, *, *)
+        .returning(Future.successful(error))
+    }
+
+    val mtditid: String = "1234567890"
+    val fakeRequest = FakeRequest("POST", "/TBC").withHeaders("mtditid" -> mtditid)
+
+    "request is from Individual" should {
+      "return a 204 response when delete is successful" in {
+        val result = {
+          mockAuth()
+          mockDeleteEmploymentFinancialDataSuccess()
+          deleteEmploymentFinancialDataController.deleteEmploymentFinancialData(nino, taxYear, employmentId)(fakeRequest)
+        }
+        status(result) mustBe NO_CONTENT
+      }
+
+      Seq(UNAUTHORIZED, NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { httpErrorCode =>
+        s"return a $httpErrorCode response when DES returns $httpErrorCode" in {
+          val result = {
+            mockAuth()
+            mockDeleteEmploymentFinancialDataFailure(httpErrorCode)
+            deleteEmploymentFinancialDataController.deleteEmploymentFinancialData(nino, taxYear, employmentId)(fakeRequest)
+          }
+
+          status(result) mustBe httpErrorCode
+          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
+        }
+      }
+
+    }
+
+    "request is from Agent" should {
+      "return a 204 response when delete is successful" in {
+        val result = {
+          mockAuthAsAgent()
+          mockDeleteEmploymentFinancialDataSuccess()
+          deleteEmploymentFinancialDataController.deleteEmploymentFinancialData(nino, taxYear, employmentId)(fakeRequest)
+        }
+        status(result) mustBe NO_CONTENT
+      }
+
+      Seq(UNAUTHORIZED, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { httpErrorCode =>
+        s"return a $httpErrorCode response when DES returns $httpErrorCode" in {
+          val result = {
+            mockAuthAsAgent()
+            mockDeleteEmploymentFinancialDataFailure(httpErrorCode)
+            deleteEmploymentFinancialDataController.deleteEmploymentFinancialData(nino, taxYear, employmentId)(fakeRequest)
+          }
+          status(result) mustBe httpErrorCode
+          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
+        }
+      }
+    }
+
+  }
 }
+

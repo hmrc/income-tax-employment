@@ -106,7 +106,7 @@ class EmploymentServiceSpec extends TestUtils {
 
       "deleteEmploymentFinancialData connector call succeeds" in {
 
-        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancial(_: String, _: Int, _: String)(_: HeaderCarrier))
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
@@ -122,7 +122,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val desError = DesErrorModel(500, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
-        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancial(_: String, _: Int, _: String)(_: HeaderCarrier))
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 

@@ -27,7 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeleteEmploymentFinancialDataConnector@Inject()(val http: HttpClient,
                                                       val appConfig: AppConfig)(implicit ec: ExecutionContext) extends DesConnector {
 
-  def deleteEmploymentFinancial(nino: String, taxYear: Int, employmentId: String)(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
+  def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
+                                   (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
 
     val uri: String = appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
