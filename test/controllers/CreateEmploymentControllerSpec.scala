@@ -32,8 +32,8 @@ import scala.concurrent.Future
 
 class CreateEmploymentControllerSpec extends TestUtils {
 
-  val createEmploymentService: EmploymentService = mock[EmploymentService]
-  val createEmploymentController = new CreateEmploymentController(createEmploymentService, authorisedAction, mockControllerComponents)
+  val employmentService: EmploymentService = mock[EmploymentService]
+  val createEmploymentController = new CreateEmploymentController(employmentService, authorisedAction, mockControllerComponents)
 
   val nino = "tax_entity_id"
   val taxYear = 2020
@@ -42,14 +42,14 @@ class CreateEmploymentControllerSpec extends TestUtils {
 
     def mockCreateOrAmendEmploymentSuccess(): CallHandler4[String, Int, AddEmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
       val response: CreateEmploymentResponse = Right(AddEmploymentResponseModel("employment_id"))
-      (createEmploymentService.createEmployment(_: String, _: Int, _: AddEmploymentRequestModel)(_: HeaderCarrier))
+      (employmentService.createEmployment(_: String, _: Int, _: AddEmploymentRequestModel)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(response))
     }
 
     def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, AddEmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
       val error: CreateEmploymentResponse = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
-      (createEmploymentService.createEmployment(_: String, _: Int, _: AddEmploymentRequestModel)(_: HeaderCarrier))
+      (employmentService.createEmployment(_: String, _: Int, _: AddEmploymentRequestModel)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(error))
     }
