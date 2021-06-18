@@ -31,7 +31,8 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockCreateEmploymentConnector = mock[CreateEmploymentConnector]
   private val mockDeleteEmploymentConnector = mock[DeleteEmploymentConnector]
   private val mockDeleteEmploymentFinancialDataConnector = mock[DeleteEmploymentFinancialDataConnector]
-  private val employmentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector, mockDeleteEmploymentFinancialDataConnector)
+  private val employmentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector,
+    mockDeleteEmploymentFinancialDataConnector)
 
   val nino = "entity_id"
   val taxYear = 2022
@@ -120,7 +121,7 @@ class EmploymentServiceSpec extends TestUtils {
 
       "the deleteEmploymentFinancialData connector fails" in {
 
-        val desError = DesErrorModel(500, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
