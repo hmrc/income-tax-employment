@@ -19,7 +19,7 @@ package controllers
 import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalamock.handlers.CallHandler4
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE, UNAUTHORIZED, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
@@ -56,7 +56,7 @@ class DeleteEmploymentFinancialDataControllerSpec extends TestUtils {
     }
 
     val mtditid: String = "1234567890"
-    val fakeRequest = FakeRequest("POST", "/TBC").withHeaders("mtditid" -> mtditid)
+    val fakeRequest = FakeRequest("DELETE", "/TBC").withHeaders("mtditid" -> mtditid)
 
     "request is from Individual" should {
       "return a 204 response when delete is successful" in {
@@ -68,7 +68,7 @@ class DeleteEmploymentFinancialDataControllerSpec extends TestUtils {
         status(result) mustBe NO_CONTENT
       }
 
-      Seq(UNAUTHORIZED, NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { httpErrorCode =>
+      Seq(NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { httpErrorCode =>
         s"return a $httpErrorCode response when DES returns $httpErrorCode" in {
           val result = {
             mockAuth()
@@ -93,7 +93,7 @@ class DeleteEmploymentFinancialDataControllerSpec extends TestUtils {
         status(result) mustBe NO_CONTENT
       }
 
-      Seq(UNAUTHORIZED, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { httpErrorCode =>
+      Seq(NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { httpErrorCode =>
         s"return a $httpErrorCode response when DES returns $httpErrorCode" in {
           val result = {
             mockAuthAsAgent()
