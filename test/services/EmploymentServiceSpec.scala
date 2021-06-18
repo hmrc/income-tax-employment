@@ -16,7 +16,7 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector}
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector}
 import models.shared.{AddEmploymentRequestModel, AddEmploymentResponseModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
@@ -30,7 +30,9 @@ class EmploymentServiceSpec extends TestUtils {
 
   private val mockCreateEmploymentConnector = mock[CreateEmploymentConnector]
   private val mockDeleteEmploymentConnector = mock[DeleteEmploymentConnector]
-  private val createEmploymentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector)
+  private val mockDeleteEmploymentFinancialDataConnector = mock[DeleteEmploymentFinancialDataConnector]
+  private val employmentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector,
+    mockDeleteEmploymentFinancialDataConnector)
 
   val nino = "entity_id"
   val taxYear = 2022
@@ -48,7 +50,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Right(addEmploymentResponseModel)))
 
-        val result = createEmploymentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
+        val result = employmentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
 
         await(result) mustBe Right(addEmploymentResponseModel)
       }
@@ -62,7 +64,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = createEmploymentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
+        val result = employmentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
 
         await(result) mustBe Left(desError)
       }
@@ -78,7 +80,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
-        val result = createEmploymentService.deleteEmployment(nino, taxYear, employmentId)
+        val result = employmentService.deleteEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Right(())
       }
@@ -92,11 +94,45 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = createEmploymentService.deleteEmployment(nino, taxYear, employmentId)
+        val result = employmentService.deleteEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Left(desError)
       }
     }
+  }
+
+  "deleteEmploymentFinancialData" should {
+
+    "return Right" when {
+
+      "deleteEmploymentFinancialData connector call succeeds" in {
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+
+        await(result) mustBe Right(())
+      }
+    }
+
+    "return Left containing DES Error" when {
+
+      "the deleteEmploymentFinancialData connector fails" in {
+
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+
+        await(result) mustBe Left(desError)
+      }
+    }
+
   }
 
 }

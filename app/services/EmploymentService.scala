@@ -16,9 +16,10 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector}
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector}
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
+import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
 import models.shared.AddEmploymentRequestModel
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -26,8 +27,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentConnector, deleteEmploymentConnector: DeleteEmploymentConnector) {
-
+class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentConnector,
+                                  deleteEmploymentConnector: DeleteEmploymentConnector,
+                                  deleteEmploymentFinancialDataConnector: DeleteEmploymentFinancialDataConnector) {
 
   def createEmployment(nino: String, taxYear: Int, employmentModel: AddEmploymentRequestModel)
                       (implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
@@ -41,5 +43,11 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
 
     deleteEmploymentConnector.deleteEmployment(nino, taxYear, employmentId)
 
+  }
+
+  def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
+                                   (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
+
+    deleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(nino, taxYear, employmentId)
   }
 }
