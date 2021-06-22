@@ -20,7 +20,7 @@ import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteE
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
-import models.shared.AddEmploymentRequestModel
+import models.shared.EmploymentRequestModel
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -31,7 +31,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   deleteEmploymentConnector: DeleteEmploymentConnector,
                                   deleteEmploymentFinancialDataConnector: DeleteEmploymentFinancialDataConnector) {
 
-  def createEmployment(nino: String, taxYear: Int, employmentModel: AddEmploymentRequestModel)
+  def createEmployment(nino: String, taxYear: Int, employmentModel: EmploymentRequestModel)
                       (implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
 
     createEmploymentConnector.createEmployment(nino, taxYear, employmentModel)

@@ -18,7 +18,7 @@ package controllers
 
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import controllers.predicates.AuthorisedAction
-import models.shared.AddEmploymentRequestModel
+import models.shared.EmploymentRequestModel
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.EmploymentService
@@ -33,7 +33,7 @@ class CreateEmploymentController @Inject()(service: EmploymentService,
                                           (implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def createEmployment(nino: String, taxYear:Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-    user.request.body.asJson.map(_.validate[AddEmploymentRequestModel]) match {
+    user.request.body.asJson.map(_.validate[EmploymentRequestModel]) match {
       case Some(JsSuccess(model, _)) => responseHandler(service.createEmployment(nino, taxYear, model))
       case _ => Future.successful(BadRequest)
     }

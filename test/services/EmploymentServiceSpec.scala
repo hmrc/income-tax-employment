@@ -17,7 +17,7 @@
 package services
 
 import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector}
-import models.shared.{AddEmploymentRequestModel, AddEmploymentResponseModel}
+import models.shared.{EmploymentRequestModel, AddEmploymentResponseModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
 import play.api.http.Status.INTERNAL_SERVER_ERROR
@@ -40,13 +40,13 @@ class EmploymentServiceSpec extends TestUtils {
 
   "createEmployment" should {
 
-    val addEmploymentRequestModel = AddEmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+    val addEmploymentRequestModel = EmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
     val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
     "return Right containing employmentId" when {
 
       "createEmployment connector call succeeds" in {
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
+        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:EmploymentRequestModel)(_: HeaderCarrier))
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Right(addEmploymentResponseModel)))
 
@@ -60,7 +60,7 @@ class EmploymentServiceSpec extends TestUtils {
       "the createEmployment connector call fails" in {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
+        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:EmploymentRequestModel)(_: HeaderCarrier))
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Left(desError)))
 
