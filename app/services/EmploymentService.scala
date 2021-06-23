@@ -16,10 +16,11 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector}
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, UpdateEmploymentConnector}
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
+import connectors.httpParsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
 import models.shared.EmploymentRequestModel
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -29,7 +30,8 @@ import scala.concurrent.Future
 @Singleton
 class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentConnector,
                                   deleteEmploymentConnector: DeleteEmploymentConnector,
-                                  deleteEmploymentFinancialDataConnector: DeleteEmploymentFinancialDataConnector) {
+                                  deleteEmploymentFinancialDataConnector: DeleteEmploymentFinancialDataConnector,
+                                  updateEmploymentConnector: UpdateEmploymentConnector) {
 
   def createEmployment(nino: String, taxYear: Int, employmentModel: EmploymentRequestModel)
                       (implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
@@ -42,6 +44,13 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                       (implicit hc: HeaderCarrier): Future[DeleteEmploymentResponse] = {
 
     deleteEmploymentConnector.deleteEmployment(nino, taxYear, employmentId)
+
+  }
+
+  def updateEmployment(nino: String, taxYear: Int, employmentId: String, employmentModel: EmploymentRequestModel)
+                      (implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
+
+    updateEmploymentConnector.updateEmployment(nino, taxYear, employmentId, employmentModel)
 
   }
 
