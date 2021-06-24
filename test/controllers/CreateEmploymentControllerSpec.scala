@@ -17,7 +17,7 @@
 package controllers
 
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
-import models.shared.{AddEmploymentRequestModel, AddEmploymentResponseModel}
+import models.shared.{EmploymentRequestModel, AddEmploymentResponseModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
@@ -40,16 +40,16 @@ class CreateEmploymentControllerSpec extends TestUtils {
 
   "createEmployment" when {
 
-    def mockCreateOrAmendEmploymentSuccess(): CallHandler4[String, Int, AddEmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
+    def mockCreateOrAmendEmploymentSuccess(): CallHandler4[String, Int, EmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
       val response: CreateEmploymentResponse = Right(AddEmploymentResponseModel("employment_id"))
-      (employmentService.createEmployment(_: String, _: Int, _: AddEmploymentRequestModel)(_: HeaderCarrier))
+      (employmentService.createEmployment(_: String, _: Int, _: EmploymentRequestModel)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(response))
     }
 
-    def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, AddEmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
+    def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, EmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
       val error: CreateEmploymentResponse = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
-      (employmentService.createEmployment(_: String, _: Int, _: AddEmploymentRequestModel)(_: HeaderCarrier))
+      (employmentService.createEmployment(_: String, _: Int, _: EmploymentRequestModel)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(error))
     }

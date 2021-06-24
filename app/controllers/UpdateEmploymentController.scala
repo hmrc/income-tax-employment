@@ -16,7 +16,7 @@
 
 package controllers
 
-import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
+import connectors.httpParsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
 import controllers.predicates.AuthorisedAction
 import models.shared.EmploymentRequestModel
 import play.api.libs.json.{JsSuccess, Json}
@@ -27,21 +27,21 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CreateEmploymentController @Inject()(service: EmploymentService,
+class UpdateEmploymentController @Inject()(service: EmploymentService,
                                            authorisedAction: AuthorisedAction,
                                            cc: ControllerComponents)
                                           (implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def createEmployment(nino: String, taxYear:Int): Action[AnyContent] = authorisedAction.async { implicit user =>
+  def updateEmployment(nino: String, taxYear:Int, employmentId: String): Action[AnyContent] = authorisedAction.async { implicit user =>
     user.request.body.asJson.map(_.validate[EmploymentRequestModel]) match {
-      case Some(JsSuccess(model, _)) => responseHandler(service.createEmployment(nino, taxYear, model))
+      case Some(JsSuccess(model, _)) => responseHandler(service.updateEmployment(nino, taxYear, employmentId,model))
       case _ => Future.successful(BadRequest)
     }
   }
 
-  private def responseHandler(serviceResponse: Future[CreateEmploymentResponse]): Future[Result] ={
+  private def responseHandler(serviceResponse: Future[UpdateEmploymentDataResponse]): Future[Result] ={
     serviceResponse.map {
-      case Right(responseModel) => Ok(Json.toJson(responseModel))
+      case Right(_) => Status(NO_CONTENT)
       case Left(errorModel) => Status(errorModel.status)(Json.toJson(errorModel.toJson))
     }
   }

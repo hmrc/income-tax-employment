@@ -16,8 +16,8 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector}
-import models.shared.{AddEmploymentRequestModel, AddEmploymentResponseModel}
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, UpdateEmploymentConnector}
+import models.shared.{AddEmploymentResponseModel, EmploymentRequestModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
 import play.api.http.Status.INTERNAL_SERVER_ERROR
@@ -31,8 +31,9 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockCreateEmploymentConnector = mock[CreateEmploymentConnector]
   private val mockDeleteEmploymentConnector = mock[DeleteEmploymentConnector]
   private val mockDeleteEmploymentFinancialDataConnector = mock[DeleteEmploymentFinancialDataConnector]
+  private val mockUpdateEmploymentDataConnector = mock[UpdateEmploymentConnector]
   private val employmentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector,
-    mockDeleteEmploymentFinancialDataConnector)
+    mockDeleteEmploymentFinancialDataConnector, mockUpdateEmploymentDataConnector)
 
   val nino = "entity_id"
   val taxYear = 2022
@@ -40,13 +41,13 @@ class EmploymentServiceSpec extends TestUtils {
 
   "createEmployment" should {
 
-    val addEmploymentRequestModel = AddEmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+    val addEmploymentRequestModel = EmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
     val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
     "return Right containing employmentId" when {
 
       "createEmployment connector call succeeds" in {
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
+        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:EmploymentRequestModel)(_: HeaderCarrier))
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Right(addEmploymentResponseModel)))
 
@@ -60,11 +61,43 @@ class EmploymentServiceSpec extends TestUtils {
       "the createEmployment connector call fails" in {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:AddEmploymentRequestModel)(_: HeaderCarrier))
+        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:EmploymentRequestModel)(_: HeaderCarrier))
           .expects(nino, taxYear, addEmploymentRequestModel, *)
           .returning(Future.successful(Left(desError)))
 
         val result = employmentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
+
+        await(result) mustBe Left(desError)
+      }
+    }
+  }
+
+  "updateEmployment" should {
+
+    val updateEmploymentRequestModel = EmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+
+    "return a right with no content" when {
+
+      "updateEmployment connector call succeeds" in {
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _:String, _:EmploymentRequestModel)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, updateEmploymentRequestModel, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.updateEmployment(nino, taxYear, employmentId, updateEmploymentRequestModel)
+
+        await(result) mustBe Right(())
+      }
+    }
+
+    "return Left containing DesError" when {
+      "the updateEmployment connector call fails" in {
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _:String, _:EmploymentRequestModel)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, updateEmploymentRequestModel, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.updateEmployment(nino, taxYear, employmentId, updateEmploymentRequestModel)
 
         await(result) mustBe Left(desError)
       }

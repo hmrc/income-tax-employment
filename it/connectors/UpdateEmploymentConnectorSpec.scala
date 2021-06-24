@@ -19,7 +19,7 @@ package connectors
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
 import helpers.WiremockSpec
-import models.shared.{EmploymentRequestModel, AddEmploymentResponseModel}
+import models.shared.EmploymentRequestModel
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
 import org.scalatestplus.play.PlaySpec
@@ -30,9 +30,9 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
 
-class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
+class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
-  lazy val connector: CreateEmploymentConnector = app.injector.instanceOf[CreateEmploymentConnector]
+  lazy val connector: UpdateEmploymentConnector = app.injector.instanceOf[UpdateEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
   def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
@@ -41,21 +41,18 @@ class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
   val taxYear = 2022
 
-  ".CreateEmploymentConnector" should {
+  ".UpdateEmploymentConnector" should {
 
     val appConfigWithInternalHost = appConfig("localhost")
     val appConfigWithExternalHost = appConfig("127.0.0.1")
 
     val nino = "taxable_entity_id"
+    val employmentId = "employment_id"
+    val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
+    val updateEmploymentModel = EmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
 
-    val addEmploymentModel = EmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
-
-    val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom"
 
     "include internal headers" when {
-      val expectedResult = AddEmploymentResponseModel("employmendId")
-      val desResponseBody = Json.toJson(expectedResult).toString()
-      val desRequestBody = Json.toJson(addEmploymentModel).toString()
 
       val headersSentToBenefits = Seq(
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
@@ -63,56 +60,37 @@ class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
       "the host for DES is 'Internal'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new CreateEmploymentConnector(httpClient, appConfigWithInternalHost)
+        val connector = new UpdateEmploymentConnector(httpClient, appConfigWithInternalHost)
 
-        stubPostWithResponseBody(url, OK, desRequestBody, desResponseBody, headersSentToBenefits)
+        stubPutWithoutResponseBody(url, Json.toJson(updateEmploymentModel).toString(), NO_CONTENT, headersSentToBenefits)
 
-        val result = await(connector.createEmployment(nino, taxYear, addEmploymentModel)(hc))
+        val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
 
-        result mustBe Right(expectedResult)
+        result mustBe Right(())
       }
 
       "the host for DES is 'External'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new CreateEmploymentConnector(httpClient, appConfigWithExternalHost)
+        val connector = new UpdateEmploymentConnector(httpClient, appConfigWithExternalHost)
 
-        stubPostWithResponseBody(url, OK, desRequestBody, desResponseBody, headersSentToBenefits)
+        stubPutWithoutResponseBody(url, Json.toJson(updateEmploymentModel).toString(), NO_CONTENT)
 
-        val result = await(connector.createEmployment(nino, taxYear, addEmploymentModel)(hc))
+        val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
 
-        result mustBe Right(expectedResult)
-      }
-    }
-
-    "return error" when {
-      val expectedResult = Left(DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(true)))
-
-      "when des returns 200 but the schema of the json response body is unexpected" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new CreateEmploymentConnector(httpClient, appConfigWithInternalHost)
-
-        stubPostWithResponseBody(url, OK, Json.toJson(addEmploymentModel).toString(), "{}")
-
-        val result = await(connector.createEmployment(nino, taxYear, addEmploymentModel)(hc))
-
-        result mustBe expectedResult
+        result mustBe Right(())
       }
     }
 
     "handle error" when {
       val desErrorBodyModel = DesErrorBodyModel("DES_CODE", "DES_REASON")
 
-      val desRequestBody = Json.toJson(addEmploymentModel).toString()
-
-      Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
+      Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"DES returns $status" in {
           val desError = DesErrorModel(status, desErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
 
-          stubPostWithResponseBody(url, status, desRequestBody, desError.toJson.toString())
-
-          val result = await(connector.createEmployment(nino, taxYear, addEmploymentModel))
-
+          stubPutWithResponseBody(url, status, Json.toJson(updateEmploymentModel).toString(), desError.toJson.toString())
+          val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel))
           result mustBe Left(desError)
         }
       }
@@ -121,9 +99,9 @@ class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        stubPostWithResponseBody(url, BAD_GATEWAY, desRequestBody, desError.toJson.toString())
+        stubPutWithResponseBody(url, BAD_GATEWAY, Json.toJson(updateEmploymentModel).toString(),desError.toJson.toString())
 
-        val result = await(connector.createEmployment(nino, taxYear, addEmploymentModel))
+        val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel))
 
         result mustBe Left(desError)
       }
