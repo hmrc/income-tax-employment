@@ -17,7 +17,8 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.IgnoreEmploymentHttpParser.{IgnoreEmploymentResponse,IgnoreEmploymentHttpReads}
+import connectors.httpParsers.IgnoreEmploymentHttpParser.{IgnoreEmploymentHttpReads, IgnoreEmploymentResponse}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
@@ -34,7 +35,7 @@ class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
       appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore"
 
     def desCall(implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
-      http.PUTString[IgnoreEmploymentResponse](ignoreEmploymentUri, "")
+      http.PUT[JsValue,IgnoreEmploymentResponse](ignoreEmploymentUri, Json.parse("""{}"""))
     }
 
     desCall(desHeaderCarrier(ignoreEmploymentUri))
