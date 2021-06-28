@@ -125,6 +125,15 @@ trait WiremockStubHelpers {
           .withStatus(status)
           .withHeader("Content-Type", "application/json; charset=utf-8")))
 
+
+  def stubPutWithResponseAndWithoutRequestBody(url: String, status: Int,  response: String): StubMapping =
+    stubFor(put(urlEqualTo(url))
+      .willReturn(
+        aResponse()
+          .withStatus(status)
+          .withBody(response)
+          .withHeader("Content-Type", "application/json; charset=utf-8")))
+
   def verifyPostWithRequestBody(url: String, times: Int, body: JsValue): Unit =
     verify(times, postRequestedFor(urlEqualTo(url))
       .withRequestBody(equalToJson(body.toString(), true, true))

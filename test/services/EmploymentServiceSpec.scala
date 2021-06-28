@@ -16,7 +16,7 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, UpdateEmploymentConnector}
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, IgnoreEmploymentConnector, UpdateEmploymentConnector}
 import models.shared.{AddEmploymentResponseModel, EmploymentRequestModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
@@ -32,8 +32,9 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockDeleteEmploymentConnector = mock[DeleteEmploymentConnector]
   private val mockDeleteEmploymentFinancialDataConnector = mock[DeleteEmploymentFinancialDataConnector]
   private val mockUpdateEmploymentDataConnector = mock[UpdateEmploymentConnector]
+  private val mockIgnoreEmploymentConnector = mock[IgnoreEmploymentConnector]
   private val employmentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector,
-    mockDeleteEmploymentFinancialDataConnector, mockUpdateEmploymentDataConnector)
+    mockDeleteEmploymentFinancialDataConnector, mockUpdateEmploymentDataConnector,mockIgnoreEmploymentConnector)
 
   val nino = "entity_id"
   val taxYear = 2022
@@ -161,6 +162,40 @@ class EmploymentServiceSpec extends TestUtils {
           .returning(Future.successful(Left(desError)))
 
         val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+
+        await(result) mustBe Left(desError)
+      }
+    }
+
+  }
+
+  "ignoreEmployment" should {
+
+    "return Right" when {
+
+      "ignoreEmployment connector call succeeds" in {
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+
+        await(result) mustBe Right(())
+      }
+    }
+
+    "return Left containing DES Error" when {
+
+      "the ignoreEmployment connector fails" in {
+
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.ignoreEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Left(desError)
       }
