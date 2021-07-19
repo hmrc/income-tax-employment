@@ -30,7 +30,7 @@ class GetEmploymentDataConnector @Inject()(val http: HttpClient,
   def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
 
     val incomeSourcesUri: String =
-      appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId?view=$view"
+      appConfig.internalFrameworkBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId?view=$view"
 
     def desCall(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
       http.GET[GetEmploymentDataResponse](incomeSourcesUri)

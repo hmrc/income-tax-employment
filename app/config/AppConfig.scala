@@ -28,6 +28,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
   val desBaseUrl: String = servicesConfig.baseUrl("des")
+  val internalFrameworkBaseUrl: String = servicesConfig.baseUrl("internal-framework")
   val benefitsBaseUrl: String = servicesConfig.baseUrl("income-tax-benefits")
   val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
 
