@@ -34,4 +34,6 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val environment: String = config.get[String]("microservice.services.des.environment")
   val authorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")
+  val integrationFrameworkEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+  val integrationFrameworkAuthorisationToken: String = config.get[String]("microservice.services.integration-framework.authorisation-token")
 }
