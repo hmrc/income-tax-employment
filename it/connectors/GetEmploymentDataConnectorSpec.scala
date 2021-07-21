@@ -35,8 +35,8 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
   lazy val connector: GetEmploymentDataConnector = app.injector.instanceOf[GetEmploymentDataConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  def appConfig(integrationFrameworkHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val nino: String = "123456789"
@@ -49,7 +49,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
     "include internal headers" when {
       val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentData])
 
-      val headersSentToDes = Seq(
+      val headersSentToIntegrationFramework = Seq(
         new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
       )
@@ -57,22 +57,22 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       val internalHost = "localhost"
       val externalHost = "127.0.0.1"
 
-      "the host for DES is 'Internal'" in {
+      "the host for integration framework is 'Internal'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new GetEmploymentDataConnector(httpClient, appConfig(internalHost))
 
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToDes)
+        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToIntegrationFramework)
 
         val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
 
         result mustBe Right(expectedResult)
       }
 
-      "the host for DES is 'External'" in {
+      "the host for integration framework is 'External'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new GetEmploymentDataConnector(httpClient, appConfig(externalHost))
 
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToDes)
+        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToIntegrationFramework)
 
         val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
 
@@ -196,7 +196,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       result mustBe Left(expectedResult)
     }
 
-    "return an Internal Server Error when DES throws an unexpected result that is parsable" in {
+    "return an Internal Server Error when integration framework throws an unexpected result that is parsable" in {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
@@ -210,7 +210,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec{
       result mustBe Left(expectedResult)
     }
 
-    "return an Internal Server Error when DES throws an unexpected result that isn't parsable" in {
+    "return an Internal Server Error when integration framework throws an unexpected result that isn't parsable" in {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
