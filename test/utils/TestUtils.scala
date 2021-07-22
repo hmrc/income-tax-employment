@@ -24,7 +24,7 @@ import config.AppConfig
 import controllers.predicates.AuthorisedAction
 import models.DES._
 import models.frontend._
-import models.shared.{Benefits, Expenses, Pay}
+import models.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
@@ -201,6 +201,12 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
               paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
               taxMonthNo = Some(2)
+            )),
+            Some(Deductions(
+              studentLoans = Some(StudentLoans(
+                uglDeductionAmount = Some(100),
+                pglDeductionAmount = Some(100)
+              ))
             ))
           )),
           employmentBenefits = Some(
@@ -217,6 +223,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       ),
       hmrcExpenses = Some(
         EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
@@ -251,6 +258,12 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
                 paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
                 taxMonthNo = Some(2)
+              )),
+              Some(Deductions(
+                studentLoans = Some(StudentLoans(
+                  uglDeductionAmount = Some(100),
+                  pglDeductionAmount = Some(100)
+                ))
               ))
             )
           ),
@@ -268,6 +281,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       ),
       customerExpenses = Some(
         EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
@@ -339,8 +353,14 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           paymentDate = Some("2020-04-23"),
           taxWeekNo = Some(32),
           taxMonthNo = Some(2)
-        )
-      ))
+        )),
+        Some(Deductions(
+          studentLoans = Some(StudentLoans(
+            uglDeductionAmount = Some(100.00),
+            pglDeductionAmount = Some(100.00)
+          ))
+        ))
+      )
     )
 
   val hmrcEmploymentDataModelExample: DESEmploymentData =
@@ -371,6 +391,12 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           paymentDate = Some("2020-04-23"),
           taxWeekNo = Some(32),
           taxMonthNo = Some(2)
+        )),
+        Some(Deductions(
+          studentLoans = Some(StudentLoans(
+            uglDeductionAmount = Some(100.00),
+            pglDeductionAmount = Some(100.00)
+          ))
         ))
       )
     )
@@ -406,7 +432,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
   val hmrcExpenses: DESEmploymentExpenses = DESEmploymentExpenses(
     submittedOn = Some("2020-01-04T05:01:01Z"),
     source = Some("HMRC-HELD"),
-    dateIgnored = None,
+    dateIgnored = Some("2020-01-04T05:01:01Z"),
     totalExpenses = Some(800),
     expenses = Some(Expenses(
       Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
@@ -416,7 +442,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
   val customerExpenses: DESEmploymentExpenses = DESEmploymentExpenses(
     submittedOn = Some("2020-01-04T05:01:01Z"),
     source = Some("CUSTOMER"),
-    dateIgnored = None,
+    dateIgnored = Some("2020-01-04T05:01:01Z"),
     totalExpenses = Some(800),
     expenses = Some(Expenses(
       Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
@@ -451,8 +477,9 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           paymentDate = None,
           taxWeekNo = None,
           taxMonthNo = None,
-        )
-      ))
+        )),
+        None
+      )
     )
 }
 

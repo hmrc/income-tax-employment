@@ -27,7 +27,7 @@ case class DESEmploymentExpenses(submittedOn: Option[String],
                                  expenses: Option[Expenses]){
 
   def toEmploymentExpenses: EmploymentExpenses = {
-    EmploymentExpenses(submittedOn,totalExpenses,expenses)
+    EmploymentExpenses(submittedOn, dateIgnored, totalExpenses ,expenses)
   }
 }
 
