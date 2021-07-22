@@ -30,10 +30,11 @@ class DeleteEmploymentController @Inject()(service: EmploymentService,
                                            cc: ControllerComponents)
                                           (implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def deleteEmployment(nino: String, taxYear:Int, employmentId: String): Action[AnyContent] = authorisedAction.async { implicit user =>
-    service.deleteEmployment(nino, taxYear, employmentId).map {
-      case Right(_) => NoContent
-      case Left(errorModel) => Status(errorModel.status)(Json.toJson(errorModel.toJson))
-    }
+  def deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int): Action[AnyContent] =
+    authorisedAction.async { implicit user =>
+      service.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear).map {
+        case Right(_) => NoContent
+        case Left(errorModel) => Status(errorModel.status)(Json.toJson(errorModel.toJson))
+      }
   }
 }

@@ -21,11 +21,14 @@ import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentRespons
 import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
 import connectors.httpParsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
+import models.{DesErrorBodyModel, DesErrorModel}
+import play.api.http.Status._
 import models.shared.EmploymentRequestModel
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.ViewParameterValidation._
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentConnector,
@@ -62,9 +65,33 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
   def ignoreEmployment(nino: String, taxYear: Int, employmentId: String)
-                                   (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
+                      (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
 
     ignoreEmploymentConnector.ignoreEmployment(nino, taxYear, employmentId)
   }
+
+  def deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int)
+                              (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
+    toRemove match {
+      case HMRC_HELD => ignoreEmployment(nino, taxYear, employmentId)
+      case CUSTOMER =>
+        customerHandle(nino, employmentId, taxYear)
+      case ALL =>
+        customerHandle(nino, employmentId, taxYear).flatMap {
+          case Right(_) => ignoreEmployment(nino, taxYear, employmentId)
+          case Left(response) => Future(Left(response))
+        }
+      case _ => Future(Left(DesErrorModel(BAD_REQUEST, DesErrorBodyModel("CODE", "toRemove is invalid"))))
+    }
+  }
+
+  private def customerHandle(nino: String, employmentId: String, taxYear: Int)
+                            (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
+    deleteEmploymentFinancialData(nino, taxYear, employmentId).map {
+      case Right(_) => deleteEmployment(nino, taxYear, employmentId).asInstanceOf[DeleteEmploymentFinancialDataResponse]
+      case Left(response) => Left(response)
+    }
+  }
+
 }
 

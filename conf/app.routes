@@ -4,3 +4,5 @@ GET   /income-tax/nino/:nino/sources/:employmentId   controllers.GetEmploymentDa
 
 
 GET   /income-tax/nino/:nino/sources   controllers.GetEmploymentsController.getEmployments(nino: String, taxYear: Int)
+
+DELETE  /income-tax/nino/:nino/sources/:employmentId/:toRemove   controllers.DeleteEmploymentController.deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int)
