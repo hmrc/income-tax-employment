@@ -39,18 +39,7 @@ case class HmrcEmployment(employmentId: String,
     EmploymentSource(
       employmentId, employerName, employerRef, payrollId, startDate, cessationDate, dateIgnored,
       submittedOn = None,
-      employmentData = employmentData.map { e =>
-        EmploymentData(
-          submittedOn = e.submittedOn,
-          employmentSequenceNumber = e.employment.employmentSequenceNumber,
-          companyDirector = e.employment.companyDirector,
-          closeCompany = e.employment.closeCompany,
-          directorshipCeasedDate = e.employment.directorshipCeasedDate,
-          occPen = e.employment.occPen,
-          disguisedRemuneration = e.employment.disguisedRemuneration,
-          pay = e.employment.pay
-        )
-      },
+      employmentData = employmentData.map(EmploymentData(_)),
       employmentBenefits = employmentBenefits.map { e =>
         EmploymentBenefits(
           submittedOn = e.submittedOn,
@@ -79,19 +68,7 @@ case class CustomerEmployment(employmentId: String,
       employmentId, employerName, employerRef, payrollId, startDate, cessationDate,
       dateIgnored = None,
       submittedOn = Some(submittedOn),
-      employmentData = employmentData.map {
-        e =>
-          EmploymentData(
-            submittedOn = e.submittedOn,
-            employmentSequenceNumber = e.employment.employmentSequenceNumber,
-            companyDirector = e.employment.companyDirector,
-            closeCompany = e.employment.closeCompany,
-            directorshipCeasedDate = e.employment.directorshipCeasedDate,
-            occPen = e.employment.occPen,
-            disguisedRemuneration = e.employment.disguisedRemuneration,
-            pay = e.employment.pay
-          )
-      },
+      employmentData = employmentData.map(EmploymentData(_)),
       employmentBenefits = employmentBenefits.map { e =>
         EmploymentBenefits(
           submittedOn = e.submittedOn,

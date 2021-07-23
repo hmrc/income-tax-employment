@@ -16,7 +16,7 @@
 
 package models.DES
 
-import models.shared.Pay
+import models.shared.{Deductions, Pay}
 import play.api.libs.json.{Json, OFormat}
 
 case class DESEmploymentData(submittedOn: String,
@@ -39,7 +39,9 @@ case class DESEmploymentDetails(employmentSequenceNumber: Option[String],
                                 occPen: Option[Boolean],
                                 disguisedRemuneration: Option[Boolean],
                                 employer: Employer,
-                                pay: Option[Pay])
+                                pay: Option[Pay],
+                                deductions: Option[Deductions]
+                               )
 
 object DESEmploymentDetails {
   implicit val formats: OFormat[DESEmploymentDetails] = Json.format[DESEmploymentDetails]

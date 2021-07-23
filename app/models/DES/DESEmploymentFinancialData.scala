@@ -16,7 +16,7 @@
 
 package models.DES
 
-import models.shared.Benefits
+import models.shared.{Benefits, Deductions}
 import play.api.libs.json.{Json, OFormat}
 
 case class DESEmploymentFinancialData(employment: Employment)
@@ -94,21 +94,4 @@ case class RedundancyCompensationPaymentsUnderExemption(
 
 object RedundancyCompensationPaymentsUnderExemption {
   implicit val formats: OFormat[RedundancyCompensationPaymentsUnderExemption] = Json.format[RedundancyCompensationPaymentsUnderExemption]
-}
-
-case class Deductions(
-                       studentLoans: Option[StudentLoans]
-                     )
-
-object Deductions {
-  implicit val formats: OFormat[Deductions] = Json.format[Deductions]
-}
-
-case class StudentLoans(
-                         uglDeductionAmount: Option[BigDecimal],
-                         pglDeductionAmount: Option[BigDecimal]
-                       )
-
-object StudentLoans {
-  implicit val formats: OFormat[StudentLoans] = Json.format[StudentLoans]
 }

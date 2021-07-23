@@ -50,6 +50,12 @@ class AllEmploymentDataModelSpec extends TestUtils {
               "paymentDate" -> "2020-04-23",
               "taxWeekNo" -> 32,
               "taxMonthNo" -> 2
+            ),
+            "deductions" -> Json.obj(
+              "studentLoans" -> Json.obj(
+                "uglDeductionAmount" -> 100,
+                "pglDeductionAmount" -> 100
+              )
             )
           ),
           "employmentBenefits" -> Json.obj(
@@ -88,6 +94,7 @@ class AllEmploymentDataModelSpec extends TestUtils {
         )),
     "hmrcExpenses" -> Json.obj(
       "submittedOn" -> "2020-01-04T05:01:01Z",
+      "dateIgnored" -> "2020-01-04T05:01:01Z",
       "totalExpenses" -> 800,
       "expenses" -> Json.obj(
         "businessTravelCosts" -> 100,
@@ -125,6 +132,12 @@ class AllEmploymentDataModelSpec extends TestUtils {
               "paymentDate" -> "2020-04-23",
               "taxWeekNo" -> 32,
               "taxMonthNo" -> 2
+            ),
+            "deductions" -> Json.obj(
+              "studentLoans" -> Json.obj(
+                "uglDeductionAmount" -> 100,
+                "pglDeductionAmount" -> 100
+              )
             )
           ),
           "employmentBenefits" -> Json.obj(
@@ -163,6 +176,7 @@ class AllEmploymentDataModelSpec extends TestUtils {
         )),
     "customerExpenses" -> Json.obj(
       "submittedOn" -> "2020-01-04T05:01:01Z",
+      "dateIgnored" -> "2020-01-04T05:01:01Z",
       "totalExpenses" -> 800,
       "expenses" -> Json.obj(
         "businessTravelCosts" -> 100,

@@ -25,8 +25,8 @@ class DESEmploymentDataSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
   val jsonModel: JsObject = Json.obj(
-    "source" -> "CUSTOMER",
     "submittedOn" -> "2020-01-04T05:01:01Z",
+    "source" -> "CUSTOMER",
     "customerAdded" -> "2020-04-04T01:01:01Z",
     "dateIgnored" -> "2020-04-04T01:01:01Z",
     "employment" -> Json.obj(
@@ -51,6 +51,12 @@ class DESEmploymentDataSpec extends TestUtils {
         "paymentDate" -> "2020-04-23",
         "taxWeekNo" -> 32,
         "taxMonthNo" -> 2
+      ),
+      "deductions" -> Json.obj(
+        "studentLoans" -> Json.obj(
+          "uglDeductionAmount" -> 100,
+          "pglDeductionAmount" -> 100
+        )
       )
     )
   )
