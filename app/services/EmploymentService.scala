@@ -87,9 +87,9 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
 
   private def customerHandle(nino: String, employmentId: String, taxYear: Int)
                             (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
-    deleteEmploymentFinancialData(nino, taxYear, employmentId).map {
-      case Right(_) => deleteEmployment(nino, taxYear, employmentId).asInstanceOf[DeleteEmploymentFinancialDataResponse]
-      case Left(response) => Left(response)
+    deleteEmploymentFinancialData(nino, taxYear, employmentId).flatMap {
+      case Right(_) => deleteEmployment(nino, taxYear, employmentId).mapTo[DeleteEmploymentFinancialDataResponse]
+      case Left(response) => Future(Left(response))
     }
   }
 
