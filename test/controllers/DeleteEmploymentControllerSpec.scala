@@ -16,9 +16,8 @@
 
 package controllers
 
-import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
 import models.{DesErrorBodyModel, DesErrorModel}
-import org.scalamock.handlers.CallHandler4
+import org.scalamock.handlers.CallHandler6
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -27,7 +26,7 @@ import services.EmploymentService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DeleteEmploymentControllerSpec extends TestUtils {
 
@@ -36,21 +35,23 @@ class DeleteEmploymentControllerSpec extends TestUtils {
 
   val nino = "tax_entity_id"
   val employmentId = "employment_id"
+  val toRemove = "ALL"
   val taxYear = 2020
 
   "deleteEmployment" when {
 
-    def mockDeleteEmploymentSuccess(): CallHandler4[String, Int, String, HeaderCarrier, Future[DeleteEmploymentResponse]] = {
-      val response: DeleteEmploymentResponse = Right(())
-      (employmentService.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-        .expects(*, *, *, *)
+    def mockDeleteEmploymentSuccess(): CallHandler6[String, String, String, Int, HeaderCarrier, ExecutionContext, Future[Either[DesErrorModel, Unit]]] = {
+      val response: Either[DesErrorModel, Unit] = Right(())
+      (employmentService.deleteOrIgnoreEmployment(_: String, _: String, _: String, _: Int)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(response))
     }
 
-    def mockDeleteEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, String, HeaderCarrier, Future[DeleteEmploymentResponse]] = {
-      val error: DeleteEmploymentResponse = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
-      (employmentService.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-        .expects(*, *, *, *)
+    def mockDeleteEmploymentFailure(httpStatus: Int):
+    CallHandler6[String, String, String, Int, HeaderCarrier, ExecutionContext, Future[Either[DesErrorModel, Unit]]] = {
+      val error: Either[DesErrorModel, Unit] = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
+      (employmentService.deleteOrIgnoreEmployment(_: String, _: String, _: String, _: Int)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(error))
     }
 
@@ -62,7 +63,7 @@ class DeleteEmploymentControllerSpec extends TestUtils {
         val result = {
           mockAuth()
           mockDeleteEmploymentSuccess()
-          deleteEmploymentController.deleteEmployment(nino, taxYear, employmentId)(fakeRequest)
+          deleteEmploymentController.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)(fakeRequest)
         }
         status(result) mustBe NO_CONTENT
       }
@@ -72,7 +73,7 @@ class DeleteEmploymentControllerSpec extends TestUtils {
           val result = {
             mockAuth()
             mockDeleteEmploymentFailure(httpErrorCode)
-            deleteEmploymentController.deleteEmployment(nino, taxYear, employmentId)(fakeRequest)
+            deleteEmploymentController.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)(fakeRequest)
           }
 
           status(result) mustBe httpErrorCode
@@ -87,7 +88,7 @@ class DeleteEmploymentControllerSpec extends TestUtils {
         val result = {
           mockAuthAsAgent()
           mockDeleteEmploymentSuccess()
-          deleteEmploymentController.deleteEmployment(nino, taxYear, employmentId)(fakeRequest)
+          deleteEmploymentController.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)(fakeRequest)
         }
         status(result) mustBe NO_CONTENT
       }
@@ -97,7 +98,7 @@ class DeleteEmploymentControllerSpec extends TestUtils {
           val result = {
             mockAuthAsAgent()
             mockDeleteEmploymentFailure(httpErrorCode)
-            deleteEmploymentController.deleteEmployment(nino, taxYear, employmentId)(fakeRequest)
+            deleteEmploymentController.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)(fakeRequest)
           }
           status(result) mustBe httpErrorCode
           contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")

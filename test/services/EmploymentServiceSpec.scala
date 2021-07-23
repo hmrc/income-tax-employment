@@ -203,4 +203,59 @@ class EmploymentServiceSpec extends TestUtils {
 
   }
 
+  "deleteOrIgnoreEmployment" should {
+
+    "return Right" when {
+
+      "HMRC_HELD and connectors succeed" in {
+
+        val toRemove = "HMRC-HELD"
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Right(())
+      }
+
+      "CUSTOMER and connectors succeed" in {
+        val toRemove = "CUSTOMER"
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Right(())
+      }
+
+      "ALL and connectors succeed" in {
+        val toRemove = "ALL"
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Right(())
+      }
+    }
+  }
+
 }
