@@ -74,10 +74,8 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                               (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
     toRemove match {
       case HMRC_HELD => ignoreEmployment(nino, taxYear, employmentId)
-      case CUSTOMER =>
-        customerHandle(nino, employmentId, taxYear)
-      case ALL =>
-        customerHandle(nino, employmentId, taxYear).flatMap {
+      case CUSTOMER => customerHandle(nino, employmentId, taxYear)
+      case ALL => customerHandle(nino, employmentId, taxYear).flatMap {
           case Right(_) => ignoreEmployment(nino, taxYear, employmentId)
           case Left(response) => Future(Left(response))
         }
