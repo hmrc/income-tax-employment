@@ -203,4 +203,158 @@ class EmploymentServiceSpec extends TestUtils {
 
   }
 
+  "deleteOrIgnoreEmployment" should {
+
+    "return Right" when {
+
+      "HMRC_HELD and connectors succeed" in {
+
+        val toRemove = "HMRC-HELD"
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Right(())
+      }
+
+      "CUSTOMER and connectors succeed" in {
+        val toRemove = "CUSTOMER"
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Right(())
+      }
+
+      "ALL and connectors succeed" in {
+        val toRemove = "ALL"
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Right(())
+      }
+    }
+
+    "return Left" when {
+
+      "HMRC_HELD and connector fails" in {
+
+        val toRemove = "HMRC-HELD"
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
+
+      "CUSTOMER and first connector fails" in {
+        val toRemove = "CUSTOMER"
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
+
+      "CUSTOMER and second connector fails" in {
+        val toRemove = "CUSTOMER"
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
+
+      "ALL and first connector fails" in {
+        val toRemove = "ALL"
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
+
+      "ALL and second connector fails" in {
+        val toRemove = "ALL"
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
+
+      "ALL and third connector fails" in {
+        val toRemove = "ALL"
+        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+
+        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Right(())))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, employmentId, *)
+          .returning(Future.successful(Left(desError)))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
+
+    }
+  }
+
 }

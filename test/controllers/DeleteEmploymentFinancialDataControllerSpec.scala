@@ -16,7 +16,6 @@
 
 package controllers
 
-import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalamock.handlers.CallHandler4
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE}
@@ -40,16 +39,16 @@ class DeleteEmploymentFinancialDataControllerSpec extends TestUtils {
 
   "deleteEmploymentFinancialData" when {
 
-    def mockDeleteEmploymentFinancialDataSuccess(): CallHandler4[String, Int, String, HeaderCarrier, Future[DeleteEmploymentFinancialDataResponse]] = {
-      val response: DeleteEmploymentFinancialDataResponse = Right(())
+    def mockDeleteEmploymentFinancialDataSuccess(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[DesErrorModel, Unit]]] = {
+      val response: Either[DesErrorModel, Unit] = Right(())
       (employmentService.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(response))
     }
 
     def mockDeleteEmploymentFinancialDataFailure(httpStatus: Int): CallHandler4[String, Int, String,
-      HeaderCarrier, Future[DeleteEmploymentFinancialDataResponse]] = {
-      val error: DeleteEmploymentFinancialDataResponse = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
+      HeaderCarrier, Future[Either[DesErrorModel, Unit]]] = {
+      val error: Either[DesErrorModel, Unit] = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
       (employmentService.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(error))
