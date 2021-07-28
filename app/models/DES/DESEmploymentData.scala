@@ -53,5 +53,3 @@ case class Employer(employerRef: Option[String],
 object Employer {
   implicit val formats: OFormat[Employer] = Json.format[Employer]
 }
-
-
