@@ -34,7 +34,11 @@ object DeleteEmploymentFinancialDataHttpParser extends DESParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): DeleteEmploymentFinancialDataResponse = {
       response.status match {
         case NO_CONTENT => Right(())
-        case BAD_REQUEST | NOT_FOUND =>
+        case NOT_FOUND =>
+          logger.warn(s"[$parserName][read] Received Not found from delete employment financial data API." +
+            s" Employment must not have had financial data - Continuing to remove employment.")
+          Right(())
+        case BAD_REQUEST =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response)
         case INTERNAL_SERVER_ERROR =>

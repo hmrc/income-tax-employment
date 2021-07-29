@@ -16,7 +16,8 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, IgnoreEmploymentConnector, UpdateEmploymentConnector}
+import connectors.{CreateEmploymentConnector, DeleteEmploymentConnector,
+  DeleteEmploymentFinancialDataConnector, IgnoreEmploymentConnector, UpdateEmploymentConnector}
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
 import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
@@ -25,7 +26,9 @@ import models.{DesErrorBodyModel, DesErrorModel}
 import play.api.http.Status._
 import models.shared.EmploymentRequestModel
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.PagerDutyHelper.PagerDutyKeys.INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST
 import utils.ViewParameterValidation._
+import utils.PagerDutyHelper.pagerDutyLog
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +38,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   deleteEmploymentConnector: DeleteEmploymentConnector,
                                   deleteEmploymentFinancialDataConnector: DeleteEmploymentFinancialDataConnector,
                                   updateEmploymentConnector: UpdateEmploymentConnector,
-                                  ignoreEmploymentConnector: IgnoreEmploymentConnector) {
+                                  ignoreEmploymentConnector: IgnoreEmploymentConnector)  {
 
   def createEmployment(nino: String, taxYear: Int, employmentModel: EmploymentRequestModel)
                       (implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
@@ -79,7 +82,10 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
           case Right(_) => ignoreEmployment(nino, taxYear, employmentId)
           case Left(response) => Future(Left(response))
         }
-      case _ => Future(Left(DesErrorModel(BAD_REQUEST, DesErrorBodyModel("CODE", "toRemove is invalid"))))
+      case _ =>
+        val message = "toRemove parameter is not: ALL, HMRC-HELD or CUSTOMER"
+        pagerDutyLog(INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST, message)
+        Future(Left(DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_TO_REMOVE_PARAMETER", message))))
     }
   }
 
@@ -92,4 +98,3 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
 }
-

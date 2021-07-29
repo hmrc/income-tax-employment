@@ -51,34 +51,36 @@ class DeleteEmploymentFinancialDataConnectorSpec  extends PlaySpec with Wiremock
       val headersSentToBenefits = Seq(
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
       )
+      Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
+        s"the host for DES is 'Internal', the status is $status" in {
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+          val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
 
-      "the host for DES is 'Internal'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
+          stubDeleteWithoutResponseBody(url, status, headersSentToBenefits)
 
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToBenefits)
+          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
 
-        val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
-
-        result mustBe Right(())
+          result mustBe Right(())
+        }
       }
+        Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
+          s"the host for DES is 'External', the status is $status" in {
+            implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+            val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
 
-      "the host for DES is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
+            stubDeleteWithoutResponseBody(url, status, headersSentToBenefits)
 
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToBenefits)
+            val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
 
-        val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
-
-        result mustBe Right(())
-      }
+            result mustBe Right(())
+          }
+        }
     }
 
     "handle error" when {
       val desErrorBodyModel = DesErrorBodyModel("DES_CODE", "DES_REASON")
 
-      Seq(BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
+      Seq(BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"DES returns $status" in {
           val desError = DesErrorModel(status, desErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
