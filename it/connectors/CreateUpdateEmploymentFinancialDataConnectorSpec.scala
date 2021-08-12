@@ -16,18 +16,24 @@
 
 package connectors
 
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import config.AppConfig
 import helpers.WiremockSpec
 import models.DES.{DESEmploymentFinancialData, Employment, PayModel}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
 
 class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec{
 
   lazy val connector: CreateUpdateEmploymentFinancialDataConnector = app.injector.instanceOf[CreateUpdateEmploymentFinancialDataConnector]
+
+  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -36,12 +42,39 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
   val minEmploymentFinancialData: DESEmploymentFinancialData = DESEmploymentFinancialData(minEmployment)
   val stubUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
-  "PutEmploymentFinancialDataConnector" should {
-    "return a success result" when {
-      "DES Returns a 204 with minimum data sent in the body" in {
-        stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT)
+  def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  }
 
-        implicit val hc: HeaderCarrier = HeaderCarrier()
+  "PutEmploymentFinancialDataConnector" should {
+
+    val appConfigWithInternalHost = appConfig("localhost")
+    val appConfigWithExternalHost = appConfig("127.0.0.1")
+
+    val headersToSend = Seq(
+      new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
+    )
+    "return a success result and include the correct headers" when {
+
+      "DES Returns a 204 with minimum data sent in the body when host is internal" in {
+
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new CreateUpdateEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
+
+        stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT, headersToSend)
+
+        val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+
+        result mustBe Right(())
+      }
+
+      "DES Returns a 204 with minimum data sent in the body when host is external" in {
+
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new CreateUpdateEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
+
+        stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT, headersToSend)
+
         val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
         result mustBe Right(())

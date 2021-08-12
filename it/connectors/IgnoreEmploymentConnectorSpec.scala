@@ -59,7 +59,7 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new IgnoreEmploymentConnector(httpClient, appConfigWithInternalHost)
 
-        stubPutWithoutResponseBody(url, JsString("").toString(), CREATED, headersSentToBenefits)
+        stubPutWithoutResponseBody(url, "{}", CREATED, headersSentToBenefits)
 
         val result = await(connector.ignoreEmployment(nino, taxYear, employmentId)(hc))
 
