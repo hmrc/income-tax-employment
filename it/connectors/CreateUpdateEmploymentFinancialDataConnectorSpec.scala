@@ -25,9 +25,9 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.DESTaxYearHelper.desTaxYearConverter
 
-class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec{
+class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec{
 
-  lazy val connector: PutEmploymentFinancialDataConnector = app.injector.instanceOf[PutEmploymentFinancialDataConnector]
+  lazy val connector: CreateUpdateEmploymentFinancialDataConnector = app.injector.instanceOf[CreateUpdateEmploymentFinancialDataConnector]
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -42,7 +42,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
         stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+        val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
         result mustBe Right(())
       }
@@ -51,7 +51,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
         stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+        val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
         result mustBe Right(())
       }
@@ -66,7 +66,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPutWithResponseBody(stubUrl, OK, Json.toJson(minEmploymentFinancialData).toString(), invalidJson.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -80,7 +80,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPutWithResponseBody(stubUrl, FORBIDDEN, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -94,7 +94,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPutWithResponseBody(stubUrl, INTERNAL_SERVER_ERROR, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -108,7 +108,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPutWithResponseBody(stubUrl, SERVICE_UNAVAILABLE, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -118,7 +118,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPostWithoutResponseBody(stubUrl, NO_CONTENT, Json.toJson(minEmploymentFinancialData).toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -132,7 +132,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPutWithResponseBody(stubUrl, CONFLICT, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -145,7 +145,7 @@ class PutEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec
 
       stubPutWithResponseBody(stubUrl, CONFLICT, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.putEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }

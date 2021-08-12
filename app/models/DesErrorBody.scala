@@ -16,6 +16,7 @@
 
 package models
 
+import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json.{JsValue, Json, OFormat}
 
 sealed trait DesErrorBody
@@ -27,7 +28,10 @@ case class DesErrorModel(status: Int, body: DesErrorBody){
       case errors: DesErrorsBodyModel => Json.toJson(errors)
     }
   }
+
+
 }
+
 
 /** Single DES Error **/
 case class DesErrorBodyModel(code: String, reason: String) extends DesErrorBody
@@ -38,6 +42,10 @@ object DesErrorBodyModel {
     DesErrorBodyModel("PARSING_ERROR", s"Error parsing response from ${if(desAPI) "DES" else "API"}")
   }
   val invalidView: DesErrorBodyModel = DesErrorBodyModel("INVALID_VIEW", "Submission has not passed validation. Invalid query parameter view.")
+  private val invalidCreateUpdateRequestBody: DesErrorBodyModel = {
+    DesErrorBodyModel("INVALID_CREATE_UPDATE_EMPLOYMENT_REQUEST", "Request to create/update employment is invalid.")
+  }
+  val invalidCreateUpdateRequest: DesErrorModel = DesErrorModel(BAD_REQUEST,invalidCreateUpdateRequestBody)
 }
 
 /** Multiple DES Errors **/
