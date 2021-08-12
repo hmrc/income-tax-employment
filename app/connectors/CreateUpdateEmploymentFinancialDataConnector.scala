@@ -17,7 +17,7 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.PutEmploymentFinancialDataHttpParser.{PutEmploymentFinancialDataHttpReads, PutEmploymentFinancialDataResponse}
+import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser.{CreateUpdateEmploymentFinancialDataHttpReads, CreateUpdateEmploymentFinancialDataResponse}
 import models.DES.DESEmploymentFinancialData
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
@@ -25,17 +25,17 @@ import utils.DESTaxYearHelper.desTaxYearConverter
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PutEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
-                                                    val appConfig: AppConfig)(implicit ec:ExecutionContext) extends Connector {
+class CreateUpdateEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
+                                                             val appConfig: AppConfig)(implicit ec:ExecutionContext) extends Connector {
 
-  def putEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: DESEmploymentFinancialData)
-                           (implicit hc: HeaderCarrier): Future[PutEmploymentFinancialDataResponse] = {
+  def createUpdateEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: DESEmploymentFinancialData)
+                                         (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
 
     val employmentFinancialDataUri: String =
       appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
-    def call(implicit hc: HeaderCarrier): Future[PutEmploymentFinancialDataResponse] = {
-      http.PUT[DESEmploymentFinancialData, PutEmploymentFinancialDataResponse](employmentFinancialDataUri, employmentFinancialData)
+    def call(implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
+      http.PUT[DESEmploymentFinancialData, CreateUpdateEmploymentFinancialDataResponse](employmentFinancialDataUri, employmentFinancialData)
     }
 
     call(headerCarrier(employmentFinancialDataUri))

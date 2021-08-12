@@ -16,10 +16,9 @@
 
 package controllers
 
-import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
-import models.shared.{EmploymentRequestModel, AddEmploymentResponseModel}
-import models.{DesErrorBodyModel, DesErrorModel}
-import org.scalamock.handlers.CallHandler4
+import models.DES.PayModel
+import models.shared.{Benefits, CreateUpdateEmployment}
+import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -30,26 +29,25 @@ import utils.TestUtils
 
 import scala.concurrent.Future
 
-class CreateEmploymentControllerSpec extends TestUtils {
+class CreateUpdateEmploymentControllerSpec extends TestUtils {
 
   val employmentService: EmploymentService = mock[EmploymentService]
-  val createEmploymentController = new CreateEmploymentController(employmentService, authorisedAction, mockControllerComponents)
+  val createEmploymentController = new CreateUpdateEmploymentController(employmentService, authorisedAction, mockControllerComponents)
 
   val nino = "tax_entity_id"
   val taxYear = 2020
 
   "createEmployment" when {
 
-    def mockCreateOrAmendEmploymentSuccess(): CallHandler4[String, Int, EmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
-      val response: CreateEmploymentResponse = Right(AddEmploymentResponseModel("employment_id"))
-      (employmentService.createEmployment(_: String, _: Int, _: EmploymentRequestModel)(_: HeaderCarrier))
+    def mockCreateOrAmendEmploymentSuccess() = {
+      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
-        .returning(Future.successful(response))
+        .returning(Future.successful(Right(())))
     }
 
-    def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, EmploymentRequestModel, HeaderCarrier, Future[CreateEmploymentResponse]] = {
-      val error: CreateEmploymentResponse = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
-      (employmentService.createEmployment(_: String, _: Int, _: EmploymentRequestModel)(_: HeaderCarrier))
+    def mockCreateOrAmendEmploymentFailure(httpStatus: Int)= {
+      val error = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
+      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(error))
     }
@@ -57,26 +55,34 @@ class CreateEmploymentControllerSpec extends TestUtils {
     val mtditid: String = "1234567890"
     val fakeRequest = FakeRequest("POST", "/TBC").withHeaders("mtditid" -> mtditid)
 
-    val requestBody =
-      Json.parse(
-        """
-          |{
-          |  "employerRef": "employerRef",
-          |  "employerName": "employerName",
-          |  "startDate": "2021-06-11T16:44:37.410+01:00",
-          |  "cessationDate": "2021-06-11T16:44:37.424+01:00",
-          |  "payrollId": "payrollId"
-          |}
-          |""".stripMargin)
+    val requestBody = CreateUpdateEmploymentRequest(
+      Some("employment_id"),
+      employment = Some(
+        CreateUpdateEmployment(
+          Some("123/12345"),
+          "Misery Loves Company",
+          "2020-11-11",
+          None,
+          None
+        )
+      ),
+      employmentData = Some(
+        CreateUpdateEmploymentData(
+          PayModel(
+            564563456345.55,
+            34523523454.44,
+            None
+          ),
+          None,
+          benefitsInKind = Some(Benefits(
+            Some(1231.33)
+          ))
+        )
+      ),
+      hmrcEmploymentIdToIgnore = None
+    )
 
-    val requestBodyWithOnlyMandatoryValues =
-      Json.parse(
-        """
-          |{
-          |  "employerName": "employerName",
-          |  "startDate": "2021-06-11T16:44:37.410+01:00"
-          |}
-          |""".stripMargin)
+    val requestBodyWithOnlyEmploymentData =requestBody.copy(employment = None)
 
     val invalidRequestBody =
       Json.parse(
@@ -87,30 +93,28 @@ class CreateEmploymentControllerSpec extends TestUtils {
           |""".stripMargin)
 
     "request is from Individual" should {
-      "return a 200 response with employmentId" in {
+      "return a 204 response with employmentId" in {
         val result = {
           mockAuth()
           mockCreateOrAmendEmploymentSuccess()
-          createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(requestBody))
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
         }
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.obj("employmentId" -> "employment_id")
+        status(result) mustBe NO_CONTENT
       }
 
       "return a 200 response with employmentId when request body only has mandatory values" in {
         val result = {
           mockAuth()
           mockCreateOrAmendEmploymentSuccess()
-          createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(requestBodyWithOnlyMandatoryValues))
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBodyWithOnlyEmploymentData)))
         }
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.obj("employmentId" -> "employment_id")
+        status(result) mustBe NO_CONTENT
       }
 
       "return a 400 response when request body is not valid" in {
         val result = {
           mockAuth()
-          createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(invalidRequestBody))
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(invalidRequestBody))
         }
         status(result) mustBe BAD_REQUEST
 
@@ -121,7 +125,7 @@ class CreateEmploymentControllerSpec extends TestUtils {
           val result = {
             mockAuth()
             mockCreateOrAmendEmploymentFailure(httpErrorCode)
-            createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(requestBody))
+            createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
           }
           status(result) mustBe httpErrorCode
           contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
@@ -135,26 +139,24 @@ class CreateEmploymentControllerSpec extends TestUtils {
         val result = {
           mockAuthAsAgent()
           mockCreateOrAmendEmploymentSuccess()
-          createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(requestBody))
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
         }
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.obj("employmentId" -> "employment_id")
+        status(result) mustBe NO_CONTENT
       }
 
       "return a 200 response with employmentId when request body only has mandatory values" in {
         val result = {
           mockAuthAsAgent()
           mockCreateOrAmendEmploymentSuccess()
-          createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(requestBodyWithOnlyMandatoryValues))
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBodyWithOnlyEmploymentData)))
         }
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.obj("employmentId" -> "employment_id")
+        status(result) mustBe NO_CONTENT
       }
 
       "return a 400 response when request body is not valid" in {
         val result = {
           mockAuthAsAgent()
-          createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(invalidRequestBody))
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(invalidRequestBody))
         }
         status(result) mustBe BAD_REQUEST
 
@@ -165,7 +167,7 @@ class CreateEmploymentControllerSpec extends TestUtils {
           val result = {
             mockAuthAsAgent()
             mockCreateOrAmendEmploymentFailure(httpErrorCode)
-            createEmploymentController.createEmployment(nino, taxYear)(fakeRequest.withJsonBody(requestBody))
+            createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
           }
           status(result) mustBe httpErrorCode
           contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")

@@ -22,14 +22,14 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object PutEmploymentFinancialDataHttpParser extends DESParser {
-  type PutEmploymentFinancialDataResponse = Either[DesErrorModel, Unit]
+object CreateUpdateEmploymentFinancialDataHttpParser extends DESParser {
+  type CreateUpdateEmploymentFinancialDataResponse = Either[DesErrorModel, Unit]
 
-  override val parserName: String = "PutEmploymentFinancialDataHttpParser"
+  override val parserName: String = "CreateUpdateEmploymentFinancialDataHttpParser"
   override val isDesAPI: Boolean = true
 
-  implicit object PutEmploymentFinancialDataHttpReads extends HttpReads[PutEmploymentFinancialDataResponse] {
-    override def read(method: String, url: String, response: HttpResponse): PutEmploymentFinancialDataResponse = {
+  implicit object CreateUpdateEmploymentFinancialDataHttpReads extends HttpReads[CreateUpdateEmploymentFinancialDataResponse] {
+    override def read(method: String, url: String, response: HttpResponse): CreateUpdateEmploymentFinancialDataResponse = {
       response.status match {
         case NO_CONTENT => Right(())
         case INTERNAL_SERVER_ERROR =>

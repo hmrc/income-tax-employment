@@ -18,7 +18,7 @@ package connectors
 
 import config.AppConfig
 import connectors.httpParsers.UpdateEmploymentDataHttpParser.{UpdateEmploymentDataHttpReads, UpdateEmploymentDataResponse}
-import models.shared.EmploymentRequestModel
+import models.shared.CreateUpdateEmployment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
@@ -28,13 +28,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class UpdateEmploymentConnector @Inject()(val http: HttpClient,
                                           val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
 
-  def updateEmployment(nino: String, taxYear: Int, employmentId: String, employmentData: EmploymentRequestModel)
+  def updateEmployment(nino: String, taxYear: Int, employmentId: String, employmentData: CreateUpdateEmployment)
                       (implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
 
     val uri: String = appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
 
     def desCall(implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
-      http.PUT[EmploymentRequestModel, UpdateEmploymentDataResponse](uri, employmentData)
+      http.PUT[CreateUpdateEmployment, UpdateEmploymentDataResponse](uri, employmentData)
     }
 
     desCall(desHeaderCarrier(uri))

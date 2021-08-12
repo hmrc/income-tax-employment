@@ -16,15 +16,14 @@
 
 package models.shared
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
-case class EmploymentRequestModel(employerRef: Option[String],
+case class CreateUpdateEmployment(employerRef: Option[String],
                                   employerName: String,
                                   startDate: String,
-                                  cessationDate: Option[String],
-                                  payrollId: Option[String]
-                                    )
+                                  cessationDate: Option[String] = None,
+                                  payrollId: Option[String] = None)
 
-object EmploymentRequestModel {
-  implicit val format = Json.format[EmploymentRequestModel]
+object CreateUpdateEmployment {
+  implicit val format: OFormat[CreateUpdateEmployment] = Json.format[CreateUpdateEmployment]
 }

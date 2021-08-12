@@ -19,7 +19,7 @@ package connectors
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
 import helpers.WiremockSpec
-import models.shared.EmploymentRequestModel
+import models.shared.CreateUpdateEmployment
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
 import org.scalatestplus.play.PlaySpec
@@ -49,7 +49,7 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
     val nino = "taxable_entity_id"
     val employmentId = "employment_id"
     val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
-    val updateEmploymentModel = EmploymentRequestModel(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+    val updateEmploymentModel = CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
 
 
     "include internal headers" when {
