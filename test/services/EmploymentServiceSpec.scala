@@ -457,30 +457,19 @@ class EmploymentServiceSpec extends TestUtils {
 
         await(result) mustBe Right(())
       }
-
-      "ALL and connectors succeed" in {
-        val toRemove = "ALL"
-
-        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Right(())))
-
-        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Right(())))
-
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Right(())))
-
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
-
-        await(result) mustBe Right(())
-      }
     }
 
     "return Left" when {
 
+      "invalid parameter" in {
+
+        val toRemove = "HELD"
+        val desError = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_TO_REMOVE_PARAMETER", "toRemove parameter is not: HMRC-HELD or CUSTOMER"))
+
+        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+
+        await(result) mustBe Left(desError)
+      }
       "HMRC_HELD and connector fails" in {
 
         val toRemove = "HMRC-HELD"
@@ -517,57 +506,6 @@ class EmploymentServiceSpec extends TestUtils {
           .returning(Future.successful(Right(())))
 
         (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Left(desError)))
-
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
-
-        await(result) mustBe Left(desError)
-      }
-
-      "ALL and first connector fails" in {
-        val toRemove = "ALL"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
-
-        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Left(desError)))
-
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
-
-        await(result) mustBe Left(desError)
-      }
-
-      "ALL and second connector fails" in {
-        val toRemove = "ALL"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
-
-        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Right(())))
-
-        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Left(desError)))
-
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
-
-        await(result) mustBe Left(desError)
-      }
-
-      "ALL and third connector fails" in {
-        val toRemove = "ALL"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
-
-        (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Right(())))
-
-        (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
-          .expects(nino, taxYear, employmentId, *)
-          .returning(Future.successful(Right(())))
-
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 

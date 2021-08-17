@@ -142,12 +142,8 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
     toRemove match {
       case HMRC_HELD => ignoreEmployment(nino, taxYear, employmentId)
       case CUSTOMER => handleCustomerDelete(nino, employmentId, taxYear)
-      case ALL => handleCustomerDelete(nino, employmentId, taxYear).flatMap {
-          case Right(_) => ignoreEmployment(nino, taxYear, employmentId)
-          case Left(response) => Future(Left(response))
-        }
       case _ =>
-        val message = "toRemove parameter is not: ALL, HMRC-HELD or CUSTOMER"
+        val message = "toRemove parameter is not: HMRC-HELD or CUSTOMER"
         pagerDutyLog(INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST, message)
         Future(Left(DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_TO_REMOVE_PARAMETER", message))))
     }
