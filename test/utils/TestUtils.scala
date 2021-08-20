@@ -196,7 +196,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
             Some(Pay(
               taxablePayToDate = Some(34234.15),
               totalTaxToDate = Some(6782.92),
-              tipsAndOtherPayments = Some(67676),
               payFrequency = Some("CALENDAR MONTHLY"),
               paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
@@ -253,7 +252,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
               Some(Pay(
                 taxablePayToDate = Some(34234.15),
                 totalTaxToDate = Some(6782.92),
-                tipsAndOtherPayments = Some(67676),
                 payFrequency = Some("CALENDAR MONTHLY"),
                 paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
@@ -348,7 +346,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
         pay = Some(Pay(
           taxablePayToDate = Some(34234.15),
           totalTaxToDate = Some(6782.92),
-          tipsAndOtherPayments = Some(67676),
           payFrequency = Some("CALENDAR MONTHLY"),
           paymentDate = Some("2020-04-23"),
           taxWeekNo = Some(32),
@@ -386,7 +383,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
         pay = Some(Pay(
           taxablePayToDate = Some(34234.15),
           totalTaxToDate = Some(6782.92),
-          tipsAndOtherPayments = Some(67676),
           payFrequency = Some("CALENDAR MONTHLY"),
           paymentDate = Some("2020-04-23"),
           taxWeekNo = Some(32),
@@ -472,7 +468,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
         pay = Some(Pay(
           taxablePayToDate = Some(34234.15),
           totalTaxToDate = Some(6782.92),
-          tipsAndOtherPayments = None,
           payFrequency = None,
           paymentDate = None,
           taxWeekNo = None,
