@@ -45,7 +45,6 @@ class AllEmploymentDataModelSpec extends TestUtils {
             "pay" -> Json.obj(
               "taxablePayToDate" -> 34234.15,
               "totalTaxToDate" -> 6782.92,
-              "tipsAndOtherPayments" -> 67676,
               "payFrequency" -> "CALENDAR MONTHLY",
               "paymentDate" -> "2020-04-23",
               "taxWeekNo" -> 32,
@@ -127,7 +126,6 @@ class AllEmploymentDataModelSpec extends TestUtils {
             "pay" -> Json.obj(
               "taxablePayToDate" -> 34234.15,
               "totalTaxToDate" -> 6782.92,
-              "tipsAndOtherPayments" -> 67676,
               "payFrequency" -> "CALENDAR MONTHLY",
               "paymentDate" -> "2020-04-23",
               "taxWeekNo" -> 32,
