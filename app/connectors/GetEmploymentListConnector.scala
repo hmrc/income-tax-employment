@@ -25,17 +25,17 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentListConnector @Inject()(val http: HttpClient,
-                                           val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
+                                           val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
 
   def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String])(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
 
     val incomeSourcesUri: String =
-      appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}" + employmentId.fold("")(id => s"?employmentId=$id")
+      appConfig.integrationFrameworkBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}" + employmentId.fold("")(id => s"?employmentId=$id")
 
-    def desCall(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
       http.GET[GetEmploymentListResponse](incomeSourcesUri)
     }
 
-    desCall(desHeaderCarrier(incomeSourcesUri))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(incomeSourcesUri, "employment-list"))
   }
 }
