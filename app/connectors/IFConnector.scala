@@ -30,10 +30,10 @@ trait IFConnector {
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
-  private[connectors] def integrationFrameworkHeaderCarrier(url : String)(implicit hc: HeaderCarrier): HeaderCarrier = {
+  private[connectors] def integrationFrameworkHeaderCarrier(url : String, apiNumber: String)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
 
-    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.integrationFrameworkAuthorisationToken}")))
+    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.integrationFrameworkAuthorisationToken(apiNumber)}")))
 
     if(isInternalHost) {
       hcWithAuth.withExtraHeaders("Environment" -> appConfig.integrationFrameworkEnvironment)
