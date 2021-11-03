@@ -26,7 +26,7 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
-                                          val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
+                                          val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
 
   def ignoreEmployment(nino: String, taxYear: Int, employmentId: String)
                            (implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
@@ -34,10 +34,10 @@ class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
     val ignoreEmploymentUri: String =
       appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore"
 
-    def desCall(implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
       http.PUT[JsValue,IgnoreEmploymentResponse](ignoreEmploymentUri, Json.parse("""{}"""))
     }
 
-    desCall(desHeaderCarrier(ignoreEmploymentUri))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(ignoreEmploymentUri, "1664"))
   }
 }

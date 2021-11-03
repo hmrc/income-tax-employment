@@ -23,7 +23,6 @@ import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
-import play.api.libs.json._
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
@@ -51,26 +50,26 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
     "include internal headers" when {
 
-      val headersSentToBenefits = Seq(
+      val headersSentToIntegrationFramework = Seq(
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
       )
 
-      "the host for DES is 'Internal'" in {
+      "the host for IF is 'Internal'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new IgnoreEmploymentConnector(httpClient, appConfigWithInternalHost)
 
-        stubPutWithoutResponseBody(url, "{}", CREATED, headersSentToBenefits)
+        stubPutWithoutResponseBody(url, "{}", CREATED, headersSentToIntegrationFramework)
 
         val result = await(connector.ignoreEmployment(nino, taxYear, employmentId)(hc))
 
         result mustBe Right(())
       }
 
-      "the host for DES is 'External'" in {
+      "the host for IF is 'External'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new IgnoreEmploymentConnector(httpClient, appConfigWithExternalHost)
 
-        stubPutWithoutResponseBody(url, JsString("").toString(), CREATED)
+        stubPutWithoutResponseBody(url, "{}", CREATED, headersSentToIntegrationFramework)
 
         val result = await(connector.ignoreEmployment(nino, taxYear, employmentId)(hc))
 
