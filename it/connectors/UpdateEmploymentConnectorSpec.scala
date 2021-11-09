@@ -35,8 +35,8 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: UpdateEmploymentConnector = app.injector.instanceOf[UpdateEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  def appConfig(integrationFrameworkHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val taxYear = 2022
@@ -54,22 +54,22 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
     "include internal headers" when {
 
-      val headersSentToBenefits = Seq(
+      val headersSentToIntegrationFramework = Seq(
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
       )
 
-      "the host for DES is 'Internal'" in {
+      "the host for Integration Framework is 'Internal'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new UpdateEmploymentConnector(httpClient, appConfigWithInternalHost)
 
-        stubPutWithoutResponseBody(url, Json.toJson(updateEmploymentModel).toString(), NO_CONTENT, headersSentToBenefits)
+        stubPutWithoutResponseBody(url, Json.toJson(updateEmploymentModel).toString(), NO_CONTENT, headersSentToIntegrationFramework)
 
         val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
 
         result mustBe Right(())
       }
 
-      "the host for DES is 'External'" in {
+      "the host for Integration Framework is 'External'" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new UpdateEmploymentConnector(httpClient, appConfigWithExternalHost)
 
