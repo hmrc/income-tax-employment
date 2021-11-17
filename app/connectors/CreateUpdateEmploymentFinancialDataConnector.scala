@@ -26,18 +26,18 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CreateUpdateEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
-                                                             val appConfig: AppConfig)(implicit ec:ExecutionContext) extends DesConnector {
+                                                             val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
 
   def createUpdateEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: DESEmploymentFinancialData)
                                          (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
 
     val employmentFinancialDataUri: String =
-      appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
+      appConfig.integrationFrameworkBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
     def call(implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
       http.PUT[DESEmploymentFinancialData, CreateUpdateEmploymentFinancialDataResponse](employmentFinancialDataUri, employmentFinancialData)
     }
 
-    call(desHeaderCarrier(employmentFinancialDataUri))
+    call(integrationFrameworkHeaderCarrier(employmentFinancialDataUri, "1643"))
   }
 }

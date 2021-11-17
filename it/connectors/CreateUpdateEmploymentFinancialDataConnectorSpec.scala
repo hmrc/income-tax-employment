@@ -38,12 +38,12 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
   val nino: String = "123456789"
   val taxYear: Int = 1999
   val employmentId: String = "0000000-0000000-000000"
-  val minEmployment: Employment = Employment(pay = PayModel(taxablePayToDate = 100.00, totalTaxToDate = 100.00, tipsAndOtherPayments = None), None, None, None)
+  val minEmployment: Employment = Employment(pay = PayModel(taxablePayToDate = 100.00, totalTaxToDate = 100.00, tipsAndOtherPayments = None), None, None)
   val minEmploymentFinancialData: DESEmploymentFinancialData = DESEmploymentFinancialData(minEmployment)
   val stubUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
-  def appConfig(desHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   "PutEmploymentFinancialDataConnector" should {
@@ -56,7 +56,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
     )
     "return a success result and include the correct headers" when {
 
-      "DES Returns a 204 with minimum data sent in the body when host is internal" in {
+      "Integration Framework Returns a 204 with minimum data sent in the body when host is internal" in {
 
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new CreateUpdateEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
@@ -68,7 +68,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         result mustBe Right(())
       }
 
-      "DES Returns a 204 with minimum data sent in the body when host is external" in {
+      "Integration Framework Returns a 204 with minimum data sent in the body when host is external" in {
 
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new CreateUpdateEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
@@ -80,7 +80,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         result mustBe Right(())
       }
 
-      "DES Returns a 204 with maximum data sent in the body" in {
+      "Integration Framework Returns a 204 with maximum data sent in the body" in {
         stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -146,7 +146,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       result mustBe Left(expectedResult)
     }
 
-    "return an Internal Server Error when DES throws an unexpected result with no body" in {
+    "return an Internal Server Error when Integration Framework throws an unexpected result with no body" in {
       val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
 
       stubPostWithoutResponseBody(stubUrl, NO_CONTENT, Json.toJson(minEmploymentFinancialData).toString())
@@ -156,7 +156,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       result mustBe Left(expectedResult)
     }
 
-    "return an Internal Server Error when DES throws an unexpected result that is parsable" in {
+    "return an Internal Server Error when Integration Framework throws an unexpected result that is parsable" in {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
@@ -170,7 +170,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       result mustBe Left(expectedResult)
     }
 
-    "return an Internal Server Error when DES throws an unexpected result that isn't parsable" in {
+    "return an Internal Server Error when Integration Framework throws an unexpected result that isn't parsable" in {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
