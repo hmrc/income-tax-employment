@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.BackendAppConfig
 import connectors.GetEmploymentExpensesConnectorSpec.expectedResponseBody
 import helpers.WiremockSpec
 import models.DES.DESEmploymentExpenses
@@ -34,7 +34,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: GetEmploymentExpensesConnector = app.injector.instanceOf[GetEmploymentExpensesConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(expensesHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(expensesHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
     override val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
   }
 

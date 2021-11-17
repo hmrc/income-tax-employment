@@ -17,7 +17,7 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser.{CreateUpdateEmploymentFinancialDataHttpReads, CreateUpdateEmploymentFinancialDataResponse}
+import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser._
 import models.DES.DESEmploymentFinancialData
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
