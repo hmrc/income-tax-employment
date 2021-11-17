@@ -17,9 +17,9 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.BackendAppConfig
 import helpers.WiremockSpec
-import models.shared.{CreateUpdateEmployment, AddEmploymentResponseModel}
+import models.shared.{AddEmploymentResponseModel, CreateUpdateEmployment}
 import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
 import org.scalatestplus.play.PlaySpec
@@ -35,7 +35,7 @@ class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: CreateEmploymentConnector = app.injector.instanceOf[CreateEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(integrationFrameworkHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
     override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 

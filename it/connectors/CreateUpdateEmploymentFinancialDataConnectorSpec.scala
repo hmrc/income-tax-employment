@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.BackendAppConfig
 import helpers.WiremockSpec
 import models.DES.{DESEmploymentFinancialData, Employment, PayModel}
 import models.{DesErrorBodyModel, DesErrorModel}
@@ -29,7 +29,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
 
-class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec{
+class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val connector: CreateUpdateEmploymentFinancialDataConnector = app.injector.instanceOf[CreateUpdateEmploymentFinancialDataConnector]
 
@@ -42,7 +42,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
   val minEmploymentFinancialData: DESEmploymentFinancialData = DESEmploymentFinancialData(minEmployment)
   val stubUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
-  def appConfig(desHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(desHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
     override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
   }
 

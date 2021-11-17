@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.BackendAppConfig
 import helpers.WiremockSpec
 import models.shared.CreateUpdateEmployment
 import models.{DesErrorBodyModel, DesErrorModel}
@@ -35,7 +35,7 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: UpdateEmploymentConnector = app.injector.instanceOf[UpdateEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(integrationFrameworkHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
     override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
