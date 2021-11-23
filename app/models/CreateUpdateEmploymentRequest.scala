@@ -35,7 +35,6 @@ case class CreateUpdateEmploymentData(pay: PayModel,
   def toDESModel: DESEmploymentFinancialData = {
     DESEmploymentFinancialData(employment = Employment(
       pay = pay,
-      lumpSums = None,
       deductions = deductions,
       benefitsInKind = benefitsInKind
     ))

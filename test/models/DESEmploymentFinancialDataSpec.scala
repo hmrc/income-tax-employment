@@ -40,27 +40,6 @@ class DESEmploymentFinancialDataSpec extends TestUtils {
         "totalTaxToDate" -> 100.00,
         "tipsAndOtherPayments" -> 100.00
       ),
-      "lumpSums" -> Json.obj(
-        "taxableLumpSumsAndCertainIncome" -> Json.obj(
-          "amount" -> 100.00,
-          "taxPaid" -> 10.00,
-          "taxTakenOffInEmployment" -> true
-        ),
-        "benefitFromEmployerFinancedRetirementScheme" -> Json.obj(
-          "amount" -> 100.00,
-          "exemptAmount" -> 100.00,
-          "taxPaid" -> 10.00,
-          "taxTakenOffInEmployment" -> true
-        ),
-        "redundancyCompensationPaymentsOverExemption" -> Json.obj(
-          "amount" -> 100.00,
-          "taxPaid" -> 10.00,
-          "taxTakenOffInEmployment" -> true
-        ),
-        "redundancyCompensationPaymentsUnderExemption" -> Json.obj(
-          "amount" -> 100.00
-        )
-      ),
       "deductions" -> Json.obj(
         "studentLoans" -> Json.obj(
           "uglDeductionAmount" -> 100.00,
