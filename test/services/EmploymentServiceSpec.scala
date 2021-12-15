@@ -140,7 +140,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
-        await(result) mustBe Right(())
+        await(result) mustBe Right(Some("employmentId"))
       }
       "there is a hmrc employment to ignore but doesn't have all employment data" in {
 
@@ -211,7 +211,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None))
 
-        await(result) mustBe Right(())
+        await(result) mustBe Right(Some("employerId"))
       }
       "it is an update to a previously submitted customer employment" in {
 
@@ -225,7 +225,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId")))
 
-        await(result) mustBe Right(())
+        await(result) mustBe Right(None)
       }
       "it is an update to a previously submitted customer employment when the update fails" in {
 
@@ -249,7 +249,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"),employmentData = None))
 
-        await(result) mustBe Right(())
+        await(result) mustBe Right(None)
       }
       "it is an update to a previously submitted customer employment when only updating employment data info" in {
 
@@ -257,7 +257,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"),employment = None))
 
-        await(result) mustBe Right(())
+        await(result) mustBe Right(None)
       }
     }
   }

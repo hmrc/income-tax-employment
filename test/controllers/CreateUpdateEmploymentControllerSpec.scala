@@ -19,6 +19,7 @@ package controllers
 import models.DES.PayModel
 import models.shared.{Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
+import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -39,13 +40,22 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
 
   "createEmployment" when {
 
-    def mockCreateOrAmendEmploymentSuccess() = {
+    def mockCreateEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
+      Future[Either[DesErrorModel, Option[String]]]] = {
       (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
-        .returning(Future.successful(Right(())))
+        .returning(Future.successful(Right(Some("employmentId"))))
     }
 
-    def mockCreateOrAmendEmploymentFailure(httpStatus: Int)= {
+    def mockAmendEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
+      Future[Either[DesErrorModel, Option[String]]]] = {
+      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
+        .expects(*, *, *, *)
+        .returning(Future.successful(Right(None)))
+    }
+
+    def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, CreateUpdateEmploymentRequest,
+      HeaderCarrier, Future[Either[DesErrorModel, Option[String]]]] = {
       val error = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
       (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
@@ -96,16 +106,25 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
       "return a 204 response with employmentId" in {
         val result = {
           mockAuth()
-          mockCreateOrAmendEmploymentSuccess()
+          mockAmendEmploymentSuccess()
           createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
         }
         status(result) mustBe NO_CONTENT
       }
 
+      "return a 201 response with employmentId" in {
+        val result = {
+          mockAuth()
+          mockCreateEmploymentSuccess()
+          createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
+        }
+        status(result) mustBe CREATED
+      }
+
       "return a 200 response with employmentId when request body only has mandatory values" in {
         val result = {
           mockAuth()
-          mockCreateOrAmendEmploymentSuccess()
+          mockAmendEmploymentSuccess()
           createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBodyWithOnlyEmploymentData)))
         }
         status(result) mustBe NO_CONTENT
@@ -138,7 +157,7 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
       "return a 200 response with employmentId" in {
         val result = {
           mockAuthAsAgent()
-          mockCreateOrAmendEmploymentSuccess()
+          mockAmendEmploymentSuccess()
           createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
         }
         status(result) mustBe NO_CONTENT
@@ -147,7 +166,7 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
       "return a 200 response with employmentId when request body only has mandatory values" in {
         val result = {
           mockAuthAsAgent()
-          mockCreateOrAmendEmploymentSuccess()
+          mockAmendEmploymentSuccess()
           createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBodyWithOnlyEmploymentData)))
         }
         status(result) mustBe NO_CONTENT
