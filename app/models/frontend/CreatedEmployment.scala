@@ -16,12 +16,10 @@
 
 package models.frontend
 
-import models.shared.Benefits
 import play.api.libs.json.{Json, OFormat}
 
-case class EmploymentBenefits(submittedOn: String,
-                              benefits: Option[Benefits])
+case class CreatedEmployment(employmentId: String)
 
-object EmploymentBenefits {
-  implicit val formats: OFormat[EmploymentBenefits] = Json.format[EmploymentBenefits]
+object CreatedEmployment {
+  implicit val formats: OFormat[CreatedEmployment] = Json.format[CreatedEmployment]
 }

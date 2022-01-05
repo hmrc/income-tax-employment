@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   implicit val executionContext: ExecutionContext)  {
 
   def createUpdateEmployment(nino: String, taxYear: Int, createUpdateEmploymentRequest: CreateUpdateEmploymentRequest)
-                            (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Unit]] = {
+                            (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
 
     val hmrcEmploymentIdToIgnore = createUpdateEmploymentRequest.hmrcEmploymentIdToIgnore
 
@@ -62,13 +62,16 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
   def createUpdateEmploymentOrchestration(nino: String, taxYear: Int, createUpdateEmploymentRequest: CreateUpdateEmploymentRequest)
-                                         (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Unit]] = {
+                                         (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
 
     createUpdateEmploymentRequest match {
       case CreateUpdateEmploymentRequest(None,Some(employment),Some(employmentData),_) =>
         createEmploymentCalls(nino,taxYear,employment,employmentData)
       case CreateUpdateEmploymentRequest(Some(employmentId),employment,employmentData,_) =>
-        updateEmploymentCalls(nino,taxYear,employmentId,employment,employmentData)
+        updateEmploymentCalls(nino,taxYear,employmentId,employment,employmentData).map {
+          case Left(error) => Left(error)
+          case Right(_) => Right(None)
+        }
       case _ => Future.successful(Left(invalidCreateUpdateRequest))
     }
   }
@@ -76,11 +79,14 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   def createEmploymentCalls(nino: String, taxYear: Int,
                             employment: CreateUpdateEmployment,
                             employmentData: CreateUpdateEmploymentData)
-                           (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Unit]] = {
+                           (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
 
     createEmployment(nino,taxYear,employment).flatMap {
       case Left(error) => Future(Left(error))
-      case Right(AddEmploymentResponseModel(employmentId)) => createOrUpdateFinancialData(nino,taxYear,employmentId,employmentData.toDESModel)
+      case Right(AddEmploymentResponseModel(employmentId)) => createOrUpdateFinancialData(nino,taxYear,employmentId,employmentData.toDESModel).map {
+        case Left(error) => Left(error)
+        case Right(_) => Right(Some(employmentId))
+      }
     }
   }
 

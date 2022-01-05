@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package controllers
 
 import controllers.predicates.AuthorisedAction
 import javax.inject.Inject
+import models.frontend.CreatedEmployment
 import models.{CreateUpdateEmploymentRequest, DesErrorModel}
 import play.api.Logging
 import play.api.libs.json.{JsSuccess, Json}
@@ -43,8 +44,9 @@ class CreateUpdateEmploymentController @Inject()(service: EmploymentService,
     }
   }
 
-  private def responseHandler(serviceResponse: Future[Either[DesErrorModel, Unit]]): Future[Result] ={
+  private def responseHandler(serviceResponse: Future[Either[DesErrorModel, Option[String]]]): Future[Result] ={
     serviceResponse.map {
+      case Right(Some(employmentId)) => Created(Json.toJson(CreatedEmployment(employmentId)))
       case Right(_) => NoContent
       case Left(errorModel) => Status(errorModel.status)(Json.toJson(errorModel.toJson))
     }
