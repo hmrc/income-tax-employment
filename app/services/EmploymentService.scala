@@ -16,24 +16,23 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, CreateUpdateEmploymentFinancialDataConnector,
-  DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, IgnoreEmploymentConnector, UpdateEmploymentConnector}
+import connectors._
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
-import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
-import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
 import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser.CreateUpdateEmploymentFinancialDataResponse
+import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
+import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
 import connectors.httpParsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
-import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
-import play.api.http.Status._
-import models.shared.{AddEmploymentResponseModel, CreateUpdateEmployment}
-import uk.gov.hmrc.http.HeaderCarrier
-import utils.PagerDutyHelper.PagerDutyKeys.INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST
-import utils.ViewParameterValidation._
-import utils.PagerDutyHelper.pagerDutyLog
-import javax.inject.{Inject, Singleton}
 import models.DES.DESEmploymentFinancialData
 import models.DesErrorBodyModel.invalidCreateUpdateRequest
+import models.shared.{AddEmploymentResponseModel, CreateUpdateEmployment}
+import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
+import play.api.http.Status._
+import uk.gov.hmrc.http.HeaderCarrier
+import utils.PagerDutyHelper.PagerDutyKeys.INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST
+import utils.PagerDutyHelper.pagerDutyLog
+import utils.ViewParameterValidation._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -43,18 +42,18 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   updateEmploymentConnector: UpdateEmploymentConnector,
                                   ignoreEmploymentConnector: IgnoreEmploymentConnector,
                                   updateEmploymentFinancialDataConnector: CreateUpdateEmploymentFinancialDataConnector,
-                                  implicit val executionContext: ExecutionContext)  {
+                                  implicit val executionContext: ExecutionContext) {
 
   def createUpdateEmployment(nino: String, taxYear: Int, createUpdateEmploymentRequest: CreateUpdateEmploymentRequest)
                             (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
 
     val hmrcEmploymentIdToIgnore = createUpdateEmploymentRequest.hmrcEmploymentIdToIgnore
 
-    hmrcEmploymentIdToIgnore.fold{
+    hmrcEmploymentIdToIgnore.fold {
       createUpdateEmploymentOrchestration(nino, taxYear, createUpdateEmploymentRequest)
-    }{
+    } {
       hmrcEmploymentIdToIgnore =>
-        ignoreEmployment(nino,taxYear,hmrcEmploymentIdToIgnore).flatMap {
+        ignoreEmployment(nino, taxYear, hmrcEmploymentIdToIgnore).flatMap {
           case Left(error) => Future(Left(error))
           case Right(_) => createUpdateEmploymentOrchestration(nino, taxYear, createUpdateEmploymentRequest)
         }
@@ -65,10 +64,10 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                          (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
 
     createUpdateEmploymentRequest match {
-      case CreateUpdateEmploymentRequest(None,Some(employment),Some(employmentData),_) =>
-        createEmploymentCalls(nino,taxYear,employment,employmentData)
-      case CreateUpdateEmploymentRequest(Some(employmentId),employment,employmentData,_) =>
-        updateEmploymentCalls(nino,taxYear,employmentId,employment,employmentData).map {
+      case CreateUpdateEmploymentRequest(None, Some(employment), Some(employmentData), _) =>
+        createEmploymentCalls(nino, taxYear, employment, employmentData)
+      case CreateUpdateEmploymentRequest(Some(employmentId), employment, employmentData, _) =>
+        updateEmploymentCalls(nino, taxYear, employmentId, employment, employmentData).map {
           case Left(error) => Left(error)
           case Right(_) => Right(None)
         }
@@ -76,14 +75,14 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
     }
   }
 
-  def createEmploymentCalls(nino: String, taxYear: Int,
-                            employment: CreateUpdateEmployment,
-                            employmentData: CreateUpdateEmploymentData)
-                           (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
-
-    createEmployment(nino,taxYear,employment).flatMap {
+  private def createEmploymentCalls(nino: String, taxYear: Int,
+                                    employment: CreateUpdateEmployment,
+                                    employmentData: CreateUpdateEmploymentData)
+                                   (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
+    createEmploymentConnector.createEmployment(nino, taxYear, employment).flatMap {
       case Left(error) => Future(Left(error))
-      case Right(AddEmploymentResponseModel(employmentId)) => createOrUpdateFinancialData(nino,taxYear,employmentId,employmentData.toDESModel).map {
+      case Right(AddEmploymentResponseModel(employmentId)) => createOrUpdateFinancialData(nino, taxYear, employmentId, employmentData.toDESModel).map {
+        case Left(error@DesErrorModel(SERVICE_UNAVAILABLE, _)) => Left(error.copy(status = INTERNAL_SERVER_ERROR))
         case Left(error) => Left(error)
         case Right(_) => Right(Some(employmentId))
       }
@@ -96,21 +95,20 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                             employmentData: Option[CreateUpdateEmploymentData])
                            (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Unit]] = {
 
-    (employment,employmentData) match {
+    (employment, employmentData) match {
       case (Some(employment), Some(employmentData)) =>
-        updateEmployment(nino,taxYear,employmentId,employment).flatMap {
+        updateEmployment(nino, taxYear, employmentId, employment).flatMap {
           case Left(error) => Future(Left(error))
-          case Right(_) => createOrUpdateFinancialData(nino,taxYear,employmentId,employmentData.toDESModel)
+          case Right(_) => createOrUpdateFinancialData(nino, taxYear, employmentId, employmentData.toDESModel)
         }
-      case (Some(employment), None) => updateEmployment(nino,taxYear,employmentId,employment)
-      case (None, Some(employmentData)) => createOrUpdateFinancialData(nino,taxYear,employmentId,employmentData.toDESModel)
+      case (Some(employment), None) => updateEmployment(nino, taxYear, employmentId, employment)
+      case (None, Some(employmentData)) => createOrUpdateFinancialData(nino, taxYear, employmentId, employmentData.toDESModel)
       case _ => Future.successful(Left(invalidCreateUpdateRequest))
     }
   }
 
   def createEmployment(nino: String, taxYear: Int, employmentModel: CreateUpdateEmployment)
                       (implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
-
     createEmploymentConnector.createEmployment(nino, taxYear, employmentModel)
   }
 
@@ -120,7 +118,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
     updateEmploymentConnector.updateEmployment(nino, taxYear, employmentId, employmentModel)
   }
 
-  def createOrUpdateFinancialData(nino: String, taxYear: Int, employmentId:String, employmentFinancialData: DESEmploymentFinancialData)
+  def createOrUpdateFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: DESEmploymentFinancialData)
                                  (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
     updateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, employmentFinancialData)
   }
@@ -156,11 +154,10 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
   private def handleCustomerDelete(nino: String, employmentId: String, taxYear: Int)
-                            (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
+                                  (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
     deleteEmploymentFinancialData(nino, taxYear, employmentId).flatMap {
       case Right(_) => deleteEmployment(nino, taxYear, employmentId).mapTo[DeleteEmploymentFinancialDataResponse]
       case Left(response) => Future(Left(response))
     }
   }
-
 }

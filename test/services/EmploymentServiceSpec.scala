@@ -16,7 +16,8 @@
 
 package services
 
-import connectors.{CreateEmploymentConnector, CreateUpdateEmploymentFinancialDataConnector, DeleteEmploymentConnector, DeleteEmploymentFinancialDataConnector, IgnoreEmploymentConnector, UpdateEmploymentConnector}
+import connectors._
+import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
 import models.DES.{DESEmploymentFinancialData, PayModel}
 import models.DesErrorBodyModel.invalidCreateUpdateRequest
 import models.shared.{AddEmploymentResponseModel, Benefits, CreateUpdateEmployment}
@@ -37,20 +38,22 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockUpdateEmploymentDataConnector = mock[UpdateEmploymentConnector]
   private val mockIgnoreEmploymentConnector = mock[IgnoreEmploymentConnector]
   private val mockCreateUpdateEmploymentFinancialDataConnector = mock[CreateUpdateEmploymentFinancialDataConnector]
-  private val employmentService = new EmploymentService(mockCreateEmploymentConnector, mockDeleteEmploymentConnector,
-    mockDeleteEmploymentFinancialDataConnector, mockUpdateEmploymentDataConnector,mockIgnoreEmploymentConnector,
-    mockCreateUpdateEmploymentFinancialDataConnector,mockExecutionContext)
 
-  val nino = "entity_id"
-  val taxYear = 2022
-  val employmentId = "employment_id"
+  private val underTest = new EmploymentService(mockCreateEmploymentConnector,
+    mockDeleteEmploymentConnector,
+    mockDeleteEmploymentFinancialDataConnector,
+    mockUpdateEmploymentDataConnector,
+    mockIgnoreEmploymentConnector,
+    mockCreateUpdateEmploymentFinancialDataConnector,
+    mockExecutionContext)
 
-  val badRequestModel: DesErrorBodyModel = DesErrorBodyModel("INVALID_NINO", "Nino is invalid")
-  val notFoundModel: DesErrorBodyModel = DesErrorBodyModel("NOT_FOUND_INCOME_SOURCE", "Can't find income source")
-  val serverErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVER_ERROR", "Internal server error")
-  val serviceUnavailableErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable")
+  private val nino = "entity_id"
+  private val taxYear = 2022
+  private val employmentId = "employment_id"
 
-  def mockPutEmploymentFinancialDataValid(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
+  private val serviceUnavailableErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable")
+
+  private def mockPutEmploymentFinancialDataValid(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
     Future[Either[DesErrorModel, Unit]]] = {
     (mockCreateUpdateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(
       _: String, _: Int, _: String, _: DESEmploymentFinancialData)(_: HeaderCarrier))
@@ -58,25 +61,16 @@ class EmploymentServiceSpec extends TestUtils {
       .returning(Future.successful(Right(())))
   }
 
-  def mockPutEmploymentFinancialDataBadRequest(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
-    Future[Either[DesErrorModel, Unit]]] = {
-    val invalidEmploymentFinancialData = Left(DesErrorModel(BAD_REQUEST, badRequestModel))
-    (mockCreateUpdateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(
-      _: String, _: Int, _: String, _: DESEmploymentFinancialData)(_: HeaderCarrier))
-      .expects(*, *, *, *, *)
-      .returning(Future.successful(invalidEmploymentFinancialData))
+  private def mockCreateEmployment(nino: String,
+                                   taxYear: Int,
+                                   createUpdateEmployment: CreateUpdateEmployment,
+                                   connectorResult: CreateEmploymentResponse) = {
+    (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _: CreateUpdateEmployment)(_: HeaderCarrier))
+      .expects(nino, taxYear, createUpdateEmployment, *)
+      .returning(Future.successful(connectorResult))
   }
 
-  def mockPutEmploymentFinancialDataServerError(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
-    Future[Either[DesErrorModel, Unit]]] = {
-    val invalidEmploymentFinancialData= Left(DesErrorModel(INTERNAL_SERVER_ERROR, serverErrorModel))
-    (mockCreateUpdateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(
-      _: String, _: Int, _: String, _: DESEmploymentFinancialData)(_: HeaderCarrier))
-      .expects(*, *, *, *, *)
-      .returning(Future.successful(invalidEmploymentFinancialData))
-  }
-
-  def mockPutEmploymentFinancialDataServiceUnavailable(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
+  private def mockPutEmploymentFinancialDataServiceUnavailable(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
     Future[Either[DesErrorModel, Unit]]] = {
     val invalidEmploymentFinancialData = Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
     (mockCreateUpdateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(
@@ -85,37 +79,30 @@ class EmploymentServiceSpec extends TestUtils {
       .returning(Future.successful(invalidEmploymentFinancialData))
   }
 
-  val request:CreateUpdateEmploymentRequest = CreateUpdateEmploymentRequest(
+  private val createUpdateEmploymentData: CreateUpdateEmploymentData = CreateUpdateEmploymentData(
+    PayModel(564563456345.55, 34523523454.44, None),
+    None,
+    benefitsInKind = Some(Benefits(Some(1231.33)))
+  )
+
+  private val createUpdateEmployment: CreateUpdateEmployment = CreateUpdateEmployment(
+    Some("123/12345"),
+    "Misery Loves Company",
+    "2020-11-11",
+    None,
+    None
+  )
+
+  private val request: CreateUpdateEmploymentRequest = CreateUpdateEmploymentRequest(
     Some("employmentId"),
-    employment = Some(
-      CreateUpdateEmployment(
-        Some("123/12345"),
-        "Misery Loves Company",
-        "2020-11-11",
-        None,
-        None
-      )
-    ),
-    employmentData = Some(
-      CreateUpdateEmploymentData(
-        PayModel(
-          564563456345.55,
-          34523523454.44,
-          None
-        ),
-        None,
-        benefitsInKind = Some(Benefits(
-          Some(1231.33)
-        ))
-      )
-    ),
+    employment = Some(createUpdateEmployment),
+    employmentData = Some(createUpdateEmploymentData),
     hmrcEmploymentIdToIgnore = None
   )
 
   "updateEmploymentCalls" should {
     "return an error if no data supplied" in {
-
-      val result = employmentService.updateEmploymentCalls(nino, taxYear, "employmentId", None, None)
+      val result = underTest.updateEmploymentCalls(nino, taxYear, "employmentId", None, None)
 
       await(result) mustBe Left(invalidCreateUpdateRequest)
     }
@@ -124,138 +111,128 @@ class EmploymentServiceSpec extends TestUtils {
   "createUpdateEmployment" should {
     "orchestrate the different api calls based on the model" when {
       "there is a hmrc employment to ignore" in {
-
         val addEmploymentRequestModel = request.employment.get
         val addEmploymentResponseModel = AddEmploymentResponseModel("employmentId")
 
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:CreateUpdateEmployment)(_: HeaderCarrier))
-          .expects(nino, taxYear, addEmploymentRequestModel, *)
-          .returning(Future.successful(Right(addEmploymentResponseModel)))
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
 
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _:String)(_: HeaderCarrier))
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", *)
           .returning(Future.successful(Right(())))
 
         mockPutEmploymentFinancialDataValid()
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
         await(result) mustBe Right(Some("employmentId"))
       }
-      "there is a hmrc employment to ignore but doesn't have all employment data" in {
 
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _:String)(_: HeaderCarrier))
+      "there is a hmrc employment to ignore but doesn't have all employment data" in {
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(
           employmentId = None, employment = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
         await(result) mustBe Left(invalidCreateUpdateRequest)
       }
-      "there is a hmrc employment to ignore but the final update fails" in {
 
+      "there is a hmrc employment to ignore but the final update fails" in {
         val addEmploymentRequestModel = request.employment.get
         val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:CreateUpdateEmployment)(_: HeaderCarrier))
-          .expects(nino, taxYear, addEmploymentRequestModel, *)
-          .returning(Future.successful(Right(addEmploymentResponseModel)))
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
 
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _:String)(_: HeaderCarrier))
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", *)
           .returning(Future.successful(Right(())))
 
         mockPutEmploymentFinancialDataServiceUnavailable()
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+
+        await(result) mustBe Left(DesErrorModel(INTERNAL_SERVER_ERROR, serviceUnavailableErrorModel))
+      }
+
+      "there is a hmrc employment to ignore but the create call fails" in {
+        val addEmploymentRequestModel = request.employment.get
+
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel)))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, taxYear, "employmentId", *)
+          .returning(Future.successful(Right(())))
+
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
         await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
-      "there is a hmrc employment to ignore but the create call fails" in {
 
-        val addEmploymentRequestModel = request.employment.get
-
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:CreateUpdateEmployment)(_: HeaderCarrier))
-          .expects(nino, taxYear, addEmploymentRequestModel, *)
-          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE,serviceUnavailableErrorModel))))
-
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _:String)(_: HeaderCarrier))
-          .expects(nino, taxYear, "employmentId", *)
-          .returning(Future.successful(Right(())))
-
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
-
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE,serviceUnavailableErrorModel))
-      }
       "there is a hmrc employment to ignore but fails to ignore" in {
-
-        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _:String)(_: HeaderCarrier))
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", *)
-          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE,serviceUnavailableErrorModel))))
+          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE,serviceUnavailableErrorModel))
+        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
-      "there is a no hmrc employment to ignore" in {
 
+      "there is a no hmrc employment to ignore" in {
         val addEmploymentRequestModel = request.employment.get
         val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:CreateUpdateEmployment)(_: HeaderCarrier))
-          .expects(nino, taxYear, addEmploymentRequestModel, *)
-          .returning(Future.successful(Right(addEmploymentResponseModel)))
-
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
         mockPutEmploymentFinancialDataValid()
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None))
 
         await(result) mustBe Right(Some("employerId"))
       }
+
       "it is an update to a previously submitted customer employment" in {
-
         val employmentRequestModel = request.employment.get
 
-        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _:CreateUpdateEmployment)(_: HeaderCarrier))
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", employmentRequestModel, *)
           .returning(Future.successful(Right(())))
 
         mockPutEmploymentFinancialDataValid()
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId")))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId")))
 
         await(result) mustBe Right(None)
       }
+
       "it is an update to a previously submitted customer employment when the update fails" in {
-
         val employmentRequestModel = request.employment.get
 
-        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _:CreateUpdateEmployment)(_: HeaderCarrier))
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", employmentRequestModel, *)
-          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE,serviceUnavailableErrorModel))))
+          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId")))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId")))
 
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE,serviceUnavailableErrorModel))
+        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
-      "it is an update to a previously submitted customer employment when only updating employment info" in {
 
+      "it is an update to a previously submitted customer employment when only updating employment info" in {
         val employmentRequestModel = request.employment.get
 
-        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _:CreateUpdateEmployment)(_: HeaderCarrier))
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", employmentRequestModel, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"),employmentData = None))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"), employmentData = None))
 
         await(result) mustBe Right(None)
       }
-      "it is an update to a previously submitted customer employment when only updating employment data info" in {
 
+      "it is an update to a previously submitted customer employment when only updating employment data info" in {
         mockPutEmploymentFinancialDataValid()
 
-        val result = employmentService.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"),employment = None))
+        val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"), employment = None))
 
         await(result) mustBe Right(None)
       }
@@ -263,20 +240,15 @@ class EmploymentServiceSpec extends TestUtils {
   }
 
   "createEmployment" should {
-
     val addEmploymentRequestModel = CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
     val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
     "return Right containing employmentId" when {
 
       "createEmployment connector call succeeds" in {
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:CreateUpdateEmployment)(_: HeaderCarrier))
-          .expects(nino, taxYear, addEmploymentRequestModel, *)
-          .returning(Future.successful(Right(addEmploymentResponseModel)))
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
 
-        val result = employmentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
-
-        await(result) mustBe Right(addEmploymentResponseModel)
+        await(underTest.createEmployment(nino, taxYear, addEmploymentRequestModel)) mustBe Right(addEmploymentResponseModel)
       }
     }
 
@@ -284,13 +256,9 @@ class EmploymentServiceSpec extends TestUtils {
       "the createEmployment connector call fails" in {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
-        (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _:CreateUpdateEmployment)(_: HeaderCarrier))
-          .expects(nino, taxYear, addEmploymentRequestModel, *)
-          .returning(Future.successful(Left(desError)))
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Left(desError))
 
-        val result = employmentService.createEmployment(nino, taxYear, addEmploymentRequestModel)
-
-        await(result) mustBe Left(desError)
+        await(underTest.createEmployment(nino, taxYear, addEmploymentRequestModel)) mustBe Left(desError)
       }
     }
   }
@@ -302,11 +270,11 @@ class EmploymentServiceSpec extends TestUtils {
     "return a right with no content" when {
 
       "updateEmployment connector call succeeds" in {
-        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _:String, _:CreateUpdateEmployment)(_: HeaderCarrier))
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, updateEmploymentRequestModel, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.updateEmployment(nino, taxYear, employmentId, updateEmploymentRequestModel)
+        val result = underTest.updateEmployment(nino, taxYear, employmentId, updateEmploymentRequestModel)
 
         await(result) mustBe Right(())
       }
@@ -316,11 +284,11 @@ class EmploymentServiceSpec extends TestUtils {
       "the updateEmployment connector call fails" in {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
 
-        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _:String, _:CreateUpdateEmployment)(_: HeaderCarrier))
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, updateEmploymentRequestModel, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.updateEmployment(nino, taxYear, employmentId, updateEmploymentRequestModel)
+        val result = underTest.updateEmployment(nino, taxYear, employmentId, updateEmploymentRequestModel)
 
         await(result) mustBe Left(desError)
       }
@@ -336,7 +304,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.deleteEmployment(nino, taxYear, employmentId)
+        val result = underTest.deleteEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Right(())
       }
@@ -350,7 +318,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.deleteEmployment(nino, taxYear, employmentId)
+        val result = underTest.deleteEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Left(desError)
       }
@@ -367,7 +335,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+        val result = underTest.deleteEmploymentFinancialData(nino, taxYear, employmentId)
 
         await(result) mustBe Right(())
       }
@@ -383,7 +351,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+        val result = underTest.deleteEmploymentFinancialData(nino, taxYear, employmentId)
 
         await(result) mustBe Left(desError)
       }
@@ -401,7 +369,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.deleteEmploymentFinancialData(nino, taxYear, employmentId)
+        val result = underTest.deleteEmploymentFinancialData(nino, taxYear, employmentId)
 
         await(result) mustBe Right(())
       }
@@ -417,7 +385,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.ignoreEmployment(nino, taxYear, employmentId)
+        val result = underTest.ignoreEmployment(nino, taxYear, employmentId)
 
         await(result) mustBe Left(desError)
       }
@@ -437,7 +405,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+        val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
         await(result) mustBe Right(())
       }
@@ -453,7 +421,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Right(())))
 
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+        val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
         await(result) mustBe Right(())
       }
@@ -466,7 +434,7 @@ class EmploymentServiceSpec extends TestUtils {
         val toRemove = "HELD"
         val desError = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_TO_REMOVE_PARAMETER", "toRemove parameter is not: HMRC-HELD or CUSTOMER"))
 
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+        val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
         await(result) mustBe Left(desError)
       }
@@ -479,7 +447,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+        val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
         await(result) mustBe Left(desError)
       }
@@ -492,7 +460,7 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+        val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
         await(result) mustBe Left(desError)
       }
@@ -509,12 +477,11 @@ class EmploymentServiceSpec extends TestUtils {
           .expects(nino, taxYear, employmentId, *)
           .returning(Future.successful(Left(desError)))
 
-        val result = employmentService.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
+        val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
         await(result) mustBe Left(desError)
       }
 
     }
   }
-
 }
