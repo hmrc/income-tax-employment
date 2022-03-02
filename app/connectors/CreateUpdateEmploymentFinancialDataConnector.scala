@@ -32,7 +32,7 @@ class CreateUpdateEmploymentFinancialDataConnector @Inject()(val http: HttpClien
                                          (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
 
     val employmentFinancialDataUri: String =
-      appConfig.integrationFrameworkBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
+      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
     def call(implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
       http.PUT[DESEmploymentFinancialData, CreateUpdateEmploymentFinancialDataResponse](employmentFinancialDataUri, employmentFinancialData)

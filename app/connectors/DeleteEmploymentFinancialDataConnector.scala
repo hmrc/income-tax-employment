@@ -30,7 +30,7 @@ class DeleteEmploymentFinancialDataConnector@Inject()(val http: HttpClient,
   def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
                                    (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
 
-    val uri: String = appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
+    val uri: String = baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
     def desCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
       http.DELETE[DeleteEmploymentFinancialDataResponse](uri)
