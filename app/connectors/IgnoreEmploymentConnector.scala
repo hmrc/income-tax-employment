@@ -32,7 +32,7 @@ class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
                            (implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
 
     val ignoreEmploymentUri: String =
-      appConfig.desBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore"
+      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore"
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
       http.PUT[JsValue,IgnoreEmploymentResponse](ignoreEmploymentUri, Json.parse("""{}"""))

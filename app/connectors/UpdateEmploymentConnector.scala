@@ -31,8 +31,7 @@ class UpdateEmploymentConnector @Inject()(val http: HttpClient,
   def updateEmployment(nino: String, taxYear: Int, employmentId: String, employmentData: CreateUpdateEmployment)
                       (implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
 
-    val uri: String = appConfig.integrationFrameworkBaseUrl +
-      s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
+    val uri: String = baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
       http.PUT[CreateUpdateEmployment, UpdateEmploymentDataResponse](uri, employmentData)

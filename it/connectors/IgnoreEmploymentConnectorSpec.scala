@@ -32,8 +32,8 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: IgnoreEmploymentConnector = app.injector.instanceOf[IgnoreEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(desHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val desBaseUrl: String = s"http://$desHost:$wireMockPort"
+  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val taxYear = 2022
@@ -81,7 +81,7 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       val desErrorBodyModel = DesErrorBodyModel("DES_CODE", "DES_REASON")
 
       Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
-        s"DES returns $status" in {
+        s"Integration Framework returns $status" in {
           val desError = DesErrorModel(status, desErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -91,7 +91,7 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
         }
       }
 
-      s"DES returns unexpected error code - BAD_GATEWAY (502)" in {
+      s"Integration Framework returns unexpected error code - BAD_GATEWAY (502)" in {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 

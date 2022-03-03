@@ -30,7 +30,7 @@ class GetEmploymentListConnector @Inject()(val http: HttpClient,
   def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String])(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
 
     val incomeSourcesUri: String =
-      appConfig.integrationFrameworkBaseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}" +
+      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}" +
         employmentId.fold("")(id => s"?employmentId=$id")
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
