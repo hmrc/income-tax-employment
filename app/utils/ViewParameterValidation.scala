@@ -24,6 +24,7 @@ object ViewParameterValidation {
     }
   }
 
+  val ALL = "ALL"
   val HMRC_HELD = "HMRC-HELD"
   val CUSTOMER = "CUSTOMER"
   val LATEST = "LATEST"

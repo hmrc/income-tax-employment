@@ -23,7 +23,8 @@ import play.api.libs.json.{Json, OFormat}
 case class CreateUpdateEmploymentRequest(employmentId: Option[String] = None,
                                          employment: Option[CreateUpdateEmployment] = None,
                                          employmentData: Option[CreateUpdateEmploymentData] = None,
-                                         hmrcEmploymentIdToIgnore: Option[String] = None)
+                                         hmrcEmploymentIdToIgnore: Option[String] = None,
+                                         isHmrcEmploymentId: Option[Boolean] = None)
 
 object CreateUpdateEmploymentRequest {
   implicit val formats: OFormat[CreateUpdateEmploymentRequest] = Json.format[CreateUpdateEmploymentRequest]

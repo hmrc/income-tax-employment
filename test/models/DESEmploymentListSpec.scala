@@ -18,6 +18,7 @@ package models
 
 import com.codahale.metrics.SharedMetricRegistries
 import models.DES.DESEmploymentList
+import models.frontend.{EmploymentBenefits, EmploymentData, EmploymentFinancialData, HmrcEmploymentSource}
 import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.TestUtils
 
@@ -61,6 +62,67 @@ class DESEmploymentListSpec extends TestUtils {
 
     "parse from Json" in {
       jsonModel.as[DESEmploymentList]
+    }
+  }
+
+  ".toHmrcEmploymentSource" should {
+    "return a hmrc source with empty financials" in {
+      hmrcEmploymentModel.toHmrcEmploymentSource(None,None,None,None) mustBe HmrcEmploymentSource(
+        employmentId = hmrcEmploymentModel.employmentId,
+        employerName = hmrcEmploymentModel.employerName,
+        employerRef = hmrcEmploymentModel.employerRef,
+        payrollId = hmrcEmploymentModel.payrollId,
+        startDate = hmrcEmploymentModel.startDate,
+        cessationDate = hmrcEmploymentModel.cessationDate,
+        dateIgnored = hmrcEmploymentModel.dateIgnored,
+        submittedOn = None,
+        hmrcEmploymentFinancialData = None,
+        customerEmploymentFinancialData = None
+      )
+    }
+    "return a hmrc source with hmrc financials" in {
+      hmrcEmploymentModel.toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),Some(hmrcBenefits),None,None) mustBe HmrcEmploymentSource(
+        employmentId = hmrcEmploymentModel.employmentId,
+        employerName = hmrcEmploymentModel.employerName,
+        employerRef = hmrcEmploymentModel.employerRef,
+        payrollId = hmrcEmploymentModel.payrollId,
+        startDate = hmrcEmploymentModel.startDate,
+        cessationDate = hmrcEmploymentModel.cessationDate,
+        dateIgnored = hmrcEmploymentModel.dateIgnored,
+        submittedOn = None,
+        hmrcEmploymentFinancialData = Some(
+          EmploymentFinancialData(
+            Some(EmploymentData(hmrcEmploymentDataModelExample)),
+            Some(EmploymentBenefits(hmrcBenefits.submittedOn,hmrcBenefits.employment.benefitsInKind))
+          )
+        ),
+        customerEmploymentFinancialData = None
+      )
+    }
+    "return a hmrc source with hmrc and customer financials" in {
+      hmrcEmploymentModel.toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),Some(hmrcBenefits),
+        Some(customerEmploymentDataModelExample),Some(customerBenefits)) mustBe HmrcEmploymentSource(
+        employmentId = hmrcEmploymentModel.employmentId,
+        employerName = hmrcEmploymentModel.employerName,
+        employerRef = hmrcEmploymentModel.employerRef,
+        payrollId = hmrcEmploymentModel.payrollId,
+        startDate = hmrcEmploymentModel.startDate,
+        cessationDate = hmrcEmploymentModel.cessationDate,
+        dateIgnored = hmrcEmploymentModel.dateIgnored,
+        submittedOn = None,
+        hmrcEmploymentFinancialData = Some(
+          EmploymentFinancialData(
+            Some(EmploymentData(hmrcEmploymentDataModelExample)),
+            Some(EmploymentBenefits(hmrcBenefits.submittedOn,hmrcBenefits.employment.benefitsInKind))
+          )
+        ),
+        customerEmploymentFinancialData = Some(
+          EmploymentFinancialData(
+            Some(EmploymentData(customerEmploymentDataModelExample)),
+            Some(EmploymentBenefits(customerBenefits.submittedOn,customerBenefits.employment.benefitsInKind))
+          )
+        ),
+      )
     }
   }
 

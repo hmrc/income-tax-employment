@@ -34,6 +34,7 @@ class AllEmploymentDataModelSpec extends TestUtils {
           "startDate" -> "2020-01-01",
           "cessationDate" -> "2020-01-01",
           "dateIgnored" -> "2020-01-01T10:00:38Z",
+          "hmrcEmploymentFinancialData" -> Json.obj(
           "employmentData" -> Json.obj(
             "submittedOn" -> "2020-01-04T05:01:01Z",
             "employmentSequenceNumber" -> "1002",
@@ -89,6 +90,65 @@ class AllEmploymentDataModelSpec extends TestUtils {
               "vouchersAndCreditCards" -> 100,
               "nonCash" -> 100
             )
+          )
+          ),
+          "customerEmploymentFinancialData" -> Json.obj(
+          "employmentData" -> Json.obj(
+            "submittedOn" -> "2020-01-04T05:01:01Z",
+            "employmentSequenceNumber" -> "1002",
+            "companyDirector" -> false,
+            "closeCompany" -> true,
+            "directorshipCeasedDate" -> "2020-02-12",
+            "occPen" -> false,
+            "disguisedRemuneration" -> false,
+            "pay" -> Json.obj(
+              "taxablePayToDate" -> 34234.15,
+              "totalTaxToDate" -> 6782.92,
+              "payFrequency" -> "CALENDAR MONTHLY",
+              "paymentDate" -> "2020-04-23",
+              "taxWeekNo" -> 32,
+              "taxMonthNo" -> 2
+            ),
+            "deductions" -> Json.obj(
+              "studentLoans" -> Json.obj(
+                "uglDeductionAmount" -> 100,
+                "pglDeductionAmount" -> 100
+              )
+            )
+          ),
+          "employmentBenefits" -> Json.obj(
+            "submittedOn" -> "2020-01-04T05:01:01Z",
+            "benefits" -> Json.obj(
+              "accommodation" -> 100,
+              "assets" -> 100,
+              "assetTransfer" -> 100,
+              "beneficialLoan" -> 100,
+              "car" -> 100,
+              "carFuel" -> 100,
+              "educationalServices" -> 100,
+              "entertaining" -> 100,
+              "expenses" -> 100,
+              "medicalInsurance" -> 100,
+              "telephone" -> 100,
+              "service" -> 100,
+              "taxableExpenses" -> 100,
+              "van" -> 100,
+              "vanFuel" -> 100,
+              "mileage" -> 100,
+              "nonQualifyingRelocationExpenses" -> 100,
+              "nurseryPlaces" -> 100,
+              "otherItems" -> 100,
+              "paymentsOnEmployeesBehalf" -> 100,
+              "personalIncidentalExpenses" -> 100,
+              "qualifyingRelocationExpenses" -> 100,
+              "employerProvidedProfessionalSubscriptions" -> 100,
+              "employerProvidedServices" -> 100,
+              "incomeTaxPaidByDirector" -> 100,
+              "travelAndSubsistence" -> 100,
+              "vouchersAndCreditCards" -> 100,
+              "nonCash" -> 100
+            )
+          )
           )
         )),
     "hmrcExpenses" -> Json.obj(
