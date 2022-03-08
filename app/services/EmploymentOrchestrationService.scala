@@ -25,7 +25,7 @@ import javax.inject.Inject
 import models.DES._
 import models.DesErrorBodyModel.parsingError
 import models.DesErrorModel
-import models.frontend.{AllEmploymentData, EmploymentSource}
+import models.frontend.{AllEmploymentData, EmploymentSource, HmrcEmploymentSource}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.FutureEitherOps
@@ -58,7 +58,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
       if (hmrcResponse.forall(_.isRight)) {
         getExpenses(nino, taxYear, HMRC_HELD, mtditid).flatMap { hmrcExpenses =>
           if (hmrcExpenses.isRight) {
-            val hmrcEmployments: Seq[EmploymentSource] = hmrcResponse.collect { case Right(employment) => employment }
+            val hmrcEmployments: Seq[HmrcEmploymentSource] = hmrcResponse.collect { case Right(employment) => employment }
             orchestrateCustomerEmploymentDataRetrieval(nino, taxYear, customer, mtditid).flatMap { customerResponse => {
               if (customerResponse.forall(_.isRight)) {
                 getExpenses(nino, taxYear, CUSTOMER, mtditid).map { customerExpenses =>
@@ -95,15 +95,18 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
   }
 
   private def orchestrateHmrcEmploymentDataRetrieval(nino: String, taxYear: Int, hmrcEmploymentData: Seq[HmrcEmployment], mtditid: String)
-                                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[Either[DesErrorModel, EmploymentSource]]] = {
-    val view = HMRC_HELD
+                                                    (implicit hc: HeaderCarrier,
+                                                     ec: ExecutionContext): Future[Seq[Either[DesErrorModel, HmrcEmploymentSource]]] = {
     Future.sequence(hmrcEmploymentData.map {
       hmrcEmployment =>
+        val id = hmrcEmployment.employmentId
         (for {
-          employmentData <- FutureEitherOps[DesErrorModel, Option[DESEmploymentData]](getEmploymentData(nino, taxYear, hmrcEmployment.employmentId, view))
-          benefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, hmrcEmployment.employmentId, view, mtditid))
+          hmrcEmploymentData <- FutureEitherOps[DesErrorModel, Option[DESEmploymentData]](getEmploymentData(nino, taxYear, id, HMRC_HELD))
+          hmrcBenefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, id, HMRC_HELD, mtditid))
+          customerEmploymentData <- FutureEitherOps[DesErrorModel, Option[DESEmploymentData]](getEmploymentData(nino, taxYear, id, CUSTOMER))
+          customerBenefits <- FutureEitherOps[DesErrorModel, Option[DESEmploymentBenefits]](getBenefits(nino, taxYear, id, CUSTOMER, mtditid))
         } yield {
-          hmrcEmployment.toEmploymentSource(employmentData, benefits)
+          hmrcEmployment.toHmrcEmploymentSource(hmrcEmploymentData, hmrcBenefits, customerEmploymentData, customerBenefits)
         }).value
     })
   }

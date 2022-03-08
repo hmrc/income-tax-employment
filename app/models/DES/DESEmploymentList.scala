@@ -16,7 +16,7 @@
 
 package models.DES
 
-import models.frontend.{EmploymentBenefits, EmploymentData, EmploymentSource}
+import models.frontend.{EmploymentBenefits, EmploymentData, EmploymentFinancialData, EmploymentSource, HmrcEmploymentSource}
 import play.api.libs.json.{Json, OFormat}
 
 case class DESEmploymentList(employments: Option[Seq[HmrcEmployment]],
@@ -34,11 +34,9 @@ case class HmrcEmployment(employmentId: String,
                           cessationDate: Option[String],
                           dateIgnored: Option[String]) {
 
-  def toEmploymentSource(employmentData: Option[DESEmploymentData],
-                         employmentBenefits: Option[DESEmploymentBenefits]): EmploymentSource = {
-    EmploymentSource(
-      employmentId, employerName, employerRef, payrollId, startDate, cessationDate, dateIgnored,
-      submittedOn = None,
+  private def toEmploymentFinancialData(employmentData: Option[DESEmploymentData],
+                                        employmentBenefits: Option[DESEmploymentBenefits]): EmploymentFinancialData ={
+    EmploymentFinancialData(
       employmentData = employmentData.map(EmploymentData(_)),
       employmentBenefits = employmentBenefits.map { e =>
         EmploymentBenefits(
@@ -46,6 +44,31 @@ case class HmrcEmployment(employmentId: String,
           benefits = e.employment.benefitsInKind
         )
       }
+    )
+  }
+
+  def toHmrcEmploymentSource(hmrcEmploymentData: Option[DESEmploymentData],
+                             hmrcEmploymentBenefits: Option[DESEmploymentBenefits],
+                             customerEmploymentData: Option[DESEmploymentData],
+                             customerEmploymentBenefits: Option[DESEmploymentBenefits]): HmrcEmploymentSource = {
+
+    val hmrcFinancials: Option[EmploymentFinancialData] = if (hmrcEmploymentData.isDefined || hmrcEmploymentBenefits.isDefined) {
+      Some(toEmploymentFinancialData(hmrcEmploymentData, hmrcEmploymentBenefits))
+    } else {
+      None
+    }
+
+    val customerFinancials: Option[EmploymentFinancialData] = if(customerEmploymentData.isDefined || customerEmploymentBenefits.isDefined){
+      Some(toEmploymentFinancialData(customerEmploymentData,customerEmploymentBenefits))
+    } else {
+      None
+    }
+
+    HmrcEmploymentSource(
+      employmentId, employerName, employerRef, payrollId, startDate, cessationDate, dateIgnored,
+      submittedOn = None,
+      hmrcEmploymentFinancialData = hmrcFinancials,
+      customerEmploymentFinancialData = customerFinancials
     )
   }
 }

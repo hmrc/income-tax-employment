@@ -66,12 +66,20 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .returning(Future.successful(hmrcExpectedResult))
 
       (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(customerExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
         .returning(Future.successful(customerExpectedResult))
 
       (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
         .returning(Future.successful(hmrcBenefitsExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(customerBenefitsExpectedResult))
 
       (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
@@ -115,11 +123,19 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .returning(Future.successful(hmrcExpectedResult))
 
       (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(hmrcExpectedResult))
+
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
         .returning(Future.successful(customerExpectedResult))
 
       (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcBenefitsExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
         .returning(Future.successful(hmrcBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
@@ -148,8 +164,16 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpectedResult))
 
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(hmrcExpectedResult))
+
       (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String,  _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcBenefitsExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String,  _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
         .returning(Future.successful(hmrcBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))
@@ -181,8 +205,16 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpectedResult))
 
+      (dataConnector.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
+        .returning(Future.successful(hmrcExpectedResult))
+
       (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
+        .returning(Future.successful(hmrcBenefitsExpectedResult))
+
+      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
+        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
         .returning(Future.successful(hmrcBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _:String)(_: HeaderCarrier))

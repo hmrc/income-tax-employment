@@ -64,9 +64,14 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                          (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
 
     createUpdateEmploymentRequest match {
-      case CreateUpdateEmploymentRequest(None, Some(employment), Some(employmentData), _) =>
+      case CreateUpdateEmploymentRequest(Some(hmrcEmploymentId), _, Some(employmentData), None, Some(true)) =>
+        updateEmploymentCalls(nino, taxYear, hmrcEmploymentId, None, Some(employmentData)).map {
+          case Left(error) => Left(error)
+          case Right(_) => Right(None)
+        }
+      case CreateUpdateEmploymentRequest(None, Some(employment), Some(employmentData), _, _) =>
         createEmploymentCalls(nino, taxYear, employment, employmentData)
-      case CreateUpdateEmploymentRequest(Some(employmentId), employment, employmentData, _) =>
+      case CreateUpdateEmploymentRequest(Some(employmentId), employment, employmentData, _, _) =>
         updateEmploymentCalls(nino, taxYear, employmentId, employment, employmentData).map {
           case Left(error) => Left(error)
           case Right(_) => Right(None)
@@ -144,8 +149,9 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   def deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int)
                               (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
     toRemove match {
+      case ALL => handleDeleteAllHmrc(nino, taxYear, employmentId)
       case HMRC_HELD => ignoreEmployment(nino, taxYear, employmentId)
-      case CUSTOMER => handleCustomerDelete(nino, employmentId, taxYear)
+      case CUSTOMER => handleCustomerDelete(nino, taxYear, employmentId)
       case _ =>
         val message = "toRemove parameter is not: HMRC-HELD or CUSTOMER"
         pagerDutyLog(INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST, message)
@@ -153,7 +159,15 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
     }
   }
 
-  private def handleCustomerDelete(nino: String, employmentId: String, taxYear: Int)
+  private def handleDeleteAllHmrc(nino: String,  taxYear: Int, employmentId: String)
+                              (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
+    deleteEmploymentFinancialData(nino, taxYear, employmentId).flatMap {
+      case Right(_) => ignoreEmployment(nino, taxYear, employmentId).mapTo[DeleteEmploymentFinancialDataResponse]
+      case Left(response) => Future(Left(response))
+    }
+  }
+
+  private def handleCustomerDelete(nino: String, taxYear: Int, employmentId: String)
                                   (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
     deleteEmploymentFinancialData(nino, taxYear, employmentId).flatMap {
       case Right(_) => deleteEmployment(nino, taxYear, employmentId).mapTo[DeleteEmploymentFinancialDataResponse]
