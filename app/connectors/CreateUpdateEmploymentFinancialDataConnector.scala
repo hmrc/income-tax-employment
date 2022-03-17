@@ -38,6 +38,6 @@ class CreateUpdateEmploymentFinancialDataConnector @Inject()(val http: HttpClien
       http.PUT[DESEmploymentFinancialData, CreateUpdateEmploymentFinancialDataResponse](employmentFinancialDataUri, employmentFinancialData)
     }
 
-    call(integrationFrameworkHeaderCarrier(employmentFinancialDataUri, "1643"))
+    call(integrationFrameworkHeaderCarrier(employmentFinancialDataUri, CREATE_UPDATE_EMPLOYMENT_DATA))
   }
 }
