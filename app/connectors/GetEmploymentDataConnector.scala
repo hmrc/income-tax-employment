@@ -36,6 +36,6 @@ class GetEmploymentDataConnector @Inject()(val http: HttpClient,
       http.GET[GetEmploymentDataResponse](incomeSourcesUri)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(incomeSourcesUri, "1647"))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(incomeSourcesUri, GET_EMPLOYMENT_DATA))
   }
 }

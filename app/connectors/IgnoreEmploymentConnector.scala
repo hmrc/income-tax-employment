@@ -38,6 +38,6 @@ class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
       http.PUT[JsValue,IgnoreEmploymentResponse](ignoreEmploymentUri, Json.parse("""{}"""))
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(ignoreEmploymentUri, "1664"))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(ignoreEmploymentUri, IGNORE_EMPLOYMENT))
   }
 }

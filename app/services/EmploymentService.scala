@@ -21,6 +21,8 @@ import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentRespons
 import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser.CreateUpdateEmploymentFinancialDataResponse
 import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
 import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
+import connectors.httpParsers.IgnoreEmploymentHttpParser.IgnoreEmploymentResponse
+import connectors.httpParsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
 import connectors.httpParsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
 import models.DES.DESEmploymentFinancialData
 import models.DesErrorBodyModel.invalidCreateUpdateRequest
@@ -31,8 +33,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import utils.PagerDutyHelper.PagerDutyKeys.INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST
 import utils.PagerDutyHelper.pagerDutyLog
 import utils.ViewParameterValidation._
-
 import javax.inject.{Inject, Singleton}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -41,6 +43,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   deleteEmploymentFinancialDataConnector: DeleteEmploymentFinancialDataConnector,
                                   updateEmploymentConnector: UpdateEmploymentConnector,
                                   ignoreEmploymentConnector: IgnoreEmploymentConnector,
+                                  unignoreEmploymentConnector: UnignoreEmploymentConnector,
                                   updateEmploymentFinancialDataConnector: CreateUpdateEmploymentFinancialDataConnector,
                                   implicit val executionContext: ExecutionContext) {
 
@@ -129,9 +132,15 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
   def ignoreEmployment(nino: String, taxYear: Int, employmentId: String)
-                      (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
+                      (implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
 
     ignoreEmploymentConnector.ignoreEmployment(nino, taxYear, employmentId)
+  }
+
+  def unignoreEmployment(nino: String, taxYear: Int, employmentId: String)
+                      (implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
+
+    unignoreEmploymentConnector.unignoreEmployment(nino, taxYear, employmentId)
   }
 
   def deleteEmployment(nino: String, taxYear: Int, employmentId: String)

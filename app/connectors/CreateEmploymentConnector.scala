@@ -37,6 +37,6 @@ class CreateEmploymentConnector @Inject()(val http: HttpClient,
       http.POST[CreateUpdateEmployment, CreateEmploymentResponse](uri, employment)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(uri, "1661"))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(uri, CREATE_EMPLOYMENT))
   }
 }

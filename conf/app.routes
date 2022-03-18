@@ -6,4 +6,6 @@ GET     /income-tax/nino/:nino/sources                              controllers.
 
 DELETE  /income-tax/nino/:nino/sources/:employmentId/:toRemove      controllers.DeleteEmploymentController.deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int)
 
+DELETE  /income-tax/nino/:nino/sources/:employmentId/unignore       controllers.UnignoreEmploymentController.unignoreEmployment(nino: String, employmentId: String, taxYear: Int)
+
 POST    /income-tax/nino/:nino/sources                              controllers.CreateUpdateEmploymentController.createUpdateEmployment(nino: String, taxYear: Int)

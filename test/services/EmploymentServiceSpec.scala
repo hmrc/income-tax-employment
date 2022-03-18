@@ -18,6 +18,7 @@ package services
 
 import connectors._
 import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
+import connectors.httpParsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
 import models.DES.{DESEmploymentFinancialData, PayModel}
 import models.DesErrorBodyModel.invalidCreateUpdateRequest
 import models.shared.{AddEmploymentResponseModel, Benefits, CreateUpdateEmployment}
@@ -37,6 +38,7 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockDeleteEmploymentFinancialDataConnector = mock[DeleteEmploymentFinancialDataConnector]
   private val mockUpdateEmploymentDataConnector = mock[UpdateEmploymentConnector]
   private val mockIgnoreEmploymentConnector = mock[IgnoreEmploymentConnector]
+  private val mockUnignoreEmploymentConnector = mock[UnignoreEmploymentConnector]
   private val mockCreateUpdateEmploymentFinancialDataConnector = mock[CreateUpdateEmploymentFinancialDataConnector]
 
   private val underTest = new EmploymentService(mockCreateEmploymentConnector,
@@ -44,6 +46,7 @@ class EmploymentServiceSpec extends TestUtils {
     mockDeleteEmploymentFinancialDataConnector,
     mockUpdateEmploymentDataConnector,
     mockIgnoreEmploymentConnector,
+    mockUnignoreEmploymentConnector,
     mockCreateUpdateEmploymentFinancialDataConnector,
     mockExecutionContext)
 
@@ -67,6 +70,12 @@ class EmploymentServiceSpec extends TestUtils {
                                    connectorResult: CreateEmploymentResponse) = {
     (mockCreateEmploymentConnector.createEmployment(_: String, _: Int, _: CreateUpdateEmployment)(_: HeaderCarrier))
       .expects(nino, taxYear, createUpdateEmployment, *)
+      .returning(Future.successful(connectorResult))
+  }
+
+  private def mockUnignoreEmployment(nino: String, taxYear: Int, employmentId: String, connectorResult: UnignoreEmploymentResponse) = {
+    (mockUnignoreEmploymentConnector.unignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+      .expects(nino, taxYear, employmentId, *)
       .returning(Future.successful(connectorResult))
   }
 
@@ -105,6 +114,16 @@ class EmploymentServiceSpec extends TestUtils {
       val result = underTest.updateEmploymentCalls(nino, taxYear, "employmentId", None, None)
 
       await(result) mustBe Left(invalidCreateUpdateRequest)
+    }
+  }
+
+  ".unignoreEmployment" should {
+    "return the connector response" in {
+      mockUnignoreEmployment(nino, taxYear, "employmentId", Right(()))
+
+      val result = underTest.unignoreEmployment(nino, taxYear, "employmentId")
+
+      await(result) mustBe Right(())
     }
   }
 

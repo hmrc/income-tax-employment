@@ -28,6 +28,14 @@ trait IFConnector {
 
   val appConfig: AppConfig
 
+  val CREATE_EMPLOYMENT = "1661"
+  val CREATE_UPDATE_EMPLOYMENT_DATA = "1643"
+  val GET_EMPLOYMENT_DATA = "1647"
+  val GET_EMPLOYMENT_LIST = "1645"
+  val IGNORE_EMPLOYMENT = "1664"
+  val UNIGNORE_EMPLOYMENT = "1699"
+  val UPDATE_EMPLOYMENT = "1662"
+
   lazy val baseUrl: String = appConfig.integrationFrameworkBaseUrl
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
