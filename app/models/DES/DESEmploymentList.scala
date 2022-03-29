@@ -64,8 +64,14 @@ case class HmrcEmployment(employmentId: String,
       None
     }
 
+    val _employerRef: Option[String] = if(employerRef.isDefined) employerRef else hmrcEmploymentData.flatMap(_.employment.employer.employerRef)
+    val _payrollId: Option[String] = if(payrollId.isDefined) payrollId else hmrcEmploymentData.flatMap(_.employment.payrollId)
+    val _startDate: Option[String] = if(startDate.isDefined) startDate else hmrcEmploymentData.flatMap(_.employment.startDate)
+    val _cessationDate: Option[String] = if(cessationDate.isDefined) cessationDate else hmrcEmploymentData.flatMap(_.employment.cessationDate)
+    val _dateIgnored: Option[String] = if(dateIgnored.isDefined) dateIgnored else hmrcEmploymentData.flatMap(_.dateIgnored)
+
     HmrcEmploymentSource(
-      employmentId, employerName, employerRef, payrollId, startDate, cessationDate, dateIgnored,
+      employmentId, employerName, _employerRef, _payrollId, _startDate, _cessationDate, _dateIgnored,
       submittedOn = None,
       hmrcEmploymentFinancialData = hmrcFinancials,
       customerEmploymentFinancialData = customerFinancials
@@ -87,8 +93,14 @@ case class CustomerEmployment(employmentId: String,
 
   def toEmploymentSource(employmentData: Option[DESEmploymentData],
                          employmentBenefits: Option[DESEmploymentBenefits]): EmploymentSource = {
+
+    val _employerRef: Option[String] = if(employerRef.isDefined) employerRef else employmentData.flatMap(_.employment.employer.employerRef)
+    val _payrollId: Option[String] = if(payrollId.isDefined) payrollId else employmentData.flatMap(_.employment.payrollId)
+    val _startDate: Option[String] = if(startDate.isDefined) startDate else employmentData.flatMap(_.employment.startDate)
+    val _cessationDate: Option[String] = if(cessationDate.isDefined) cessationDate else employmentData.flatMap(_.employment.cessationDate)
+
     EmploymentSource(
-      employmentId, employerName, employerRef, payrollId, startDate, cessationDate,
+      employmentId, employerName, _employerRef, _payrollId, _startDate, _cessationDate,
       dateIgnored = None,
       submittedOn = Some(submittedOn),
       employmentData = employmentData.map(EmploymentData(_)),
