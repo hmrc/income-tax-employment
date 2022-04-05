@@ -32,7 +32,7 @@ object IgnoreEmploymentHttpParser extends DESParser with Logging{
   implicit object IgnoreEmploymentHttpReads extends HttpReads[IgnoreEmploymentResponse] {
     override def read(method: String, url: String, response: HttpResponse): IgnoreEmploymentResponse = {
       response.status match {
-        case CREATED => Right(())
+        case NO_CONTENT => Right(())
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
           handleDESError(response)
