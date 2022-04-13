@@ -34,7 +34,7 @@ object DeleteEmploymentHttpParser extends DESParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): DeleteEmploymentResponse = {
       response.status match {
         case NO_CONTENT => Right(())
-        case NOT_FOUND | BAD_REQUEST =>
+        case NOT_FOUND | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response)
         case INTERNAL_SERVER_ERROR =>
