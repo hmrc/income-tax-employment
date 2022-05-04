@@ -25,18 +25,18 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class DeleteEmploymentFinancialDataConnector@Inject()(val http: HttpClient,
-                                                      val appConfig: AppConfig)(implicit ec: ExecutionContext) extends DesConnector {
+                                                      val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
                                    (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
 
     val uri: String = baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
-    def desCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
       http.DELETE[DeleteEmploymentFinancialDataResponse](uri)
     }
 
-    desCall(desHeaderCarrier(uri))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(uri, DELETE_EMPLOYMENT_FINANCIAL_DATA))
 
   }
 }
