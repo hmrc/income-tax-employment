@@ -52,7 +52,7 @@ class DeleteEmploymentFinancialDataConnectorSpec  extends PlaySpec with Wiremock
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
       )
       Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
-        s"the host for DES is 'Internal', the status is $status" in {
+        s"the host for IF is 'Internal', the status is $status" in {
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
           val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
 
@@ -64,7 +64,7 @@ class DeleteEmploymentFinancialDataConnectorSpec  extends PlaySpec with Wiremock
         }
       }
         Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
-          s"the host for DES is 'External', the status is $status" in {
+          s"the host for IF is 'External', the status is $status" in {
             implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
             val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
 
@@ -93,7 +93,7 @@ class DeleteEmploymentFinancialDataConnectorSpec  extends PlaySpec with Wiremock
         }
       }
 
-      s"DES returns unexpected error code - BAD_GATEWAY (502)" in {
+      s"IF returns unexpected error code - BAD_GATEWAY (502)" in {
         val desError = DesErrorModel(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
