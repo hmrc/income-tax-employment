@@ -29,12 +29,12 @@ This service runs on port: `localhost:9315`
 
 - **POST    /income-tax/nino/:nino/sources** (Creates or updates an employment based on the request body, this can also ignore hmrc data if an update is being made to employment details such as a change of name or employer reference etc.)                            
 
-###Downstream services
+### Downstream services
 All employment data is retrieved / updated via one of two downstream systems.
 - DES (Data Exchange Service)
 - IF (Integration Framework)
 
-###Connected microservices
+### Connected microservices
 We connect to two other microservices to fetch some data. These two services will ultimately call one of the two above downstream services for their data. 
 - income-tax-expenses (Gets employment expenses data)
 - income-tax-benefits (Gets employment benefits data)
