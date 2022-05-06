@@ -109,6 +109,7 @@ class GetEmploymentsControllerSpec extends TestUtils {
           |		"payrollId": "1234567890",
           |		"startDate": "2020-01-01",
           |		"cessationDate": "2020-01-01",
+          |   "occupationalPension": false,
           |		"dateIgnored": "2020-01-01T10:00:38Z",
           |		"hmrcEmploymentFinancialData": {
           |			"employmentData": {
@@ -249,6 +250,7 @@ class GetEmploymentsControllerSpec extends TestUtils {
           |		"payrollId": "1234567890",
           |		"startDate": "2020-01-01",
           |		"cessationDate": "2020-01-01",
+          |   "occupationalPension": false,
           |		"submittedOn": "2020-01-01T10:00:38Z",
           |		"employmentData": {
           |			"submittedOn": "2020-01-04T05:01:01Z",

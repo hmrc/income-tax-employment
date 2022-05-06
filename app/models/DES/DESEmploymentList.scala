@@ -32,6 +32,7 @@ case class HmrcEmployment(employmentId: String,
                           payrollId: Option[String],
                           startDate: Option[String],
                           cessationDate: Option[String],
+                          occupationalPension: Option[Boolean],
                           dateIgnored: Option[String]) {
 
   private def toEmploymentFinancialData(employmentData: Option[DESEmploymentData],
@@ -74,7 +75,8 @@ case class HmrcEmployment(employmentId: String,
       employmentId, employerName, _employerRef, _payrollId, _startDate, _cessationDate, _dateIgnored,
       submittedOn = None,
       hmrcEmploymentFinancialData = hmrcFinancials,
-      customerEmploymentFinancialData = customerFinancials
+      customerEmploymentFinancialData = customerFinancials,
+      occupationalPension = occupationalPension
     )
   }
 }
@@ -89,6 +91,7 @@ case class CustomerEmployment(employmentId: String,
                               payrollId: Option[String],
                               startDate: Option[String],
                               cessationDate: Option[String],
+                              occupationalPension: Option[Boolean],
                               submittedOn: String) {
 
   def toEmploymentSource(employmentData: Option[DESEmploymentData],
@@ -102,6 +105,7 @@ case class CustomerEmployment(employmentId: String,
     EmploymentSource(
       employmentId, employerName, _employerRef, _payrollId, _startDate, _cessationDate,
       dateIgnored = None,
+      occupationalPension = occupationalPension,
       submittedOn = Some(submittedOn),
       employmentData = employmentData.map(EmploymentData(_)),
       employmentBenefits = employmentBenefits.map { e =>

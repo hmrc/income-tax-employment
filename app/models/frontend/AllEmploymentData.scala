@@ -36,7 +36,8 @@ case class EmploymentSource(employmentId: String,
                             dateIgnored: Option[String],
                             submittedOn: Option[String],
                             employmentData: Option[EmploymentData],
-                            employmentBenefits: Option[EmploymentBenefits])
+                            employmentBenefits: Option[EmploymentBenefits],
+                            occupationalPension: Option[Boolean])
 
 object EmploymentSource {
   implicit val format: OFormat[EmploymentSource] = Json.format[EmploymentSource]
@@ -51,7 +52,8 @@ case class HmrcEmploymentSource(employmentId: String,
                                 dateIgnored: Option[String],
                                 submittedOn: Option[String],
                                 hmrcEmploymentFinancialData: Option[EmploymentFinancialData],
-                                customerEmploymentFinancialData: Option[EmploymentFinancialData])
+                                customerEmploymentFinancialData: Option[EmploymentFinancialData],
+                                occupationalPension: Option[Boolean])
 
 object HmrcEmploymentSource {
   implicit val format: OFormat[HmrcEmploymentSource] = Json.format[HmrcEmploymentSource]
