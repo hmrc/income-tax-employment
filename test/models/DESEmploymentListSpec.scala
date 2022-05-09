@@ -35,6 +35,7 @@ class DESEmploymentListSpec extends TestUtils {
           "payrollId" -> "1234567890",
           "startDate" -> "2020-01-01",
           "cessationDate" -> "2020-01-01",
+          "occupationalPension" -> false,
           "dateIgnored" -> "2020-01-01T10:00:38Z"
         )
       )
@@ -48,6 +49,7 @@ class DESEmploymentListSpec extends TestUtils {
           "payrollId" -> "1234567890",
           "startDate" -> "2020-01-01",
           "cessationDate" -> "2020-01-01",
+          "occupationalPension" -> false,
           "submittedOn" -> "2020-01-01T10:00:38Z"
         )
       )
@@ -79,10 +81,11 @@ class DESEmploymentListSpec extends TestUtils {
         payrollId = customerEmploymentDataModelExample.employment.payrollId,
         startDate = customerEmploymentDataModelExample.employment.startDate,
         cessationDate = customerEmploymentDataModelExample.employment.cessationDate,
+        occupationalPension = customerEmploymentDataModelExample.employment.occPen,
         dateIgnored = None,
         submittedOn = Some(customerEmploymentModel.submittedOn),
-        Some(EmploymentData(customerEmploymentDataModelExample)),
-        Some(EmploymentBenefits(customerBenefits.submittedOn,customerBenefits.employment.benefitsInKind))
+        employmentData = Some(EmploymentData(customerEmploymentDataModelExample)),
+        employmentBenefits = Some(EmploymentBenefits(customerBenefits.submittedOn,customerBenefits.employment.benefitsInKind))
       )
     }
   }
@@ -97,6 +100,7 @@ class DESEmploymentListSpec extends TestUtils {
         startDate = hmrcEmploymentModel.startDate,
         cessationDate = hmrcEmploymentModel.cessationDate,
         dateIgnored = hmrcEmploymentModel.dateIgnored,
+        occupationalPension = hmrcEmploymentModel.occupationalPension,
         submittedOn = None,
         hmrcEmploymentFinancialData = None,
         customerEmploymentFinancialData = None
@@ -111,6 +115,7 @@ class DESEmploymentListSpec extends TestUtils {
         startDate = hmrcEmploymentModel.startDate,
         cessationDate = hmrcEmploymentModel.cessationDate,
         dateIgnored = hmrcEmploymentModel.dateIgnored,
+        occupationalPension = hmrcEmploymentModel.occupationalPension,
         submittedOn = None,
         hmrcEmploymentFinancialData = Some(
           EmploymentFinancialData(
@@ -136,6 +141,7 @@ class DESEmploymentListSpec extends TestUtils {
         startDate = hmrcEmploymentDataModelExample.employment.startDate,
         cessationDate = hmrcEmploymentDataModelExample.employment.cessationDate,
         dateIgnored = hmrcEmploymentDataModelExample.dateIgnored,
+        occupationalPension = hmrcEmploymentDataModelExample.employment.occPen,
         submittedOn = None,
         hmrcEmploymentFinancialData = Some(
           EmploymentFinancialData(
@@ -156,6 +162,7 @@ class DESEmploymentListSpec extends TestUtils {
         startDate = hmrcEmploymentModel.startDate,
         cessationDate = hmrcEmploymentModel.cessationDate,
         dateIgnored = hmrcEmploymentModel.dateIgnored,
+        occupationalPension = hmrcEmploymentModel.occupationalPension,
         submittedOn = None,
         hmrcEmploymentFinancialData = Some(
           EmploymentFinancialData(

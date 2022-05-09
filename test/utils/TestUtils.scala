@@ -160,6 +160,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           payrollId = Some("1234567890"),
           startDate = Some("2020-01-01"),
           cessationDate = Some("2020-01-01"),
+          occupationalPension = Some(false),
           dateIgnored = Some("2020-01-01T10:00:38Z"),
           submittedOn = None,
           hmrcEmploymentFinancialData = Some(
@@ -256,6 +257,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           payrollId = Some("1234567890"),
           startDate = Some("2020-01-01"),
           cessationDate = Some("2020-01-01"),
+          occupationalPension = Some(false),
           dateIgnored = None,
           submittedOn = Some("2020-01-01T10:00:38Z"),
           employmentData = Some(
@@ -315,6 +317,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       payrollId = Some("1234567890"),
       startDate = Some("2020-01-01"),
       cessationDate = Some("2020-01-01"),
+      occupationalPension = Some(false),
       dateIgnored = Some("2020-01-01T10:00:38Z")
     )
 
@@ -326,6 +329,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       payrollId = Some("1234567890"),
       startDate = Some("2020-01-01"),
       cessationDate = Some("2020-01-01"),
+      occupationalPension = Some(false),
       submittedOn = "2020-01-01T10:00:38Z"
     )
 
