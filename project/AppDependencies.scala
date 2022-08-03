@@ -19,7 +19,7 @@ import sbt._
 
 object AppDependencies {
 
-  private val bootstrapPlay28Version = "6.3.0"
+  private val bootstrapPlay28Version = "6.4.0"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-28"  % bootstrapPlay28Version,
@@ -27,7 +27,7 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-test-play-28"   % bootstrapPlay28Version                % Test,
+    "uk.gov.hmrc"             %% "bootstrap-test-play-28"   % bootstrapPlay28Version  % Test,
     "org.scalatest"           %% "scalatest"                % "3.2.9"                 % Test,
     "com.typesafe.play"       %% "play-test"                % current                 % Test,
     "org.pegdown"             %  "pegdown"                  % "1.6.0"                 % "test, it",
