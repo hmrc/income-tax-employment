@@ -34,7 +34,8 @@ class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: GetEmploymentBenefitsConnector = app.injector.instanceOf[GetEmploymentBenefitsConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(benefitsHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+
+  private def appConfig(benefitsHost: String) = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
     override val benefitsBaseUrl: String = s"http://$benefitsHost:$wireMockPort"
   }
 
@@ -86,7 +87,7 @@ class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec {
         implicit val hc: HeaderCarrier = HeaderCarrier()
         val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc))
 
-        result.right.get mustBe None
+        result.toOption.get mustBe None
       }
     }
 
@@ -96,7 +97,7 @@ class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(url, OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc)).right.get.get
+        val result = await(connector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc)).toOption.get.get
 
         result.customerAdded mustBe expectedResult.customerAdded
         result.dateIgnored mustBe expectedResult.dateIgnored
@@ -200,7 +201,7 @@ class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(url, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -213,7 +214,7 @@ class GetEmploymentBenefitsConnectorSpec extends PlaySpec with WiremockSpec {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel.parsingError(false))
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
 
       stubGetWithResponseBody(url, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()

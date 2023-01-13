@@ -34,9 +34,11 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: GetEmploymentExpensesConnector = app.injector.instanceOf[GetEmploymentExpensesConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(expensesHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
-  }
+
+  private def appConfig(expensesHost: String) =
+    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+      override val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
+    }
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -86,11 +88,11 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         implicit val hc: HeaderCarrier = HeaderCarrier()
         val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
-        result.right.get.get.dateIgnored mustBe expectedResult.dateIgnored
-        result.right.get.get.expenses mustBe expectedResult.expenses
-        result.right.get.get.totalExpenses mustBe expectedResult.totalExpenses
-        result.right.get.get.source mustBe expectedResult.source
-        result.right.get.get.submittedOn mustBe expectedResult.submittedOn
+        result.toOption.get.get.dateIgnored mustBe expectedResult.dateIgnored
+        result.toOption.get.get.expenses mustBe expectedResult.expenses
+        result.toOption.get.get.totalExpenses mustBe expectedResult.totalExpenses
+        result.toOption.get.get.source mustBe expectedResult.source
+        result.toOption.get.get.submittedOn mustBe expectedResult.submittedOn
       }
     }
 
