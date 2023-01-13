@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: GetEmploymentDataConnector = app.injector.instanceOf[GetEmploymentDataConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
-  }
+
+  private def appConfig(integrationFrameworkHost: String) =
+    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+      override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+    }
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -86,7 +88,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get.get
+        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).toOption.get.get
 
         result.customerAdded mustBe expectedResult.customerAdded
         result.dateIgnored mustBe expectedResult.dateIgnored
@@ -99,7 +101,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(getEmploymentDataUrl, OK, filteredExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).right.get.get
+        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).toOption.get.get
 
         result.employment mustBe expectedResult.employment
         result.submittedOn mustBe expectedResult.submittedOn
@@ -201,7 +203,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -214,7 +216,7 @@ class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel.parsingError())
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
 
       stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()

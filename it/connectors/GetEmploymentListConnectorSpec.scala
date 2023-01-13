@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: GetEmploymentListConnector = app.injector.instanceOf[GetEmploymentListConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
-  }
+
+  private def appConfig(integrationFrameworkHost: String): BackendAppConfig =
+    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+      override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+    }
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -59,7 +61,8 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new GetEmploymentListConnector(httpClient, appConfig(internalHost))
 
-        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody, headersSentToIntegrationFramework)
+        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}",
+          OK, expectedResponseBody, headersSentToIntegrationFramework)
 
         val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
 
@@ -70,7 +73,8 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
         val connector = new GetEmploymentListConnector(httpClient, appConfig(externalHost))
 
-        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody, headersSentToIntegrationFramework)
+        stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}",
+          OK, expectedResponseBody, headersSentToIntegrationFramework)
 
         val result = await(connector.getEmploymentList(nino, taxYear, None)(hc))
 
@@ -84,7 +88,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get.get
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).toOption.get.get
 
         result.employments mustBe expectedResult.employments
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
@@ -95,7 +99,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, hmrcExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get.get
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).toOption.get.get
 
         result.employments mustBe expectedResult.employments
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
@@ -106,7 +110,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, customerExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).right.get.get
+        val result = await(connector.getEmploymentList(nino, taxYear, None)(hc)).toOption.get.get
 
         result.employments mustBe expectedResult.employments
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
@@ -119,7 +123,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
           OK, filteredExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentList(nino, taxYear, Some(employmentId))(hc)).right.get.get
+        val result = await(connector.getEmploymentList(nino, taxYear, Some(employmentId))(hc)).toOption.get.get
 
         result.employments mustBe expectedResult.employments
         result.customerDeclaredEmployments mustBe expectedResult.customerDeclaredEmployments
@@ -230,7 +234,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -243,7 +247,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel.parsingError())
+      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()

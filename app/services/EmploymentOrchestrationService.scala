@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import connectors.httpParsers.GetEmploymentDataHttpParser.GetEmploymentDataRespo
 import connectors.httpParsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.httpParsers.GetEmploymentListHttpParser.GetEmploymentListResponse
 import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector}
-import javax.inject.Inject
 import models.DES._
 import models.DesErrorBodyModel.parsingError
 import models.DesErrorModel
@@ -31,6 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import utils.FutureEitherOps
 import utils.ViewParameterValidation.{CUSTOMER, HMRC_HELD}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEmploymentListConnector,
@@ -44,14 +44,14 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
     getEmploymentList(nino, taxYear).flatMap {
       case Right(Some(DESEmploymentList(hmrc, customer))) =>
         getDataAndCreateEmploymentModel(nino, taxYear, hmrc.getOrElse(Seq()), customer.getOrElse(Seq()), mtditid)
-      case Right(None) => getDataAndCreateEmploymentModel(nino,taxYear,Seq(),Seq(),mtditid)
+      case Right(None) => getDataAndCreateEmploymentModel(nino, taxYear, Seq(), Seq(), mtditid)
       case Left(error) => Future.successful(Left(error))
     }
   }
 
   private def getDataAndCreateEmploymentModel(nino: String, taxYear: Int, hmrc: Seq[HmrcEmployment], customer: Seq[CustomerEmployment],
                                               mtditid: String)
-                                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
+                                             (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[DesErrorModel, AllEmploymentData]] = {
 
     orchestrateHmrcEmploymentDataRetrieval(nino, taxYear, hmrc, mtditid).flatMap { hmrcResponse =>
       if (hmrcResponse.forall(_.isRight)) {
@@ -65,9 +65,9 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
                     val customerEmployments: Seq[EmploymentSource] = customerResponse.collect { case Right(employment) => employment }
                     Right(AllEmploymentData(
                       hmrcEmployments,
-                      hmrcExpenses.right.get.map(_.toEmploymentExpenses),
+                      hmrcExpenses.toOption.get.map(_.toEmploymentExpenses),
                       customerEmployments,
-                      customerExpenses.right.get.map(_.toEmploymentExpenses)
+                      customerExpenses.toOption.get.map(_.toEmploymentExpenses)
                     ))
                   } else {
                     returnError(Seq(customerExpenses))
