@@ -17,27 +17,26 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser._
-import models.DES.DESEmploymentFinancialData
+import connectors.parsers.CreateUpdateEmploymentFinancialDataHttpParser._
+import models.api.EmploymentFinancialData
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CreateUpdateEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
-                                                             val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+                                                             val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
-  def createUpdateEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: DESEmploymentFinancialData)
+  def createUpdateEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: EmploymentFinancialData)
                                          (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
-
-    val employmentFinancialDataUri: String =
-      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
+    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId")
 
     def call(implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
-      http.PUT[DESEmploymentFinancialData, CreateUpdateEmploymentFinancialDataResponse](employmentFinancialDataUri, employmentFinancialData)
+      http.PUT[EmploymentFinancialData, CreateUpdateEmploymentFinancialDataResponse](url, employmentFinancialData)
     }
 
-    call(integrationFrameworkHeaderCarrier(employmentFinancialDataUri, CREATE_UPDATE_EMPLOYMENT_DATA))
+    call(integrationFrameworkHeaderCarrier(url, CREATE_UPDATE_EMPLOYMENT_DATA))
   }
 }

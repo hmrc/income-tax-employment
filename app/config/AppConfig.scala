@@ -37,23 +37,26 @@ trait AppConfig {
   val environment: String
   val authorisationToken: String
   val integrationFrameworkEnvironment: String
+
   def integrationFrameworkAuthorisationToken(api: String): String
 }
 
 
 class BackendAppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  lazy val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  lazy val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
+  lazy val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 
-  val desBaseUrl: String = servicesConfig.baseUrl("des")
-  val integrationFrameworkBaseUrl: String = servicesConfig.baseUrl("integration-framework")
-  val benefitsBaseUrl: String = servicesConfig.baseUrl("income-tax-benefits")
-  val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
+  lazy val desBaseUrl: String = servicesConfig.baseUrl("des")
+  lazy val integrationFrameworkBaseUrl: String = servicesConfig.baseUrl("integration-framework")
+  lazy val benefitsBaseUrl: String = servicesConfig.baseUrl("income-tax-benefits")
+  lazy val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
 
-  val environment: String = config.get[String]("microservice.services.des.environment")
-  val authorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")
-  val integrationFrameworkEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
-  def integrationFrameworkAuthorisationToken(api:String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
+  lazy val environment: String = config.get[String]("microservice.services.des.environment")
+  lazy val authorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")
+  lazy val integrationFrameworkEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+
+  def integrationFrameworkAuthorisationToken(apiVersion: String): String =
+    config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
 }

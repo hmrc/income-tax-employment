@@ -18,11 +18,11 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
-import helpers.WiremockSpec
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{SingleErrorBody, ApiError}
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
+import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper._
@@ -33,7 +33,7 @@ class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
   def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val taxYear = 2022
@@ -76,11 +76,11 @@ class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "handle error" when {
-      val IFErrorBodyModel = DesErrorBodyModel("IF_CODE", "IF_REASON")
+      val IFErrorBodyModel = SingleErrorBody("IF_CODE", "IF_REASON")
 
       Seq(BAD_REQUEST, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"IF returns $status" in {
-          val IFError = DesErrorModel(status, IFErrorBodyModel)
+          val IFError = ApiError(status, IFErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
 
           stubDeleteWithResponseBody(url, status, IFError.toJson.toString())
@@ -92,7 +92,7 @@ class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       }
 
       s"IF returns unexpected error code - BAD_GATEWAY (502)" in {
-        val IFError = DesErrorModel(INTERNAL_SERVER_ERROR, IFErrorBodyModel)
+        val IFError = ApiError(INTERNAL_SERVER_ERROR, IFErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
         stubDeleteWithResponseBody(url, BAD_GATEWAY, IFError.toJson.toString())

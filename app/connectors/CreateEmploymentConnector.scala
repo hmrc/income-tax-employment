@@ -17,21 +17,21 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.CreateEmploymentHttpParser.{AddEmploymentHttpReads, CreateEmploymentResponse}
+import connectors.parsers.CreateEmploymentHttpParser.{AddEmploymentHttpReads, CreateEmploymentResponse}
 import models.shared.CreateUpdateEmployment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CreateEmploymentConnector @Inject()(val http: HttpClient,
-                                          val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+                                          val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def createEmployment(nino: String, taxYear: Int, employment: CreateUpdateEmployment)
                       (implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
-
-    val uri: String = baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom"
+    val uri = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom")
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[CreateEmploymentResponse] = {
       http.POST[CreateUpdateEmployment, CreateEmploymentResponse](uri, employment)

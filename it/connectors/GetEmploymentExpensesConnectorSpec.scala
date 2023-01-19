@@ -19,13 +19,13 @@ package connectors
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
 import connectors.GetEmploymentExpensesConnectorSpec.expectedResponseBody
-import helpers.WiremockSpec
-import models.DES.DESEmploymentExpenses
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{SingleErrorBody, ApiError}
+import models.api.EmploymentExpenses
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
+import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -37,7 +37,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
 
   private def appConfig(expensesHost: String) =
     new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-      override val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
+      override lazy val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
     }
 
   val nino: String = "123456789"
@@ -48,7 +48,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
 
   ".GetEmploymentExpensesConnector" should {
     "include internal headers" when {
-      val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentExpenses])
+      val expectedResult = Some(Json.parse(expectedResponseBody).as[EmploymentExpenses])
 
       val headersSentToExpenses = Seq(
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
@@ -82,7 +82,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
 
     "return a DESEmploymentExpenses" when {
       "all values are present in the url" in {
-        val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentExpenses]
+        val expectedResult = Json.parse(expectedResponseBody).as[EmploymentExpenses]
         stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -109,7 +109,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "return a NO_CONTENT" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
       stubGetWithResponseBody(getEmploymentDataUrl, NO_CONTENT, "{}")
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -123,7 +123,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "INVALID_NINO",
         "reason" -> "Nino is invalid"
       )
-      val expectedResult = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_NINO", "Nino is invalid"))
+      val expectedResult = ApiError(BAD_REQUEST, SingleErrorBody("INVALID_NINO", "Nino is invalid"))
 
       stubGetWithResponseBody(getEmploymentDataUrl, BAD_REQUEST, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -150,7 +150,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVER_ERROR",
         "reason" -> "Internal server error"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVER_ERROR", "Internal server error"))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVER_ERROR", "Internal server error"))
 
       stubGetWithResponseBody(getEmploymentDataUrl, INTERNAL_SERVER_ERROR, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -164,7 +164,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(SERVICE_UNAVAILABLE, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(getEmploymentDataUrl, SERVICE_UNAVAILABLE, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -174,7 +174,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "return an Internal Server Error when DES throws an unexpected result" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
       stubGetWithoutResponseBody(getEmploymentDataUrl, NO_CONTENT)
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -188,7 +188,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -201,7 +201,7 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError(false))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
       stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()

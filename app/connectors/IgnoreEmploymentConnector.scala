@@ -17,27 +17,27 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.IgnoreEmploymentHttpParser.{IgnoreEmploymentHttpReads, IgnoreEmploymentResponse}
+import connectors.parsers.IgnoreEmploymentHttpParser.{IgnoreEmploymentHttpReads, IgnoreEmploymentResponse}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
-                                          val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+                                          val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def ignoreEmployment(nino: String, taxYear: Int, employmentId: String)
-                           (implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
+                      (implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
 
-    val ignoreEmploymentUri: String =
-      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore"
+    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore")
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
-      http.PUT[JsValue,IgnoreEmploymentResponse](ignoreEmploymentUri, Json.parse("""{}"""))
+      http.PUT[JsValue, IgnoreEmploymentResponse](url, Json.parse("""{}"""))
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(ignoreEmploymentUri, IGNORE_EMPLOYMENT))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, IGNORE_EMPLOYMENT))
   }
 }

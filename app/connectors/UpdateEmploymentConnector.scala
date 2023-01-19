@@ -17,26 +17,26 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.UpdateEmploymentDataHttpParser.{UpdateEmploymentDataHttpReads, UpdateEmploymentDataResponse}
+import connectors.parsers.UpdateEmploymentDataHttpParser.{UpdateEmploymentDataHttpReads, UpdateEmploymentDataResponse}
 import models.shared.CreateUpdateEmployment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateEmploymentConnector @Inject()(val http: HttpClient,
-                                          val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+                                          val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def updateEmployment(nino: String, taxYear: Int, employmentId: String, employmentData: CreateUpdateEmployment)
                       (implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
-
-    val uri: String = baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
+    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId")
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
-      http.PUT[CreateUpdateEmployment, UpdateEmploymentDataResponse](uri, employmentData)
+      http.PUT[CreateUpdateEmployment, UpdateEmploymentDataResponse](url, employmentData)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(uri, UPDATE_EMPLOYMENT))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, UPDATE_EMPLOYMENT))
   }
 }

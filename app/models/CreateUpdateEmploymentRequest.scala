@@ -16,7 +16,7 @@
 
 package models
 
-import models.DES.{DESEmploymentFinancialData, Employment, PayModel}
+import models.api.{EmploymentFinancialData, Employment, PayModel}
 import models.shared.{Benefits, CreateUpdateEmployment, Deductions}
 import play.api.libs.json.{Json, OFormat}
 
@@ -33,8 +33,8 @@ object CreateUpdateEmploymentRequest {
 case class CreateUpdateEmploymentData(pay: PayModel,
                                       deductions: Option[Deductions] = None,
                                       benefitsInKind: Option[Benefits] = None){
-  def toDESModel: DESEmploymentFinancialData = {
-    DESEmploymentFinancialData(employment = Employment(
+  def toDESModel: EmploymentFinancialData = {
+    EmploymentFinancialData(employment = Employment(
       pay = pay,
       deductions = deductions,
       benefitsInKind = benefitsInKind

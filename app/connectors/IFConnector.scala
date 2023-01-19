@@ -32,6 +32,7 @@ trait IFConnector {
   val CREATE_UPDATE_EMPLOYMENT_DATA = "1643"
   val DELETE_EMPLOYMENT_FINANCIAL_DATA = "1644"
   val GET_EMPLOYMENT_DATA = "1647"
+  val GET_EMPLOYMENT_DATA_23_24 = "1877"
   val GET_EMPLOYMENT_LIST = "1645"
   val IGNORE_EMPLOYMENT = "1664"
   val UNIGNORE_EMPLOYMENT = "1699"
@@ -42,16 +43,23 @@ trait IFConnector {
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
-  private[connectors] def integrationFrameworkHeaderCarrier(url : String, apiNumber: String)(implicit hc: HeaderCarrier): HeaderCarrier = {
-    val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
+  protected def toTaxYearParam(taxYear: Int): String = {
+    if (taxYear - 1 == 2023) {
+      s"${(taxYear - 1).toString takeRight 2}-${taxYear.toString takeRight 2}"
+    } else {
+      s"${taxYear - 1}-${taxYear.toString takeRight 2}"
+    }
+  }
+
+  private[connectors] def integrationFrameworkHeaderCarrier(url: URL, apiNumber: String)(implicit hc: HeaderCarrier): HeaderCarrier = {
+    val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(url.getHost).matches())
 
     val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.integrationFrameworkAuthorisationToken(apiNumber)}")))
 
-    if(isInternalHost) {
+    if (isInternalHost) {
       hcWithAuth.withExtraHeaders("Environment" -> appConfig.integrationFrameworkEnvironment)
     } else {
       hcWithAuth.withExtraHeaders(("Environment" -> appConfig.integrationFrameworkEnvironment) +: hcWithAuth.toExplicitHeaders: _*)
     }
   }
-
 }

@@ -16,303 +16,63 @@
 
 package connectors
 
-import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
-import connectors.GetEmploymentDataConnectorSpec.{expectedResponseBody, filteredExpectedResponseBody}
-import helpers.WiremockSpec
-import models.DES.DESEmploymentData
-import models.{DesErrorBodyModel, DesErrorModel}
-import org.scalatestplus.play.PlaySpec
-import play.api.Configuration
-import play.api.http.Status._
+import connectors.errors.{ApiError, SingleErrorBody}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import utils.DESTaxYearHelper.desTaxYearConverter
+import support.ConnectorIntegrationTest
+import support.builders.api.EmploymentDataBuilder.anEmploymentData
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 
-class GetEmploymentDataConnectorSpec extends PlaySpec with WiremockSpec {
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val connector: GetEmploymentDataConnector = app.injector.instanceOf[GetEmploymentDataConnector]
+class GetEmploymentDataConnectorSpec extends ConnectorIntegrationTest {
 
-  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  private val nino = "some-nino"
+  private val employmentId = "some-employment-id"
+  private val view = "any-view-value"
+  private val taxYear21_22 = 2022
+  private val taxYear23_24 = 2024
+  private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  private def appConfig(integrationFrameworkHost: String) =
-    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-      override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
-    }
+  private val underTest = new GetEmploymentDataConnector(httpClient, appConfigStub)
 
-  val nino: String = "123456789"
-  val taxYear: Int = 1999
-  val employmentId: String = "00000000-0000-1000-8000-000000000000"
-  val view: String = "CUSTOMER"
-  val getEmploymentDataUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId\\?view=$view"
+  ".getEmploymentData" when {
+    "taxYear is 23-24" should {
+      "return correct IF data when correct parameters are passed" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(anEmploymentData).toString())
 
-  ".GetEmploymentDataConnector" should {
-    "include internal headers" when {
-      val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentData])
+        stubGetHttpClientCall(s"/income-tax/income/employments/23-24/$nino/$employmentId\\?view=$view", httpResponse)
 
-      val headersSentToIntegrationFramework = Seq(
-        new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
-
-      val internalHost = "localhost"
-      val externalHost = "127.0.0.1"
-
-      "the host for integration framework is 'Internal'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new GetEmploymentDataConnector(httpClient, appConfig(internalHost))
-
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToIntegrationFramework)
-
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-        result mustBe Right(expectedResult)
+        await(underTest.getEmploymentData(nino, taxYear23_24, employmentId, view)(hc)) shouldBe Right(Some(anEmploymentData))
       }
 
-      "the host for integration framework is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new GetEmploymentDataConnector(httpClient, appConfig(externalHost))
+      "return IF error and perform a pagerDutyLog when Left is returned" in {
+        val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
 
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToIntegrationFramework)
+        stubGetHttpClientCall(s"/income-tax/income/employments/23-24/$nino/$employmentId\\?view=$view", httpResponse)
 
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-        result mustBe Right(expectedResult)
+        await(underTest.getEmploymentData(nino, taxYear23_24, employmentId, view)(hc)) shouldBe
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
       }
     }
 
-    "return a GetEmploymentDataModel" when {
-      "all values are present in the url" in {
-        val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentData]
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
+    "taxYear is not 23-24" should {
+      "return correct IF data when correct parameters are passed" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(anEmploymentData).toString())
 
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).toOption.get.get
+        stubGetHttpClientCall(s"/income-tax/income/employments/$nino/2021-22/$employmentId\\?view=$view", httpResponse)
 
-        result.customerAdded mustBe expectedResult.customerAdded
-        result.dateIgnored mustBe expectedResult.dateIgnored
-        result.employment mustBe expectedResult.employment
-        result.source mustBe expectedResult.source
-        result.submittedOn mustBe expectedResult.submittedOn
+        await(underTest.getEmploymentData(nino, taxYear21_22, employmentId, view)(hc)) shouldBe Right(Some(anEmploymentData))
       }
-      "only the required values are returned in the response body" in {
-        val expectedResult = Json.parse(filteredExpectedResponseBody).as[DESEmploymentData]
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, filteredExpectedResponseBody)
 
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc)).toOption.get.get
+      "return IF error and perform a pagerDutyLog when Left is returned" in {
+        val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
 
-        result.employment mustBe expectedResult.employment
-        result.submittedOn mustBe expectedResult.submittedOn
+        stubGetHttpClientCall(s"/income-tax/income/employments/$nino/2021-22/$employmentId\\?view=$view", httpResponse)
+
+        await(underTest.getEmploymentData(nino, taxYear21_22, employmentId, view)(hc)) shouldBe
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
       }
-    }
-
-
-    "return a Parsing error INTERNAL_SERVER_ERROR response" in {
-      val invalidJson = Json.obj(
-        "employments" -> ""
-      )
-
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
-
-      stubGetWithResponseBody(getEmploymentDataUrl, OK, invalidJson.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return a NO_CONTENT" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
-
-      stubGetWithResponseBody(getEmploymentDataUrl, NO_CONTENT, "{}")
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return a Bad Request" in {
-      val responseBody = Json.obj(
-        "code" -> "INVALID_NINO",
-        "reason" -> "Nino is invalid"
-      )
-      val expectedResult = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_NINO", "Nino is invalid"))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, BAD_REQUEST, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return a Right None" in {
-      val responseBody = Json.obj(
-        "code" -> "NOT_FOUND_INCOME_SOURCE",
-        "reason" -> "Can't find income source"
-      )
-
-      stubGetWithResponseBody(getEmploymentDataUrl, NOT_FOUND, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Right(None)
-    }
-
-    "return an Internal server error" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVER_ERROR",
-        "reason" -> "Internal server error"
-      )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVER_ERROR", "Internal server error"))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, INTERNAL_SERVER_ERROR, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return a Service Unavailable" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE",
-        "reason" -> "Service is unavailable"
-      )
-      val expectedResult = DesErrorModel(SERVICE_UNAVAILABLE, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, SERVICE_UNAVAILABLE, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return an Internal Server Error when DES throws an unexpected result" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
-
-      stubGetWithoutResponseBody(getEmploymentDataUrl, NO_CONTENT)
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return an Internal Server Error when integration framework throws an unexpected result that is parsable" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE",
-        "reason" -> "Service is unavailable"
-      )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return an Internal Server Error when integration framework throws an unexpected result that isn't parsable" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE"
-      )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
-
-      stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentData(nino, taxYear, employmentId, view)(hc))
-
-      result mustBe Left(expectedResult)
     }
   }
 }
-
-object GetEmploymentDataConnectorSpec {
-  val expectedResponseBody: String =
-    """
-      {
-      |  "submittedOn": "2020-01-04T05:01:01Z",
-      |  "source": "CUSTOMER",
-      |  "customerAdded": "2020-04-04T01:01:01Z",
-      |  "dateIgnored": "2020-04-04T01:01:01Z",
-      |  "employment": {
-      |    "employmentSequenceNumber": "1003",
-      |    "payrollId": "123456789999",
-      |    "companyDirector": false,
-      |    "closeCompany": true,
-      |    "directorshipCeasedDate": "2020-02-12",
-      |    "startDate": "2019-04-21",
-      |    "cessationDate": "2020-03-11",
-      |    "occPen": false,
-      |    "disguisedRemuneration": false,
-      |    "employer": {
-      |      "employerRef": "223/AB12399",
-      |      "employerName": "maggie"
-      |    },
-      |    "pay": {
-      |      "taxablePayToDate": 34234.15,
-      |      "totalTaxToDate": 6782.92,
-      |      "tipsAndOtherPayments": 67676,
-      |      "payFrequency": "CALENDAR MONTHLY",
-      |      "paymentDate": "2020-04-23",
-      |      "taxWeekNo": 32,
-      |      "taxMonthNo": 2
-      |    },
-      |    "deductions": {
-      |      "studentLoans": {
-      |        "uglDeductionAmount": 13343.45,
-      |        "pglDeductionAmount": 24242.56
-      |      }
-      |    },
-      |    "benefitsInKind": {
-      |      "accommodation": 455.67,
-      |      "assets": 435.54,
-      |      "assetTransfer": 24.58,
-      |      "beneficialLoan": 33.89,
-      |      "car": 3434.78,
-      |      "carFuel": 34.56,
-      |      "educationalServices": 445.67,
-      |      "entertaining": 434.45,
-      |      "expenses": 3444.32,
-      |      "medicalInsurance": 4542.47,
-      |      "telephone": 243.43,
-      |      "service": 45.67,
-      |      "taxableExpenses": 24.56,
-      |      "van": 56.29,
-      |      "vanFuel": 14.56,
-      |      "mileage": 34.23,
-      |      "nonQualifyingRelocationExpenses": 54.62,
-      |      "nurseryPlaces": 84.29,
-      |      "otherItems": 67.67,
-      |      "paymentsOnEmployeesBehalf": 67.23,
-      |      "personalIncidentalExpenses": 74.29,
-      |      "qualifyingRelocationExpenses": 78.24,
-      |      "employerProvidedProfessionalSubscriptions": 84.56,
-      |      "employerProvidedServices": 56.34,
-      |      "incomeTaxPaidByDirector": 67.34,
-      |      "travelAndSubsistence": 56.89,
-      |      "vouchersAndCreditCards": 34.9,
-      |      "nonCash": 23.89
-      |    }
-      |  }
-      |}
-      |""".stripMargin
-
-  val filteredExpectedResponseBody: String =
-    """
-      |{
-      |  "submittedOn": "2020-01-04T05:01:01Z",
-      |  "employment": {
-      |    "employer": {
-      |      "employerName": "maggie"
-      |    },
-      |    "pay": {
-      |      "taxablePayToDate": 34234.15,
-      |      "totalTaxToDate": 6782.92
-      |    }
-      |  }
-      |}
-      |
-      |""".stripMargin
-}
-

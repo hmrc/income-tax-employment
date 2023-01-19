@@ -16,8 +16,8 @@
 
 package controllers
 
+import connectors.errors.{SingleErrorBody, ApiError}
 import models.frontend.AllEmploymentData
-import models.{DesErrorBodyModel, DesErrorModel}
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -35,21 +35,21 @@ class GetEmploymentsControllerSpec extends TestUtils {
   val nino :String = "123456789"
   val mtdItID :String = "123123123"
   val taxYear: Int = 1234
-  val badRequestModel: DesErrorBodyModel = DesErrorBodyModel("INVALID_NINO", "Nino is invalid")
-  val notFoundModel: DesErrorBodyModel = DesErrorBodyModel("NOT_FOUND_INCOME_SOURCE", "Can't find income source")
-  val serverErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVER_ERROR", "Internal server error")
-  val serviceUnavailableErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable")
+  val badRequestModel: SingleErrorBody = SingleErrorBody("INVALID_NINO", "Nino is invalid")
+  val notFoundModel: SingleErrorBody = SingleErrorBody("NOT_FOUND_INCOME_SOURCE", "Can't find income source")
+  val serverErrorModel: SingleErrorBody = SingleErrorBody("SERVER_ERROR", "Internal server error")
+  val serviceUnavailableErrorModel: SingleErrorBody = SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable")
   private val fakeGetRequest = FakeRequest("GET", "/").withHeaders("MTDITID" -> "1234567890")
 
   def mockGetEmploymentListValid(): CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext,
-    Future[Either[DesErrorModel, AllEmploymentData]]] = {
+    Future[Either[ApiError, AllEmploymentData]]] = {
     (service.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
       .returning(Future.successful(Right(allEmploymentData)))
   }
 
   def mockGetEmploymentListValidWithNoData(): CallHandler5[String, Int, String,
-    HeaderCarrier, ExecutionContext, Future[Either[DesErrorModel, AllEmploymentData]]] = {
+    HeaderCarrier, ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] = {
     val validEmploymentList = Right(AllEmploymentData(Seq(),None,Seq(),None))
     (service.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
@@ -57,32 +57,32 @@ class GetEmploymentsControllerSpec extends TestUtils {
   }
 
   def mockGetEmploymentListBadRequest(): CallHandler5[String, Int, String,HeaderCarrier,
-    ExecutionContext, Future[Either[DesErrorModel, AllEmploymentData]]] = {
-    val invalidEmploymentList = Left(DesErrorModel(BAD_REQUEST, badRequestModel))
+    ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] = {
+    val invalidEmploymentList = Left(ApiError(BAD_REQUEST, badRequestModel))
     (service.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentList))
   }
 
   def mockGetEmploymentListNotFound(): CallHandler5[String, Int, String,HeaderCarrier,
-    ExecutionContext, Future[Either[DesErrorModel, AllEmploymentData]]] = {
-    val invalidEmploymentList = Left(DesErrorModel(NOT_FOUND, notFoundModel))
+    ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] = {
+    val invalidEmploymentList = Left(ApiError(NOT_FOUND, notFoundModel))
     (service.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentList))
   }
 
   def mockGetEmploymentListServerError(): CallHandler5[String, Int, String,HeaderCarrier,
-    ExecutionContext, Future[Either[DesErrorModel, AllEmploymentData]]] = {
-    val invalidEmploymentList= Left(DesErrorModel(INTERNAL_SERVER_ERROR, serverErrorModel))
+    ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] = {
+    val invalidEmploymentList= Left(ApiError(INTERNAL_SERVER_ERROR, serverErrorModel))
     (service.getAllEmploymentData(_: String, _: Int, _:String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentList))
   }
 
   def mockGetEmploymentListServiceUnavailable(): CallHandler5[String, Int, String,HeaderCarrier,
-    ExecutionContext, Future[Either[DesErrorModel, AllEmploymentData]]] = {
-    val invalidEmploymentList = Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+    ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] = {
+    val invalidEmploymentList = Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
     (service.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentList))

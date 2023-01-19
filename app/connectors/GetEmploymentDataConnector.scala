@@ -17,25 +17,42 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.GetEmploymentDataHttpParser.{GetEmploymentDataHttpReads, GetEmploymentDataResponse}
+import connectors.parsers.GetEmploymentDataHttpParser.{GetEmploymentDataHttpReads, GetEmploymentDataResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetEmploymentDataConnector @Inject()(val http: HttpClient,
-                                           val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppConfig)
+                                          (implicit ec: ExecutionContext) extends IFConnector {
 
-  def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
-
-    val incomeSourcesUri: String =
-      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId?view=$view"
+  def getEmploymentData(nino: String,
+                        taxYear: Int,
+                        employmentId: String,
+                        view: String)
+                       (implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
+    val url: URL = getEmploymentDataUrl(nino, taxYear, employmentId, view)
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
-      http.GET[GetEmploymentDataResponse](incomeSourcesUri)
+      http.GET[GetEmploymentDataResponse](url)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(incomeSourcesUri, GET_EMPLOYMENT_DATA))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, getApiVersion(taxYear)))
+  }
+
+  private def getApiVersion(taxYear: Int): String = {
+    if (taxYear == 2024) GET_EMPLOYMENT_DATA_23_24 else GET_EMPLOYMENT_DATA
+  }
+
+  private def getEmploymentDataUrl(nino: String,
+                                   taxYear: Int,
+                                   employmentId: String,
+                                   view: String): URL = {
+    if (taxYear == 2024) {
+      new URL(s"$baseUrl/income-tax/income/employments/${toTaxYearParam(taxYear)}/$nino/$employmentId?view=$view")
+    } else {
+      new URL(s"$baseUrl/income-tax/income/employments/$nino/${toTaxYearParam(taxYear)}/$employmentId?view=$view")
+    }
   }
 }

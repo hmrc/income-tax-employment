@@ -16,9 +16,10 @@
 
 package controllers
 
-import models.DES.PayModel
+import connectors.errors.{SingleErrorBody, ApiError}
+import models.api.PayModel
 import models.shared.{Benefits, CreateUpdateEmployment}
-import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
+import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
 import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -41,22 +42,22 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
   "createEmployment" when {
 
     def mockCreateEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
-      Future[Either[DesErrorModel, Option[String]]]] = {
+      Future[Either[ApiError, Option[String]]]] = {
       (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(Right(Some("employmentId"))))
     }
 
     def mockAmendEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
-      Future[Either[DesErrorModel, Option[String]]]] = {
+      Future[Either[ApiError, Option[String]]]] = {
       (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(Right(None)))
     }
 
     def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, CreateUpdateEmploymentRequest,
-      HeaderCarrier, Future[Either[DesErrorModel, Option[String]]]] = {
-      val error = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
+      HeaderCarrier, Future[Either[ApiError, Option[String]]]] = {
+      val error = Left(ApiError(httpStatus, SingleErrorBody("DES_CODE", "DES_REASON")))
       (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(error))

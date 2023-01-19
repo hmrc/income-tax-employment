@@ -16,64 +16,64 @@
 
 package controllers
 
-import connectors.httpParsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{ApiError, SingleErrorBody}
+import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status._
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import services.EmploymentOrchestrationService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
-import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
 class GetEmploymentDataControllerSpec extends TestUtils {
 
   val getEmploymentDataService: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
-  val getEmploymentDataController = new GetEmploymentDataController(getEmploymentDataService,authorisedAction, mockControllerComponents)
-  val nino :String = "123456789"
-  val mtdItID :String = "123123123"
+  val getEmploymentDataController = new GetEmploymentDataController(getEmploymentDataService, authorisedAction, mockControllerComponents)
+  val nino: String = "123456789"
+  val mtdItID: String = "123123123"
   val taxYear: Int = 1234
   val view = "CUSTOMER"
   val employmentId = "a1e8057e-fbbc-47a8-a8b4-78d9f015c934"
-  val badRequestModel: DesErrorBodyModel = DesErrorBodyModel("INVALID_NINO", "Nino is invalid")
-  val notFoundModel: DesErrorBodyModel = DesErrorBodyModel("NOT_FOUND_INCOME_SOURCE", "Can't find income source")
-  val serverErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVER_ERROR", "Internal server error")
-  val serviceUnavailableErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable")
+  val badRequestModel: SingleErrorBody = SingleErrorBody("INVALID_NINO", "Nino is invalid")
+  val notFoundModel: SingleErrorBody = SingleErrorBody("NOT_FOUND_INCOME_SOURCE", "Can't find income source")
+  val serverErrorModel: SingleErrorBody = SingleErrorBody("SERVER_ERROR", "Internal server error")
+  val serviceUnavailableErrorModel: SingleErrorBody = SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable")
   private val fakeGetRequest = FakeRequest("GET", "/").withHeaders("MTDITID" -> "1234567890")
 
   def mockGetEmploymentDataValid(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
     val validEmploymentData: GetEmploymentDataResponse = Right(Some(customerEmploymentDataModelExample))
-    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
-      .expects(*, *, *, *,*)
+    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
       .returning(Future.successful(validEmploymentData))
   }
 
   def mockGetEmploymentDataBadRequest(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
-    val invalidEmploymentData: GetEmploymentDataResponse = Left(DesErrorModel(BAD_REQUEST, badRequestModel))
-    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _: String, _:String)(_: HeaderCarrier))
-      .expects(*, *, *, *,*)
+    val invalidEmploymentData: GetEmploymentDataResponse = Left(ApiError(BAD_REQUEST, badRequestModel))
+    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentData))
   }
 
   def mockGetEmploymentDataNotFound(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
-    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
-      .expects(*, *, *, *,*)
+    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
       .returning(Future.successful(Right(None)))
   }
 
   def mockGetEmploymentDataServerError(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
-    val invalidEmploymentData: GetEmploymentDataResponse = Left(DesErrorModel(INTERNAL_SERVER_ERROR, serverErrorModel))
-    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
-      .expects(*, *, *, *,*)
+    val invalidEmploymentData: GetEmploymentDataResponse = Left(ApiError(INTERNAL_SERVER_ERROR, serverErrorModel))
+    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentData))
   }
 
   def mockGetEmploymentDataServiceUnavailable(): CallHandler5[String, Int, String, String, HeaderCarrier, Future[GetEmploymentDataResponse]] = {
-    val invalidEmploymentData: GetEmploymentDataResponse = Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
-    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _:String, _:String)(_: HeaderCarrier))
-      .expects(*, *, *, *,*)
+    val invalidEmploymentData: GetEmploymentDataResponse = Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+    (getEmploymentDataService.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentData))
   }
 
@@ -155,7 +155,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
         }
         status(result) mustBe BAD_REQUEST
         Json.parse(bodyOf(result)) mustBe
-        Json.parse("""{"code":"INVALID_VIEW","reason":"Submission has not passed validation. Invalid query parameter view."}""".stripMargin)
+          Json.parse("""{"code":"INVALID_VIEW","reason":"Submission has not passed validation. Invalid query parameter view."}""".stripMargin)
       }
     }
 

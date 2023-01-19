@@ -17,24 +17,25 @@
 package services
 
 import connectors._
-import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
-import connectors.httpParsers.CreateUpdateEmploymentFinancialDataHttpParser.CreateUpdateEmploymentFinancialDataResponse
-import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
-import connectors.httpParsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
-import connectors.httpParsers.IgnoreEmploymentHttpParser.IgnoreEmploymentResponse
-import connectors.httpParsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
-import connectors.httpParsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
-import models.DES.DESEmploymentFinancialData
-import models.DesErrorBodyModel.invalidCreateUpdateRequest
+import connectors.errors.SingleErrorBody.invalidCreateUpdateRequest
+import connectors.errors.{ApiError, SingleErrorBody}
+import connectors.parsers.CreateEmploymentHttpParser.CreateEmploymentResponse
+import connectors.parsers.CreateUpdateEmploymentFinancialDataHttpParser.CreateUpdateEmploymentFinancialDataResponse
+import connectors.parsers.DeleteEmploymentFinancialDataHttpParser.DeleteEmploymentFinancialDataResponse
+import connectors.parsers.DeleteEmploymentHttpParser.DeleteEmploymentResponse
+import connectors.parsers.IgnoreEmploymentHttpParser.IgnoreEmploymentResponse
+import connectors.parsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
+import connectors.parsers.UpdateEmploymentDataHttpParser.UpdateEmploymentDataResponse
+import models.api.EmploymentFinancialData
 import models.shared.{AddEmploymentResponseModel, CreateUpdateEmployment}
-import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
+import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
 import play.api.http.Status._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.PagerDutyHelper.PagerDutyKeys.INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST
 import utils.PagerDutyHelper.pagerDutyLog
 import utils.ViewParameterValidation._
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -48,7 +49,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   implicit val executionContext: ExecutionContext) {
 
   def createUpdateEmployment(nino: String, taxYear: Int, createUpdateEmploymentRequest: CreateUpdateEmploymentRequest)
-                            (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
+                            (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
 
     val hmrcEmploymentIdToIgnore = createUpdateEmploymentRequest.hmrcEmploymentIdToIgnore
 
@@ -64,7 +65,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
   def createUpdateEmploymentOrchestration(nino: String, taxYear: Int, createUpdateEmploymentRequest: CreateUpdateEmploymentRequest)
-                                         (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
+                                         (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
 
     createUpdateEmploymentRequest match {
       case CreateUpdateEmploymentRequest(Some(hmrcEmploymentId), _, Some(employmentData), None, Some(true)) =>
@@ -86,11 +87,11 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   private def createEmploymentCalls(nino: String, taxYear: Int,
                                     employment: CreateUpdateEmployment,
                                     employmentData: CreateUpdateEmploymentData)
-                                   (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Option[String]]] = {
+                                   (implicit hc: HeaderCarrier): Future[Either[ApiError, Option[String]]] = {
     createEmploymentConnector.createEmployment(nino, taxYear, employment).flatMap {
       case Left(error) => Future(Left(error))
       case Right(AddEmploymentResponseModel(employmentId)) => createOrUpdateFinancialData(nino, taxYear, employmentId, employmentData.toDESModel).map {
-        case Left(error@DesErrorModel(SERVICE_UNAVAILABLE, _)) => Left(error.copy(status = INTERNAL_SERVER_ERROR))
+        case Left(error@ApiError(SERVICE_UNAVAILABLE, _)) => Left(error.copy(status = INTERNAL_SERVER_ERROR))
         case Left(error) => Left(error)
         case Right(_) => Right(Some(employmentId))
       }
@@ -101,7 +102,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                             employmentId: String,
                             employment: Option[CreateUpdateEmployment],
                             employmentData: Option[CreateUpdateEmploymentData])
-                           (implicit hc: HeaderCarrier): Future[Either[DesErrorModel, Unit]] = {
+                           (implicit hc: HeaderCarrier): Future[Either[ApiError, Unit]] = {
 
     (employment, employmentData) match {
       case (Some(employment), Some(employmentData)) =>
@@ -126,7 +127,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
     updateEmploymentConnector.updateEmployment(nino, taxYear, employmentId, employmentModel)
   }
 
-  def createOrUpdateFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: DESEmploymentFinancialData)
+  def createOrUpdateFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: EmploymentFinancialData)
                                  (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
     updateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, employmentFinancialData)
   }
@@ -138,7 +139,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
   }
 
   def unignoreEmployment(nino: String, taxYear: Int, employmentId: String)
-                      (implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
+                        (implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
 
     unignoreEmploymentConnector.unignoreEmployment(nino, taxYear, employmentId)
   }
@@ -164,12 +165,12 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
       case _ =>
         val message = "toRemove parameter is not: HMRC-HELD or CUSTOMER"
         pagerDutyLog(INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST, message)
-        Future(Left(DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_TO_REMOVE_PARAMETER", message))))
+        Future(Left(ApiError(BAD_REQUEST, SingleErrorBody("INVALID_TO_REMOVE_PARAMETER", message))))
     }
   }
 
-  private def handleDeleteAllHmrc(nino: String,  taxYear: Int, employmentId: String)
-                              (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
+  private def handleDeleteAllHmrc(nino: String, taxYear: Int, employmentId: String)
+                                 (implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[DeleteEmploymentFinancialDataResponse] = {
     deleteEmploymentFinancialData(nino, taxYear, employmentId).flatMap {
       case Right(_) => ignoreEmployment(nino, taxYear, employmentId).mapTo[DeleteEmploymentFinancialDataResponse]
       case Left(response) => Future(Left(response))

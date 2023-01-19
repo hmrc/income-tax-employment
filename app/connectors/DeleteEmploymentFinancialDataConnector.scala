@@ -17,26 +17,25 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.DeleteEmploymentFinancialDataHttpParser.{DeleteEmploymentFinancialDataHttpReads, DeleteEmploymentFinancialDataResponse}
+import connectors.parsers.DeleteEmploymentFinancialDataHttpParser.{DeleteEmploymentFinancialDataHttpReads, DeleteEmploymentFinancialDataResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeleteEmploymentFinancialDataConnector@Inject()(val http: HttpClient,
-                                                      val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
+class DeleteEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
+                                                       val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
                                    (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
-
-    val uri: String = baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
+    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId")
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
-      http.DELETE[DeleteEmploymentFinancialDataResponse](uri)
+      http.DELETE[DeleteEmploymentFinancialDataResponse](url)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(uri, DELETE_EMPLOYMENT_FINANCIAL_DATA))
-
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, DELETE_EMPLOYMENT_FINANCIAL_DATA))
   }
 }

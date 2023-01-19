@@ -18,11 +18,11 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
-import helpers.WiremockSpec
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{SingleErrorBody, ApiError}
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
+import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
@@ -33,7 +33,7 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
   def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val taxYear = 2022
@@ -78,11 +78,11 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "handle error" when {
-      val desErrorBodyModel = DesErrorBodyModel("DES_CODE", "DES_REASON")
+      val desErrorBodyModel = SingleErrorBody("DES_CODE", "DES_REASON")
 
       Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"Integration Framework returns $status" in {
-          val desError = DesErrorModel(status, desErrorBodyModel)
+          val desError = ApiError(status, desErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
 
           stubPutWithResponseAndWithoutRequestBody(url, status, desError.toJson.toString())
@@ -92,7 +92,7 @@ class IgnoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       }
 
       s"Integration Framework returns unexpected error code - BAD_GATEWAY (502)" in {
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, desErrorBodyModel)
+        val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
         stubPutWithResponseAndWithoutRequestBody(url, BAD_GATEWAY,desError.toJson.toString())

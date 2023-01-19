@@ -19,13 +19,13 @@ package connectors
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
 import connectors.GetEmploymentListConnectorSpec.{customerExpectedResponseBody, expectedResponseBody, filteredExpectedResponseBody, hmrcExpectedResponseBody}
-import helpers.WiremockSpec
-import models.DES.DESEmploymentList
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{SingleErrorBody, ApiError}
+import models.api.EmploymentList
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
+import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
@@ -38,7 +38,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
 
   private def appConfig(integrationFrameworkHost: String): BackendAppConfig =
     new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-      override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+      override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
     }
 
   val nino: String = "123456789"
@@ -47,7 +47,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
 
   ".GetEmploymentListConnector" should {
     "include internal headers" when {
-      val expectedResult = Some(Json.parse(expectedResponseBody).as[DESEmploymentList])
+      val expectedResult = Some(Json.parse(expectedResponseBody).as[EmploymentList])
 
       val headersSentToIntegrationFramework = Seq(
         new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
@@ -84,7 +84,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
 
     "return a GetEmploymentListModel" when {
       "only nino and taxYear are present" in {
-        val expectedResult = Json.parse(expectedResponseBody).as[DESEmploymentList]
+        val expectedResult = Json.parse(expectedResponseBody).as[EmploymentList]
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, expectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -95,7 +95,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
       }
 
       "when customer is empty" in {
-        val expectedResult = Json.parse(hmrcExpectedResponseBody).as[DESEmploymentList]
+        val expectedResult = Json.parse(hmrcExpectedResponseBody).as[EmploymentList]
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, hmrcExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -106,7 +106,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
       }
 
       "when hmrc is empty" in {
-        val expectedResult = Json.parse(customerExpectedResponseBody).as[DESEmploymentList]
+        val expectedResult = Json.parse(customerExpectedResponseBody).as[EmploymentList]
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, customerExpectedResponseBody)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -117,7 +117,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
       }
 
       "nino, taxYear and employmentId are present" in {
-        val expectedResult = Json.parse(filteredExpectedResponseBody).as[DESEmploymentList]
+        val expectedResult = Json.parse(filteredExpectedResponseBody).as[EmploymentList]
 
         stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}\\?employmentId=$employmentId",
           OK, filteredExpectedResponseBody)
@@ -136,7 +136,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         "employments" -> ""
       )
 
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", OK, invalidJson.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -146,7 +146,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "return a NO_CONTENT" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", NO_CONTENT, "{}")
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -160,7 +160,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "INVALID_NINO",
         "reason" -> "Nino is invalid"
       )
-      val expectedResult = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_NINO", "Nino is invalid"))
+      val expectedResult = ApiError(BAD_REQUEST, SingleErrorBody("INVALID_NINO", "Nino is invalid"))
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", BAD_REQUEST, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -196,7 +196,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVER_ERROR",
         "reason" -> "Internal server error"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVER_ERROR", "Internal server error"))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVER_ERROR", "Internal server error"))
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", INTERNAL_SERVER_ERROR, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -210,7 +210,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(SERVICE_UNAVAILABLE, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", SERVICE_UNAVAILABLE, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -220,7 +220,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "return an Internal Server Error when Integration Framework throws an unexpected result" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubGetWithoutResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", NO_CONTENT)
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -234,7 +234,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -247,7 +247,7 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubGetWithResponseBody(s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}", CONFLICT, responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()

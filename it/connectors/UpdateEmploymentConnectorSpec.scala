@@ -18,14 +18,14 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
-import helpers.WiremockSpec
+import connectors.errors.{ApiError, SingleErrorBody}
 import models.shared.CreateUpdateEmployment
-import models.{DesErrorBodyModel, DesErrorModel}
 import org.joda.time.DateTime.now
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
+import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
@@ -35,8 +35,9 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: UpdateEmploymentConnector = app.injector.instanceOf[UpdateEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+
   def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val taxYear = 2022
@@ -82,11 +83,11 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
     }
 
     "handle error" when {
-      val desErrorBodyModel = DesErrorBodyModel("DES_CODE", "DES_REASON")
+      val desErrorBodyModel = SingleErrorBody("DES_CODE", "DES_REASON")
 
       Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"DES returns $status" in {
-          val desError = DesErrorModel(status, desErrorBodyModel)
+          val desError = ApiError(status, desErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
 
           stubPutWithResponseBody(url, status, Json.toJson(updateEmploymentModel).toString(), desError.toJson.toString())
@@ -96,10 +97,10 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       }
 
       s"DES returns unexpected error code - BAD_GATEWAY (502)" in {
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, desErrorBodyModel)
+        val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        stubPutWithResponseBody(url, BAD_GATEWAY, Json.toJson(updateEmploymentModel).toString(),desError.toJson.toString())
+        stubPutWithResponseBody(url, BAD_GATEWAY, Json.toJson(updateEmploymentModel).toString(), desError.toJson.toString())
 
         val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel))
 

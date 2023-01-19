@@ -17,25 +17,25 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.UnignoreEmploymentHttpParser._
+import connectors.parsers.UnignoreEmploymentHttpParser._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class UnignoreEmploymentConnector @Inject()(val http: HttpClient,
-                                            val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+                                            val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def unignoreEmployment(nino: String, taxYear: Int, employmentId: String)
-                      (implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
-
-    val unignoreEmploymentUri: String = baseUrl + s"/income-tax/employments/$nino/${desTaxYearConverter(taxYear)}/ignore/$employmentId"
+                        (implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
+    val url = new URL(s"$baseUrl/income-tax/employments/$nino/${desTaxYearConverter(taxYear)}/ignore/$employmentId")
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
-      http.DELETE[UnignoreEmploymentResponse](unignoreEmploymentUri)
+      http.DELETE[UnignoreEmploymentResponse](url)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(unignoreEmploymentUri, UNIGNORE_EMPLOYMENT))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, UNIGNORE_EMPLOYMENT))
   }
 }

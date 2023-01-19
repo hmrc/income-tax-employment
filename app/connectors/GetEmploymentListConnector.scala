@@ -17,26 +17,24 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.GetEmploymentListHttpParser.{GetEmploymentListHttpReads, GetEmploymentListResponse}
+import connectors.parsers.GetEmploymentListHttpParser.{GetEmploymentListHttpReads, GetEmploymentListResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
+import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentListConnector @Inject()(val http: HttpClient,
-                                           val appConfig: AppConfig)(implicit ec:ExecutionContext) extends IFConnector {
+                                           val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def getEmploymentList(nino: String, taxYear: Int, employmentId: Option[String])(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
-
-    val incomeSourcesUri: String =
-      baseUrl + s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}" +
-        employmentId.fold("")(id => s"?employmentId=$id")
+    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}" + employmentId.fold("")(id => s"?employmentId=$id"))
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
-      http.GET[GetEmploymentListResponse](incomeSourcesUri)
+      http.GET[GetEmploymentListResponse](url)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(incomeSourcesUri, GET_EMPLOYMENT_LIST))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, GET_EMPLOYMENT_LIST))
   }
 }
