@@ -17,14 +17,14 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.GetEmploymentBenefitsHttpParser.{GetEmploymentBenefitsHttpReads, GetEmploymentBenefitsResponse}
+import connectors.parsers.GetEmploymentBenefitsHttpParser.{GetEmploymentBenefitsHttpReads, GetEmploymentBenefitsResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentBenefitsConnector @Inject()(val http: HttpClient,
-                                               val appConfig: AppConfig)(implicit ec:ExecutionContext) extends Connector {
+                                               val appConfig: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
   def getEmploymentBenefits(nino: String, taxYear: Int, employmentId: String, view: String)
                            (implicit hc: HeaderCarrier): Future[GetEmploymentBenefitsResponse] = {

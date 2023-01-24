@@ -16,8 +16,8 @@
 
 package controllers
 
-import connectors.httpParsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{ApiError, SingleErrorBody}
+import connectors.parsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
 import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -41,14 +41,14 @@ class UnignoreEmploymentControllerSpec extends TestUtils {
   "unignoreEmployment" when {
 
     def mockUnignoreEmploymentSuccess(): CallHandler4[String, Int, String, HeaderCarrier, Future[UnignoreEmploymentResponse]] = {
-      val response: Either[DesErrorModel, Unit] = Right(())
+      val response: Either[ApiError, Unit] = Right(())
       (employmentService.unignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(response))
     }
 
     def mockUnignoreEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, String, HeaderCarrier, Future[UnignoreEmploymentResponse]] = {
-      val error: Either[DesErrorModel, Unit] = Left(DesErrorModel(httpStatus, DesErrorBodyModel("DES_CODE", "DES_REASON")))
+      val error: Either[ApiError, Unit] = Left(ApiError(httpStatus, SingleErrorBody("DES_CODE", "DES_REASON")))
       (employmentService.unignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(error))
@@ -76,7 +76,7 @@ class UnignoreEmploymentControllerSpec extends TestUtils {
           }
 
           status(result) mustBe httpErrorCode
-          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
+          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE", "reason" -> "DES_REASON")
         }
       }
 
@@ -100,7 +100,7 @@ class UnignoreEmploymentControllerSpec extends TestUtils {
             unignoreEmploymentController.unignoreEmployment(nino, employmentId, taxYear)(fakeRequest)
           }
           status(result) mustBe httpErrorCode
-          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
+          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE", "reason" -> "DES_REASON")
         }
       }
     }

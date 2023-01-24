@@ -22,7 +22,7 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.{AppConfig, MockAppConfig}
 import controllers.predicates.AuthorisedAction
-import models.DES._
+import models._
 import models.frontend._
 import models.shared._
 import org.scalamock.handlers.CallHandler4
@@ -43,6 +43,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
 
+// TODO: Get rid of this class
+@deprecated("Use UnitTest or another relevant trait")
 trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = {
@@ -115,10 +117,10 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       .returning(Future.failed(exception))
   }
 
-  val minFinancialData: DESEmploymentFinancialData =
-    DESEmploymentFinancialData(
-      Employment(
-        PayModel(
+  val minFinancialData: api.EmploymentFinancialData =
+    api.EmploymentFinancialData(
+      api.Employment(
+        api.PayModel(
           100.00,
           100.00,
           None
@@ -128,10 +130,10 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       )
     )
 
-  val maxFinancialData: DESEmploymentFinancialData =
-    DESEmploymentFinancialData(
-      Employment(
-        PayModel(
+  val maxFinancialData: api.EmploymentFinancialData =
+    api.EmploymentFinancialData(
+      api.Employment(
+        api.PayModel(
           100.00,
           100.00,
           Some(100.00)
@@ -143,9 +145,9 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           ))
         )),
         Some(Benefits(
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
         ))
       )
     )
@@ -192,9 +194,9 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
                 EmploymentBenefits(
                   "2020-01-04T05:01:01Z",
                   benefits = Some(Benefits(
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
                   ))
                 )
               )
@@ -229,9 +231,9 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
                 EmploymentBenefits(
                   "2020-01-04T05:01:01Z",
                   benefits = Some(Benefits(
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                    Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
                   ))
                 )
               )
@@ -245,7 +247,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+            Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
           ))
         )
       ),
@@ -289,9 +291,9 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
             EmploymentBenefits(
               "2020-01-04T05:01:01Z",
               benefits = Some(Benefits(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+                Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
               ))
             )
           )
@@ -303,14 +305,14 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+            Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
           ))
         )
       )
     )
 
-  val hmrcEmploymentModel: HmrcEmployment =
-    HmrcEmployment(
+  val hmrcEmploymentModel: api.HmrcEmployment =
+    api.HmrcEmployment(
       employmentId = "00000000-0000-0000-1111-000000000000",
       employerRef = Some("666/66666"),
       employerName = "Business",
@@ -321,8 +323,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       dateIgnored = Some("2020-01-01T10:00:38Z")
     )
 
-  val customerEmploymentModel: CustomerEmployment =
-    CustomerEmployment(
+  val customerEmploymentModel: api.CustomerEmployment =
+    api.CustomerEmployment(
       employmentId = "00000000-0000-0000-2222-000000000000",
       employerRef = Some("666/66666"),
       employerName = "Business",
@@ -333,25 +335,25 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       submittedOn = "2020-01-01T10:00:38Z"
     )
 
-  val getEmploymentListModelExample: DESEmploymentList =
-    DESEmploymentList(
+  val getEmploymentListModelExample: api.EmploymentList =
+    api.EmploymentList(
       employments = Some(Seq(hmrcEmploymentModel)),
       customerDeclaredEmployments = Some(Seq(customerEmploymentModel))
     )
 
-  val getEmploymentListModelExampleWithNoData: DESEmploymentList =
-    DESEmploymentList(
+  val getEmploymentListModelExampleWithNoData: api.EmploymentList =
+    api.EmploymentList(
       employments = None,
       customerDeclaredEmployments = None
     )
 
-  val customerEmploymentDataModelExample: DESEmploymentData =
-    DESEmploymentData(
+  val customerEmploymentDataModelExample: api.EmploymentData =
+    api.EmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = Some("CUSTOMER"),
       customerAdded = Some("2020-04-04T01:01:01Z"),
       dateIgnored = Some("2020-04-04T01:01:01Z"),
-      employment = DESEmploymentDetails(
+      employment = api.EmploymentDetails(
         employmentSequenceNumber = Some("1002"),
         payrollId = Some("123456789999"),
         companyDirector = Some(false),
@@ -361,7 +363,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         cessationDate = Some("2020-03-11"),
         occPen = Some(false),
         disguisedRemuneration = Some(false),
-        employer = Employer(
+        employer = api.Employer(
           employerRef = Some("223/AB12399"),
           employerName = "Business 1"
         ),
@@ -382,13 +384,13 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       )
     )
 
-  val hmrcEmploymentDataModelExample: DESEmploymentData =
-    DESEmploymentData(
+  val hmrcEmploymentDataModelExample: api.EmploymentData =
+    api.EmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = Some("HMRC-HELD"),
       customerAdded = Some("2020-04-04T01:01:01Z"),
       dateIgnored = Some("2020-04-04T01:01:01Z"),
-      employment = DESEmploymentDetails(
+      employment = api.EmploymentDetails(
         employmentSequenceNumber = Some("1002"),
         payrollId = Some("123456789999"),
         companyDirector = Some(false),
@@ -398,7 +400,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         cessationDate = Some("2020-03-11"),
         occPen = Some(false),
         disguisedRemuneration = Some(false),
-        employer = Employer(
+        employer = api.Employer(
           employerRef = Some("223/AB12399"),
           employerName = "Business 1"
         ),
@@ -419,61 +421,61 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       )
     )
 
-  val hmrcBenefits: DESEmploymentBenefits = DESEmploymentBenefits(
+  val hmrcBenefits: api.DESEmploymentBenefits = api.DESEmploymentBenefits(
     submittedOn = "2020-01-04T05:01:01Z",
     source = Some("HMRC-HELD"),
     customerAdded = None,
     dateIgnored = None,
-    employment = EmploymentBenefitsData(
+    employment = api.EmploymentBenefitsData(
       benefitsInKind = Some(Benefits(
-        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-        Some(100),Some(100),Some(100),Some(100)
+        Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+        Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+        Some(100), Some(100), Some(100), Some(100)
       ))
     )
   )
 
-  val customerBenefits: DESEmploymentBenefits = DESEmploymentBenefits(
+  val customerBenefits: api.DESEmploymentBenefits = api.DESEmploymentBenefits(
     submittedOn = "2020-01-04T05:01:01Z",
     source = Some("CUSTOMER"),
     customerAdded = Some("2020-01-04T05:01:01Z"),
     dateIgnored = None,
-    employment = EmploymentBenefitsData(
+    employment = api.EmploymentBenefitsData(
       benefitsInKind = Some(Benefits(
-        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-        Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-        Some(100),Some(100),Some(100),Some(100)
+        Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+        Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+        Some(100), Some(100), Some(100), Some(100)
       ))
     )
   )
 
-  val hmrcExpenses: DESEmploymentExpenses = DESEmploymentExpenses(
+  val hmrcExpenses: api.EmploymentExpenses = api.EmploymentExpenses(
     submittedOn = Some("2020-01-04T05:01:01Z"),
     source = Some("HMRC-HELD"),
     dateIgnored = Some("2020-01-04T05:01:01Z"),
     totalExpenses = Some(800),
     expenses = Some(Expenses(
-      Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+      Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
     ))
   )
 
-  val customerExpenses: DESEmploymentExpenses = DESEmploymentExpenses(
+  val customerExpenses: api.EmploymentExpenses = api.EmploymentExpenses(
     submittedOn = Some("2020-01-04T05:01:01Z"),
     source = Some("CUSTOMER"),
     dateIgnored = Some("2020-01-04T05:01:01Z"),
     totalExpenses = Some(800),
     expenses = Some(Expenses(
-      Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+      Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
     ))
   )
 
-  val getEmploymentDataModelOnlyRequiredExample: DESEmploymentData =
-    DESEmploymentData(
+  val getEmploymentDataModelOnlyRequiredExample: api.EmploymentData =
+    api.EmploymentData(
       submittedOn = "2020-01-04T05:01:01Z",
       source = None,
       customerAdded = None,
       dateIgnored = None,
-      employment = DESEmploymentDetails(
+      employment = api.EmploymentDetails(
         employmentSequenceNumber = None,
         payrollId = None,
         companyDirector = None,
@@ -483,7 +485,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         cessationDate = None,
         occPen = None,
         disguisedRemuneration = None,
-        employer = Employer(
+        employer = api.Employer(
           employerRef = None,
           employerName = "maggie"
         ),

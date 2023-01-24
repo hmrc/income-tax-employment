@@ -18,13 +18,14 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
-import helpers.WiremockSpec
-import models.DES.{DESEmploymentFinancialData, Employment, PayModel}
-import models.{DesErrorBodyModel, DesErrorModel}
+import connectors.errors.{ApiError, SingleErrorBody}
+import models._
+import models.api.{Employment, PayModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
+import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
@@ -39,11 +40,11 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
   val taxYear: Int = 1999
   val employmentId: String = "0000000-0000000-000000"
   val minEmployment: Employment = Employment(pay = PayModel(taxablePayToDate = 100.00, totalTaxToDate = 100.00, tipsAndOtherPayments = None), None, None)
-  val minEmploymentFinancialData: DESEmploymentFinancialData = DESEmploymentFinancialData(minEmployment)
+  val minEmploymentFinancialData: api.EmploymentFinancialData = api.EmploymentFinancialData(minEmployment)
   val stubUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
   def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   "PutEmploymentFinancialDataConnector" should {
@@ -95,7 +96,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         "financialData" -> ""
       )
 
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubPutWithResponseBody(stubUrl, OK, Json.toJson(minEmploymentFinancialData).toString(), invalidJson.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -109,7 +110,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         "code" -> "NOT_FOUND_INCOME_SOURCE",
         "reason" -> "Can't find income source"
       )
-      val expectedResult = DesErrorModel(FORBIDDEN, DesErrorBodyModel("NOT_FOUND_INCOME_SOURCE", "Can't find income source"))
+      val expectedResult = ApiError(FORBIDDEN, SingleErrorBody("NOT_FOUND_INCOME_SOURCE", "Can't find income source"))
 
       stubPutWithResponseBody(stubUrl, FORBIDDEN, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -123,7 +124,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         "code" -> "SERVER_ERROR",
         "reason" -> "Internal server error"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("SERVER_ERROR", "Internal server error"))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVER_ERROR", "Internal server error"))
 
       stubPutWithResponseBody(stubUrl, INTERNAL_SERVER_ERROR, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -137,7 +138,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(SERVICE_UNAVAILABLE, DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubPutWithResponseBody(stubUrl, SERVICE_UNAVAILABLE, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -147,7 +148,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
     }
 
     "return an Internal Server Error when Integration Framework throws an unexpected result with no body" in {
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubPostWithoutResponseBody(stubUrl, NO_CONTENT, Json.toJson(minEmploymentFinancialData).toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -161,7 +162,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Service is unavailable"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable"))
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
 
       stubPutWithResponseBody(stubUrl, CONFLICT, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -174,7 +175,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = DesErrorModel(INTERNAL_SERVER_ERROR,  DesErrorBodyModel.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
 
       stubPutWithResponseBody(stubUrl, CONFLICT, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()

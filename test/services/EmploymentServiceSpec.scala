@@ -17,12 +17,13 @@
 package services
 
 import connectors._
-import connectors.httpParsers.CreateEmploymentHttpParser.CreateEmploymentResponse
-import connectors.httpParsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
-import models.DES.{DESEmploymentFinancialData, PayModel}
-import models.DesErrorBodyModel.invalidCreateUpdateRequest
+import connectors.errors.SingleErrorBody.invalidCreateUpdateRequest
+import connectors.errors.{ApiError, SingleErrorBody}
+import connectors.parsers.CreateEmploymentHttpParser.CreateEmploymentResponse
+import connectors.parsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
+import models.api.{EmploymentFinancialData, PayModel}
 import models.shared.{AddEmploymentResponseModel, Benefits, CreateUpdateEmployment}
-import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest, DesErrorBodyModel, DesErrorModel}
+import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
 import org.joda.time.DateTime.now
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE}
@@ -54,12 +55,12 @@ class EmploymentServiceSpec extends TestUtils {
   private val taxYear = 2022
   private val employmentId = "employment_id"
 
-  private val serviceUnavailableErrorModel: DesErrorBodyModel = DesErrorBodyModel("SERVICE_UNAVAILABLE", "Service is unavailable")
+  private val serviceUnavailableErrorModel: SingleErrorBody = SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable")
 
-  private def mockPutEmploymentFinancialDataValid(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
-    Future[Either[DesErrorModel, Unit]]] = {
+  private def mockPutEmploymentFinancialDataValid(): CallHandler5[String, Int, String, EmploymentFinancialData, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
     (mockCreateUpdateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(
-      _: String, _: Int, _: String, _: DESEmploymentFinancialData)(_: HeaderCarrier))
+      _: String, _: Int, _: String, _: EmploymentFinancialData)(_: HeaderCarrier))
       .expects(*, *, *, *, *)
       .returning(Future.successful(Right(())))
   }
@@ -79,11 +80,11 @@ class EmploymentServiceSpec extends TestUtils {
       .returning(Future.successful(connectorResult))
   }
 
-  private def mockPutEmploymentFinancialDataServiceUnavailable(): CallHandler5[String, Int, String, DESEmploymentFinancialData, HeaderCarrier,
-    Future[Either[DesErrorModel, Unit]]] = {
-    val invalidEmploymentFinancialData = Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+  private def mockPutEmploymentFinancialDataServiceUnavailable(): CallHandler5[String, Int, String, EmploymentFinancialData, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
+    val invalidEmploymentFinancialData = Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
     (mockCreateUpdateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(
-      _: String, _: Int, _: String, _: DESEmploymentFinancialData)(_: HeaderCarrier))
+      _: String, _: Int, _: String, _: EmploymentFinancialData)(_: HeaderCarrier))
       .expects(*, *, *, *, *)
       .returning(Future.successful(invalidEmploymentFinancialData))
   }
@@ -144,7 +145,7 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employment = None, isHmrcEmploymentId = Some(true)))
 
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
 
       "there is a hmrc employment to ignore" in {
@@ -189,13 +190,13 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
-        await(result) mustBe Left(DesErrorModel(INTERNAL_SERVER_ERROR, serviceUnavailableErrorModel))
+        await(result) mustBe Left(ApiError(INTERNAL_SERVER_ERROR, serviceUnavailableErrorModel))
       }
 
       "there is a hmrc employment to ignore but the create call fails" in {
         val addEmploymentRequestModel = request.employment.get
 
-        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel)))
+        mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel)))
 
         (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", *)
@@ -203,17 +204,17 @@ class EmploymentServiceSpec extends TestUtils {
 
         val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
 
       "there is a hmrc employment to ignore but fails to ignore" in {
         (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", *)
-          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
+          .returning(Future.successful(Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
 
         val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
 
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
 
       "there is a no hmrc employment to ignore" in {
@@ -247,11 +248,11 @@ class EmploymentServiceSpec extends TestUtils {
 
         (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, "employmentId", employmentRequestModel, *)
-          .returning(Future.successful(Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
+          .returning(Future.successful(Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
 
         val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId")))
 
-        await(result) mustBe Left(DesErrorModel(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
       }
 
       "it is an update to a previously submitted customer employment when only updating employment info" in {
@@ -291,7 +292,7 @@ class EmploymentServiceSpec extends TestUtils {
 
     "return Left containing DesError" when {
       "the createEmployment connector call fails" in {
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         mockCreateEmployment(nino, taxYear, addEmploymentRequestModel, Left(desError))
 
@@ -319,7 +320,7 @@ class EmploymentServiceSpec extends TestUtils {
 
     "return Left containing DesError" when {
       "the updateEmployment connector call fails" in {
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, updateEmploymentRequestModel, *)
@@ -349,7 +350,7 @@ class EmploymentServiceSpec extends TestUtils {
 
     "return Left containing DesError" when {
       "the deleteEmployment connector call fails" in {
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentConnector.deleteEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -382,7 +383,7 @@ class EmploymentServiceSpec extends TestUtils {
 
       "the deleteEmploymentFinancialData connector fails" in {
 
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -416,7 +417,7 @@ class EmploymentServiceSpec extends TestUtils {
 
       "the ignoreEmployment connector fails" in {
 
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -486,7 +487,7 @@ class EmploymentServiceSpec extends TestUtils {
       "ALL and delete connector fails" in {
 
         val toRemove = "ALL"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -499,7 +500,7 @@ class EmploymentServiceSpec extends TestUtils {
       "ALL and ignore connector fails" in {
 
         val toRemove = "ALL"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -517,7 +518,7 @@ class EmploymentServiceSpec extends TestUtils {
       "invalid parameter" in {
 
         val toRemove = "HELD"
-        val desError = DesErrorModel(BAD_REQUEST, DesErrorBodyModel("INVALID_TO_REMOVE_PARAMETER", "toRemove parameter is not: HMRC-HELD or CUSTOMER"))
+        val desError = ApiError(BAD_REQUEST, SingleErrorBody("INVALID_TO_REMOVE_PARAMETER", "toRemove parameter is not: HMRC-HELD or CUSTOMER"))
 
         val result = underTest.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear)
 
@@ -526,7 +527,7 @@ class EmploymentServiceSpec extends TestUtils {
       "HMRC_HELD and connector fails" in {
 
         val toRemove = "HMRC-HELD"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -539,7 +540,7 @@ class EmploymentServiceSpec extends TestUtils {
 
       "CUSTOMER and first connector fails" in {
         val toRemove = "CUSTOMER"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
@@ -552,7 +553,7 @@ class EmploymentServiceSpec extends TestUtils {
 
       "CUSTOMER and second connector fails" in {
         val toRemove = "CUSTOMER"
-        val desError = DesErrorModel(INTERNAL_SERVER_ERROR, DesErrorBodyModel("DES_CODE", "DES_REASON"))
+        val desError = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("DES_CODE", "DES_REASON"))
 
         (mockDeleteEmploymentFinancialDataConnector.deleteEmploymentFinancialData(_: String, _: Int, _: String)(_: HeaderCarrier))
           .expects(nino, taxYear, employmentId, *)
