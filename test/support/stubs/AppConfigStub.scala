@@ -27,7 +27,9 @@ class AppConfigStub extends MockFactory {
     private val wireMockPort = 11111
 
     override lazy val integrationFrameworkBaseUrl: String = s"http://localhost:$wireMockPort"
+    override lazy val desBaseUrl: String = s"http://localhost:$wireMockPort"
 
+    override lazy val environment: String = "test"
     override lazy val authorisationToken: String = "secret"
     override lazy val integrationFrameworkEnvironment: String = "test"
 
