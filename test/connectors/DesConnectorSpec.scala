@@ -21,11 +21,14 @@ import uk.gov.hmrc.http.HeaderNames.{authorisation, xRequestChain, xSessionId}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, SessionId}
 import utils.TestUtils
 
-class DesConnectorSpec extends TestUtils{
+import java.net.URL
+
+class DesConnectorSpec extends TestUtils {
 
   class FakeConnector(override val appConfig: AppConfig) extends DesConnector {
-    def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = desHeaderCarrier(url)(hc)
+    def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = desHeaderCarrier(new URL(url))(hc)
   }
+
   val connector = new FakeConnector(appConfig = mockAppConfig)
 
   "FakeConnector" when {
@@ -55,7 +58,7 @@ class DesConnectorSpec extends TestUtils{
         val hc = HeaderCarrier(sessionId = Some(SessionId("sessionIdHeaderValue")))
         val result = connector.headerCarrierTest(externalHost)(hc)
 
-        result.extraHeaders.size mustBe  4
+        result.extraHeaders.size mustBe 4
         result.extraHeaders.contains(xSessionId -> "sessionIdHeaderValue") mustBe true
         result.extraHeaders.contains(authorisation -> s"Bearer ${mockAppConfig.authorisationToken}") mustBe true
         result.extraHeaders.contains("Environment" -> mockAppConfig.environment) mustBe true

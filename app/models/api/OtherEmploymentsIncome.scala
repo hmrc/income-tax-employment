@@ -23,15 +23,15 @@ import utils.JsonUtils.jsonObjNoNulls
 import java.time.Instant
 
 
-case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
-                                 shareOptions: Option[Set[ShareOption]] = None,
-                                 awardedOrReceivedShares: Option[Set[AwardedOrReceivedShare]] = None,
-                                 disability: Option[Disability] = None,
-                                 foreignService: Option[ForeignService] = None,
-                                 lumpSums: Option[Set[LumpSum]] = None)
+case class OtherEmploymentsIncome(submittedOn: Option[Instant] = None,
+                                  shareOptions: Option[Set[ShareOption]] = None,
+                                  awardedOrReceivedShares: Option[Set[AwardedOrReceivedShare]] = None,
+                                  disability: Option[Disability] = None,
+                                  foreignService: Option[ForeignService] = None,
+                                  lumpSums: Option[Set[LumpSum]] = None)
 
-object OtherEmploymentIncome {
-  implicit val otherEmploymentIncomeWrites: OWrites[OtherEmploymentIncome] = (otherEmploymentIncome: OtherEmploymentIncome) => {
+object OtherEmploymentsIncome {
+  implicit val otherEmploymentsIncomeWrites: OWrites[OtherEmploymentsIncome] = (otherEmploymentIncome: OtherEmploymentsIncome) => {
     jsonObjNoNulls(
       "submittedOn" -> otherEmploymentIncome.submittedOn,
       "shareOption" -> otherEmploymentIncome.shareOptions,
@@ -42,12 +42,12 @@ object OtherEmploymentIncome {
     )
   }
 
-  implicit val otherEmploymentIncomeReads: Reads[OtherEmploymentIncome] = (
+  implicit val otherEmploymentsIncomeReads: Reads[OtherEmploymentsIncome] = (
     (JsPath \ "submittedOn").readNullable[Instant] and
       (JsPath \ "shareOption").readNullable[Set[ShareOption]] and
       (JsPath \ "sharesAwardedOrReceived").readNullable[Set[AwardedOrReceivedShare]] and
       (JsPath \ "disability").readNullable[Disability] and
       (JsPath \ "foreignService").readNullable[ForeignService] and
       (JsPath \ "lumpSums").readNullable[Set[LumpSum]]
-    )(OtherEmploymentIncome.apply _)
+    )(OtherEmploymentsIncome.apply _)
 }

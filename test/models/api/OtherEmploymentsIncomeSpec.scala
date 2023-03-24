@@ -19,11 +19,11 @@ package models.api
 import play.api.libs.json.{JsValue, Json}
 import support.UnitTest
 import support.builders.api.LumpSumBuilder.aLumpSum
-import support.builders.api.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
+import support.builders.api.OtherEmploymentsIncomeBuilder.anOtherEmploymentsIncome
 
 import java.time.Instant
 
-class OtherEmploymentIncomeSpec extends UnitTest {
+class OtherEmploymentsIncomeSpec extends UnitTest {
 
   private val otherEmploymentIncomeJson: String =
     """
@@ -131,7 +131,7 @@ class OtherEmploymentIncomeSpec extends UnitTest {
     employerRef = "321/AB158"
   )
 
-  private val otherEmploymentIncome = anOtherEmploymentIncome.copy(
+  private val otherEmploymentIncome = anOtherEmploymentsIncome.copy(
     submittedOn = Some(Instant.parse("2020-01-04T05:01:01Z")),
     lumpSums = Some(Set(lumpSum1, lumpSum2))
   )
@@ -145,7 +145,7 @@ class OtherEmploymentIncomeSpec extends UnitTest {
             |}
             |""".stripMargin)
 
-        Json.toJson(OtherEmploymentIncome()) shouldBe jsValue
+        Json.toJson(OtherEmploymentsIncome()) shouldBe jsValue
       }
 
       "full OtherEmploymentIncome object provided" in {
@@ -161,11 +161,11 @@ class OtherEmploymentIncomeSpec extends UnitTest {
             |}
             |""".stripMargin)
 
-        Json.fromJson[OtherEmploymentIncome](jsValue).get shouldBe OtherEmploymentIncome()
+        Json.fromJson[OtherEmploymentsIncome](jsValue).get shouldBe OtherEmploymentsIncome()
       }
 
       "full json object provided" in {
-        Json.fromJson[OtherEmploymentIncome](Json.parse(otherEmploymentIncomeJson)).get shouldBe otherEmploymentIncome
+        Json.fromJson[OtherEmploymentsIncome](Json.parse(otherEmploymentIncomeJson)).get shouldBe otherEmploymentIncome
       }
     }
   }
