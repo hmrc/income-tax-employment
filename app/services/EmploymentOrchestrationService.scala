@@ -98,12 +98,12 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
                                                      ec: ExecutionContext): Future[Seq[Either[ApiError, HmrcEmploymentSource]]] = {
     Future.sequence(hmrcEmploymentData.map {
       hmrcEmployment =>
-        val id = hmrcEmployment.employmentId
+        val employmentId = hmrcEmployment.employmentId
         (for {
-          hmrcEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, id, HMRC_HELD))
-          hmrcBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, id, HMRC_HELD, mtditid))
-          customerEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, id, CUSTOMER))
-          customerBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, id, CUSTOMER, mtditid))
+          hmrcEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, employmentId, HMRC_HELD))
+          hmrcBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, employmentId, HMRC_HELD, mtditid))
+          customerEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, employmentId, CUSTOMER))
+          customerBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, employmentId, CUSTOMER, mtditid))
         } yield {
           hmrcEmployment.toHmrcEmploymentSource(hmrcEmploymentData, hmrcBenefits, customerEmploymentData, customerBenefits)
         }).value

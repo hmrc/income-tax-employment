@@ -20,60 +20,66 @@ import connectors.errors.{ApiError, SingleErrorBody}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import support.UnitTest
-import support.builders.api.OtherEmploymentsIncomeBuilder.{anOtherEmploymentsIncome, anOtherEmploymentsIncomeJson}
+import support.builders.api.OtherEmploymentIncomeBuilder.{anOtherEmploymentIncome, anOtherEmploymentsJson}
 import uk.gov.hmrc.http.HttpResponse
 
-class OtherEmploymentsIncomeHttpParserSpec extends UnitTest {
+class OtherEmploymentIncomeHttpParserSpec extends UnitTest {
 
   private val anyHeaders: Map[String, Seq[String]] = Map.empty
   private val anyMethod: String = "GET"
   private val anyUrl = "/any-url"
   private val singleErrorBody: SingleErrorBody = SingleErrorBody("PARSING_ERROR", "Error parsing response from DES")
   private val singleErrorBodyJson: JsValue = Json.toJson(singleErrorBody)
-  private val underTest = OtherEmploymentsIncomeHttpParser.OtherEmploymentsIncomeHttpReads
+  private val employmentOtherIncomeHttpReads = OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeHttpReads
 
   "OtherEmploymentIncomeHttpReads" should {
     "convert JsValue to OtherEmploymentIncomeResponse" when {
       "status is OK and source with deductions" in {
-        val httpResponse = HttpResponse.apply(OK, anOtherEmploymentsIncomeJson, anyHeaders)
+        val httpResponse = HttpResponse.apply(OK, anOtherEmploymentsJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Right(Some(anOtherEmploymentsIncome))
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Right(Some(anOtherEmploymentIncome))
       }
 
       "status is OK and empty json" in {
         val httpResponse = HttpResponse.apply(OK, """ {}""", anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(OK, singleErrorBody))
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(OK, singleErrorBody))
       }
 
       "status is NOT_FOUND" in {
         val httpResponse = HttpResponse.apply(NOT_FOUND, singleErrorBodyJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Right(None)
-      }
-
-      "status is BAD_REQUEST" in {
-        val httpResponse = HttpResponse.apply(BAD_REQUEST, singleErrorBodyJson, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(BAD_REQUEST, singleErrorBody))
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Right(None)
       }
 
       "status is INTERNAL_SERVER_ERROR" in {
         val httpResponse = HttpResponse.apply(INTERNAL_SERVER_ERROR, singleErrorBodyJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(INTERNAL_SERVER_ERROR, singleErrorBody))
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(INTERNAL_SERVER_ERROR, singleErrorBody))
       }
 
       "status is SERVICE_UNAVAILABLE" in {
         val httpResponse = HttpResponse.apply(SERVICE_UNAVAILABLE, singleErrorBodyJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(SERVICE_UNAVAILABLE, singleErrorBody))
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(SERVICE_UNAVAILABLE, singleErrorBody))
       }
 
       "status is any other error" in {
         val httpResponse = HttpResponse.apply(HTTP_VERSION_NOT_SUPPORTED, singleErrorBodyJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(INTERNAL_SERVER_ERROR, singleErrorBody))
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(INTERNAL_SERVER_ERROR, singleErrorBody))
+      }
+
+      "status is BAD_REQUEST" in {
+        val httpResponse = HttpResponse.apply(BAD_REQUEST, singleErrorBodyJson, anyHeaders)
+
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(BAD_REQUEST, singleErrorBody))
+      }
+      
+      "status is UNPROCESSABLE_ENTITY" in {
+        val httpResponse = HttpResponse.apply(UNPROCESSABLE_ENTITY, singleErrorBodyJson, anyHeaders)
+
+        employmentOtherIncomeHttpReads.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, singleErrorBody))
       }
     }
   }

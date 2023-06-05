@@ -17,44 +17,44 @@
 package connectors.parsers
 
 import connectors.errors.ApiError
-import models.api.OtherEmploymentsIncome
+import models.api.OtherEmploymentIncome
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object OtherEmploymentsIncomeHttpParser extends DESParser with Logging {
-  type OtherEmploymentsIncomeResponse = Either[ApiError, Option[OtherEmploymentsIncome]]
+object OtherEmploymentIncomeHttpParser extends DESParser with Logging {
+  type OtherEmploymentIncomeResponse = Either[ApiError, Option[OtherEmploymentIncome]]
 
-  override val parserName: String = "OtherEmploymentsIncomeHttpParser"
+  override val parserName: String = "OtherEmploymentIncomeHttpParser"
   override val isDesAPI: Boolean = true
 
-  implicit object OtherEmploymentsIncomeHttpReads extends HttpReads[OtherEmploymentsIncomeResponse] {
+  implicit object OtherEmploymentIncomeHttpReads extends HttpReads[OtherEmploymentIncomeResponse] {
 
-    override def read(method: String, url: String, response: HttpResponse): OtherEmploymentsIncomeResponse = {
+    override def read(method: String, url: String, response: HttpResponse): OtherEmploymentIncomeResponse = {
       response.status match {
-        case OK => response.json.validate[OtherEmploymentsIncome]
-          .fold[OtherEmploymentsIncomeResponse](
+        case OK                                 => response.json.validate[OtherEmploymentIncome]
+          .fold[OtherEmploymentIncomeResponse](
             _ => badSuccessJsonFromDES,
             {
-              case OtherEmploymentsIncome(None, None, None, None, None, None) => handleDESError(response)
-              case parsedModel => Right(Some(parsedModel))
+              case OtherEmploymentIncome(None, None, None, None, None, None) => handleDESError(response)
+              case otherEmploymentIncomeModel                                => Right(Some(otherEmploymentIncomeModel))
             }
           )
-        case NOT_FOUND =>
+        case NOT_FOUND                          =>
           logger.info(logMessage(response))
           Right(None)
-        case BAD_REQUEST =>
-          pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
-          handleDESError(response)
-        case INTERNAL_SERVER_ERROR =>
+        case INTERNAL_SERVER_ERROR              =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
           handleDESError(response)
-        case SERVICE_UNAVAILABLE =>
+        case SERVICE_UNAVAILABLE                =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
           handleDESError(response)
-        case _ =>
+        case BAD_REQUEST | UNPROCESSABLE_ENTITY =>
+          pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
+          handleDESError(response)
+        case _                                  =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response, Some(INTERNAL_SERVER_ERROR))
       }
