@@ -16,7 +16,7 @@
 
 package support.builders.api
 
-import models.api.{RedundancyCompensationPaymentsOverExemption, TaxableLumpSumsAndCertainIncome}
+import models.api.RedundancyCompensationPaymentsOverExemption
 
 object RedundancyCompensationPaymentsOverExemptionBuilder {
 
