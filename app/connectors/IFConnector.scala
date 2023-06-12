@@ -44,7 +44,7 @@ trait IFConnector {
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
   protected def toTaxYearParam(taxYear: Int): String = {
-    if (taxYear - 1 == 2023) {
+    if (taxYear - 1 >= 2023) {
       s"${(taxYear - 1).toString takeRight 2}-${taxYear.toString takeRight 2}"
     } else {
       s"${taxYear - 1}-${taxYear.toString takeRight 2}"

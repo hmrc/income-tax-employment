@@ -21,6 +21,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import support.ConnectorIntegrationTest
 import support.builders.api.EmploymentDataBuilder.anEmploymentData
+import support.utils.TaxYearUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,27 +32,49 @@ class GetEmploymentDataConnectorSpec extends ConnectorIntegrationTest {
   private val employmentId = "some-employment-id"
   private val view = "any-view-value"
   private val taxYear21_22 = 2022
-  private val taxYear23_24 = 2024
+  private val specificTaxYear: Int = TaxYearUtils.specificTaxYear
+  val specificTaxYearPlusOne: Int = specificTaxYear + 1
+  val formattedTaxYear: String = TaxYearUtils.convertSpecificTaxYear(specificTaxYear)
+  val formattedTaxYearPlusOne: String = TaxYearUtils.convertSpecificTaxYear(specificTaxYearPlusOne)
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   private val underTest = new GetEmploymentDataConnector(httpClient, appConfigStub)
 
   ".getEmploymentData" when {
-    "taxYear is 23-24" should {
+    "specific tax year" should {
       "return correct IF data when correct parameters are passed" in {
         val httpResponse = HttpResponse(OK, Json.toJson(anEmploymentData).toString())
 
-        stubGetHttpClientCall(s"/income-tax/income/employments/23-24/$nino/$employmentId\\?view=$view", httpResponse)
+        stubGetHttpClientCall(s"/income-tax/income/employments/$formattedTaxYear/$nino/$employmentId\\?view=$view", httpResponse)
 
-        await(underTest.getEmploymentData(nino, taxYear23_24, employmentId, view)(hc)) shouldBe Right(Some(anEmploymentData))
+        await(underTest.getEmploymentData(nino, specificTaxYear, employmentId, view)(hc)) shouldBe Right(Some(anEmploymentData))
       }
 
       "return IF error and perform a pagerDutyLog when Left is returned" in {
         val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
 
-        stubGetHttpClientCall(s"/income-tax/income/employments/23-24/$nino/$employmentId\\?view=$view", httpResponse)
+        stubGetHttpClientCall(s"/income-tax/income/employments/$formattedTaxYear/$nino/$employmentId\\?view=$view", httpResponse)
 
-        await(underTest.getEmploymentData(nino, taxYear23_24, employmentId, view)(hc)) shouldBe
+        await(underTest.getEmploymentData(nino, specificTaxYear, employmentId, view)(hc)) shouldBe
+          Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
+      }
+    }
+
+    "specific tax year plus one" should {
+      "return correct IF data when correct parameters are passed" in {
+        val httpResponse = HttpResponse(OK, Json.toJson(anEmploymentData).toString())
+
+        stubGetHttpClientCall(s"/income-tax/income/employments/$formattedTaxYearPlusOne/$nino/$employmentId\\?view=$view", httpResponse)
+
+        await(underTest.getEmploymentData(nino, specificTaxYearPlusOne, employmentId, view)(hc)) shouldBe Right(Some(anEmploymentData))
+      }
+
+      "return IF error and perform a pagerDutyLog when Left is returned" in {
+        val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
+
+        stubGetHttpClientCall(s"/income-tax/income/employments/$formattedTaxYearPlusOne/$nino/$employmentId\\?view=$view", httpResponse)
+
+        await(underTest.getEmploymentData(nino, specificTaxYearPlusOne, employmentId, view)(hc)) shouldBe
           Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
       }
     }
