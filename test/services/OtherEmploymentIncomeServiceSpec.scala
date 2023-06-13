@@ -32,25 +32,26 @@ class OtherEmploymentIncomeServiceSpec extends TestUtils {
   private val taxYear: Int = 2022
 
   private val mockOtherEmploymentIncomeConnector = mock[OtherEmploymentIncomeConnector]
-  private val otherEmploymentIncomeService = new OtherEmploymentIncomeService(mockOtherEmploymentIncomeConnector)
+  private val underTest = new OtherEmploymentIncomeService(mockOtherEmploymentIncomeConnector)
 
-  "getOtherEmployments" should {
-    " gets no other employments income so returns blank" in {
+  "getOtherEmploymentIncome" should {
+
+    " gets no other employment income so returns blank" in {
       (mockOtherEmploymentIncomeConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
         .expects(*, *, *)
         .returning(Future.successful(Right(None)))
 
-      val result = otherEmploymentIncomeService.getOtherEmploymentIncome(nino, taxYear, mtdItID)
+      val result = underTest.getOtherEmploymentIncome(nino, taxYear, mtdItID)
       await(result) mustBe Right(None)
     }
 
-    "get other employment income and returns as-is with no modifications" in {
+    "gets other employment income and returns as-is with no modifications" in {
 
       (mockOtherEmploymentIncomeConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
         .expects(*, *, *)
         .returning(Future.successful(Right(Some(anOtherEmploymentIncome))))
 
-      val result = otherEmploymentIncomeService.getOtherEmploymentIncome(nino, taxYear, mtdItID)
+      val result = underTest.getOtherEmploymentIncome(nino, taxYear, mtdItID)
       await(result) mustBe Right(Some(anOtherEmploymentIncome))
     }
 
@@ -62,12 +63,8 @@ class OtherEmploymentIncomeServiceSpec extends TestUtils {
         .expects(*, *, *)
         .returning(Future.successful(Left(desApiError)))
 
-      val result = otherEmploymentIncomeService.getOtherEmploymentIncome(nino, taxYear, mtdItID)
+      val result = underTest.getOtherEmploymentIncome(nino, taxYear, mtdItID)
       await(result) mustBe Left(desApiError)
     }
-
-
   }
-
-
 }

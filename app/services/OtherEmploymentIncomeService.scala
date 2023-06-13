@@ -21,23 +21,13 @@ import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeR
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class OtherEmploymentIncomeService @Inject()(otherEmploymentConnector: OtherEmploymentIncomeConnector) {
 
 
-    def getOtherEmploymentIncome(nino: String, taxYear: Int, mtditid: String)
-                                (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[OtherEmploymentIncomeResponse] = {
-    otherIncome(nino, taxYear, mtditid).flatMap {
-      case Right(otherEmploymentIncome) => Future.successful(Right(otherEmploymentIncome))
-      case Left(error)                  => Future.successful(Left(error))
-    }
-  }
-
-
-  private def otherIncome(nino: String, taxYear: Int, mtditid: String)
-                         (implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponse] = {
+  def getOtherEmploymentIncome(nino: String, taxYear: Int, mtditid: String)
+                              (implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponse] =
     otherEmploymentConnector.getOtherEmploymentIncome(nino, taxYear)(hc.withExtraHeaders("mtditid" -> mtditid))
-  }
 
 }

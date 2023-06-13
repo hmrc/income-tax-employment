@@ -18,7 +18,7 @@ package controllers
 
 import connectors.errors.{ApiError, SingleErrorBody}
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
-import org.scalamock.handlers.CallHandler5
+import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -28,7 +28,7 @@ import support.builders.api.OtherEmploymentIncomeBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class OtherEmploymentIncomeControllerSpec extends TestUtils {
 
@@ -39,27 +39,27 @@ class OtherEmploymentIncomeControllerSpec extends TestUtils {
   val taxYear: Int = 2022
   private val fakeGetRequest = FakeRequest("GET", "/").withHeaders("MTDITID" -> "1234567890")
 
-  def mockGetEmptyOtherIncome(): CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext, Future[OtherEmploymentIncomeResponse]] = {
+  def mockGetEmptyOtherIncome(): CallHandler4[String, Int, String, HeaderCarrier, Future[OtherEmploymentIncomeResponse]] = {
     val noOtherEmploymentsResponse: OtherEmploymentIncomeResponse = Right(None)
-    (mockOtherEmploymentIncomeService.getOtherEmploymentIncome(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *, *)
+    (mockOtherEmploymentIncomeService.getOtherEmploymentIncome(_: String, _: Int, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *)
       .returning(Future.successful(noOtherEmploymentsResponse))
   }
 
-  def mockGetValidOtherIncome(): CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext, Future[OtherEmploymentIncomeResponse]] = {
+  def mockGetValidOtherIncome(): CallHandler4[String, Int, String, HeaderCarrier, Future[OtherEmploymentIncomeResponse]] = {
 
     val otherEmploymentsResponse = OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
     val validOtherEmploymentsResponse: OtherEmploymentIncomeResponse = Right(Some(otherEmploymentsResponse))
-    (mockOtherEmploymentIncomeService.getOtherEmploymentIncome(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *, *)
+    (mockOtherEmploymentIncomeService.getOtherEmploymentIncome(_: String, _: Int, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *)
       .returning(Future.successful(validOtherEmploymentsResponse))
   }
 
-  def mockOtherIncomeFailure(httpErrorCode: Int): CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext, Future[OtherEmploymentIncomeResponse]] = {
+  def mockOtherIncomeFailure(httpErrorCode: Int): CallHandler4[String, Int, String, HeaderCarrier, Future[OtherEmploymentIncomeResponse]] = {
     val error = Left(ApiError(httpErrorCode, SingleErrorBody("DES_CODE", "DES_REASON")))
     val errorResponse: OtherEmploymentIncomeResponse = error
-    (mockOtherEmploymentIncomeService.getOtherEmploymentIncome(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *, *)
+    (mockOtherEmploymentIncomeService.getOtherEmploymentIncome(_: String, _: Int, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *)
       .returning(Future.successful(errorResponse))
   }
 

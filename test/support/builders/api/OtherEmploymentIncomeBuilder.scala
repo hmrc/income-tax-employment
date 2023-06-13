@@ -37,7 +37,7 @@ object OtherEmploymentIncomeBuilder {
     foreignService = Some(aForeignService)
   )
 
-  val anOtherEmploymentsJson: String =
+  val anOtherEmploymentIncomeJson: String =
     s"""
        |{
        |  "submittedOn": "$taxYearEOY-01-04T05:01:01Z",
