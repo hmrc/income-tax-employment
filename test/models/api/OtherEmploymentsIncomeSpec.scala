@@ -19,13 +19,13 @@ package models.api
 import play.api.libs.json.{JsValue, Json}
 import support.UnitTest
 import support.builders.api.LumpSumBuilder.aLumpSum
-import support.builders.api.OtherEmploymentsIncomeBuilder.anOtherEmploymentsIncome
+import support.builders.api.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 
 import java.time.Instant
 
-class OtherEmploymentsIncomeSpec extends UnitTest {
+class OtherEmploymentsSpec extends UnitTest {
 
-  private val otherEmploymentIncomeJson: String =
+  private val anOtherEmploymentIncomeJson: String =
     """
       |{
       |	"submittedOn": "2020-01-04T05:01:01Z",
@@ -131,7 +131,7 @@ class OtherEmploymentsIncomeSpec extends UnitTest {
     employerRef = "321/AB158"
   )
 
-  private val otherEmploymentIncome = anOtherEmploymentsIncome.copy(
+  private val otherEmploymentIncome = anOtherEmploymentIncome.copy(
     submittedOn = Some(Instant.parse("2020-01-04T05:01:01Z")),
     lumpSums = Some(Set(lumpSum1, lumpSum2))
   )
@@ -145,11 +145,11 @@ class OtherEmploymentsIncomeSpec extends UnitTest {
             |}
             |""".stripMargin)
 
-        Json.toJson(OtherEmploymentsIncome()) shouldBe jsValue
+        Json.toJson(OtherEmploymentIncome()) shouldBe jsValue
       }
 
       "full OtherEmploymentIncome object provided" in {
-        Json.toJson(otherEmploymentIncome) shouldBe Json.parse(otherEmploymentIncomeJson)
+        Json.toJson(otherEmploymentIncome) shouldBe Json.parse(anOtherEmploymentIncomeJson)
       }
     }
 
@@ -161,11 +161,11 @@ class OtherEmploymentsIncomeSpec extends UnitTest {
             |}
             |""".stripMargin)
 
-        Json.fromJson[OtherEmploymentsIncome](jsValue).get shouldBe OtherEmploymentsIncome()
+        Json.fromJson[OtherEmploymentIncome](jsValue).get shouldBe OtherEmploymentIncome()
       }
 
       "full json object provided" in {
-        Json.fromJson[OtherEmploymentsIncome](Json.parse(otherEmploymentIncomeJson)).get shouldBe otherEmploymentIncome
+        Json.fromJson[OtherEmploymentIncome](Json.parse(anOtherEmploymentIncomeJson)).get shouldBe otherEmploymentIncome
       }
     }
   }

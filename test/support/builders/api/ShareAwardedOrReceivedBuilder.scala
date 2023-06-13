@@ -16,14 +16,14 @@
 
 package support.builders.api
 
-import models.api.AwardedOrReceivedShare
+import models.api.SharesAwardedOrReceived
 import models.api.ShareAwardedShareSchemePlanType.SIP
 
 import java.time.LocalDate
 
 object ShareAwardedOrReceivedBuilder {
 
-  val anAwardedOrReceivedShare: AwardedOrReceivedShare = AwardedOrReceivedShare(
+  val aSharesAwardedOrReceived: SharesAwardedOrReceived = SharesAwardedOrReceived(
     employerName = "ABC Ltd",
     employerRef = Some("321/AB156"),
     schemePlanType = SIP,

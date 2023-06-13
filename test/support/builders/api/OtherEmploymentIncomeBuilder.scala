@@ -16,28 +16,28 @@
 
 package support.builders.api
 
-import models.api.OtherEmploymentsIncome
+import models.api.OtherEmploymentIncome
 import support.builders.api.DisabilityBuilder.aDisability
 import support.builders.api.ForeignServiceBuilder.aForeignService
 import support.builders.api.LumpSumBuilder.aLumpSum
-import support.builders.api.ShareAwardedOrReceivedBuilder.anAwardedOrReceivedShare
+import support.builders.api.ShareAwardedOrReceivedBuilder.aSharesAwardedOrReceived
 import support.builders.api.ShareOptionBuilder.aShareOption
 import support.utils.TaxYearUtils.taxYearEOY
 
 import java.time.Instant
 
-object OtherEmploymentsIncomeBuilder {
+object OtherEmploymentIncomeBuilder {
 
-  val anOtherEmploymentsIncome: OtherEmploymentsIncome = OtherEmploymentsIncome(
+  val anOtherEmploymentIncome: OtherEmploymentIncome = OtherEmploymentIncome(
     submittedOn = Some(Instant.parse(s"$taxYearEOY-01-04T05:01:01Z")),
     shareOptions = Some(Set(aShareOption)),
-    awardedOrReceivedShares = Some(Set(anAwardedOrReceivedShare)),
+    sharesAwardedOrReceived = Some(Set(aSharesAwardedOrReceived)),
+    lumpSums = Some(Set(aLumpSum)),
     disability = Some(aDisability),
-    foreignService = Some(aForeignService),
-    lumpSums = Some(Set(aLumpSum))
+    foreignService = Some(aForeignService)
   )
 
-  val anOtherEmploymentsIncomeJson: String =
+  val anOtherEmploymentIncomeJson: String =
     s"""
        |{
        |  "submittedOn": "$taxYearEOY-01-04T05:01:01Z",

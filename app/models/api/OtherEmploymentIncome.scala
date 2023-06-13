@@ -23,31 +23,31 @@ import utils.JsonUtils.jsonObjNoNulls
 import java.time.Instant
 
 
-case class OtherEmploymentsIncome(submittedOn: Option[Instant] = None,
-                                  shareOptions: Option[Set[ShareOption]] = None,
-                                  awardedOrReceivedShares: Option[Set[AwardedOrReceivedShare]] = None,
-                                  disability: Option[Disability] = None,
-                                  foreignService: Option[ForeignService] = None,
-                                  lumpSums: Option[Set[LumpSum]] = None)
+case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
+                                 shareOptions: Option[Set[ShareOption]] = None,
+                                 sharesAwardedOrReceived: Option[Set[SharesAwardedOrReceived]] = None,
+                                 lumpSums: Option[Set[LumpSum]] = None,
+                                 disability: Option[Disability] = None,
+                                 foreignService: Option[ForeignService] = None)
 
-object OtherEmploymentsIncome {
-  implicit val otherEmploymentsIncomeWrites: OWrites[OtherEmploymentsIncome] = (otherEmploymentIncome: OtherEmploymentsIncome) => {
+object OtherEmploymentIncome {
+  implicit val otherEmploymentsWrites: OWrites[OtherEmploymentIncome] = (otherEmploymentIncome: OtherEmploymentIncome) => {
     jsonObjNoNulls(
       "submittedOn" -> otherEmploymentIncome.submittedOn,
       "shareOption" -> otherEmploymentIncome.shareOptions,
-      "sharesAwardedOrReceived" -> otherEmploymentIncome.awardedOrReceivedShares,
+      "sharesAwardedOrReceived" -> otherEmploymentIncome.sharesAwardedOrReceived,
+      "lumpSums" -> otherEmploymentIncome.lumpSums,
       "disability" -> otherEmploymentIncome.disability,
-      "foreignService" -> otherEmploymentIncome.foreignService,
-      "lumpSums" -> otherEmploymentIncome.lumpSums
+      "foreignService" -> otherEmploymentIncome.foreignService
     )
   }
 
-  implicit val otherEmploymentsIncomeReads: Reads[OtherEmploymentsIncome] = (
+  implicit val otherEmploymentsReads: Reads[OtherEmploymentIncome] = (
     (JsPath \ "submittedOn").readNullable[Instant] and
       (JsPath \ "shareOption").readNullable[Set[ShareOption]] and
-      (JsPath \ "sharesAwardedOrReceived").readNullable[Set[AwardedOrReceivedShare]] and
+      (JsPath \ "sharesAwardedOrReceived").readNullable[Set[SharesAwardedOrReceived]] and
+      (JsPath \ "lumpSums").readNullable[Set[LumpSum]] and
       (JsPath \ "disability").readNullable[Disability] and
-      (JsPath \ "foreignService").readNullable[ForeignService] and
-      (JsPath \ "lumpSums").readNullable[Set[LumpSum]]
-    )(OtherEmploymentsIncome.apply _)
+      (JsPath \ "foreignService").readNullable[ForeignService]
+    ) (OtherEmploymentIncome.apply _)
 }

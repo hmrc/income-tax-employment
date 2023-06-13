@@ -18,7 +18,7 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.CreateUpdateOtherEmploymentsIncomeHttpParser.{CreateUpdateOtherEmploymentsIncomeHttpReads, CreateUpdateOtherEmploymentsIncomeResponse}
-import models.api.OtherEmploymentsIncome
+import models.api.OtherEmploymentIncome
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
@@ -30,12 +30,12 @@ class CreateUpdateOtherEmploymentIncomeConnector @Inject()(val http: HttpClient,
                                                            val appConfig: AppConfig)(implicit ec: ExecutionContext) extends DesConnector {
   def createUpdateOtherEmploymentIncome(nino: String,
                                         taxYear: Int,
-                                        otherEmploymentsIncome: OtherEmploymentsIncome)
+                                        otherEmploymentIncome: OtherEmploymentIncome)
                                        (implicit hc: HeaderCarrier): Future[CreateUpdateOtherEmploymentsIncomeResponse] = {
     val url = new URL(s"$baseUrl/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}")
 
     def desCall(implicit hc: HeaderCarrier): Future[CreateUpdateOtherEmploymentsIncomeResponse] = {
-      http.PUT[OtherEmploymentsIncome, CreateUpdateOtherEmploymentsIncomeResponse](url, otherEmploymentsIncome)
+      http.PUT[OtherEmploymentIncome, CreateUpdateOtherEmploymentsIncomeResponse](url, otherEmploymentIncome)
     }
 
     desCall(desHeaderCarrier(url))
