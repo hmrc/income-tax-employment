@@ -50,7 +50,7 @@ class GetEmploymentsControllerSpec extends TestUtils {
 
   def mockGetEmploymentListValidWithNoData(): CallHandler5[String, Int, String,
     HeaderCarrier, ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] = {
-    val validEmploymentList = Right(AllEmploymentData(Seq(),None,Seq(),None))
+    val validEmploymentList = Right(AllEmploymentData(Seq(),None,Seq(),None, None))
     (service.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *, *)
       .returning(Future.successful(validEmploymentList))
@@ -323,7 +323,16 @@ class GetEmploymentsControllerSpec extends TestUtils {
           |			"vehicleExpenses": 100,
           |			"mileageAllowanceRelief": 100
           |		}
-          |	}
+          |	},
+          | "otherEmploymentIncome": {
+          |   "lumpSums": [{
+          |     "employerName": "Business",
+          |     "employerRef": "666/66666",
+          |     "taxableLumpSumsAndCertainIncome": {
+          |       "amount": 100
+          |     }
+          |   }]
+          | }
           |}""".stripMargin)
       }
 

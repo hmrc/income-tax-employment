@@ -22,7 +22,8 @@ import connectors.parsers.GetEmploymentBenefitsHttpParser.GetEmploymentBenefitsR
 import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import connectors.parsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.parsers.GetEmploymentListHttpParser.GetEmploymentListResponse
-import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector}
+import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
+import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector, OtherEmploymentIncomeConnector}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -38,7 +39,8 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
   val dataConnector: GetEmploymentDataConnector = mock[GetEmploymentDataConnector]
   val benefitsConnector: GetEmploymentBenefitsConnector = mock[GetEmploymentBenefitsConnector]
   val expensesConnector: GetEmploymentExpensesConnector = mock[GetEmploymentExpensesConnector]
-  val service: EmploymentOrchestrationService = new EmploymentOrchestrationService(listConnector, dataConnector, benefitsConnector, expensesConnector)
+  val otherEmploymentIncomeConnector: OtherEmploymentIncomeConnector = mock[OtherEmploymentIncomeConnector]
+  val service: EmploymentOrchestrationService = new EmploymentOrchestrationService(listConnector, dataConnector, benefitsConnector, expensesConnector, otherEmploymentIncomeConnector)
 
   "getAllEmploymentData" should {
 
@@ -56,6 +58,8 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
+
+      val otherEmploymentIncomeExpectedResult: OtherEmploymentIncomeResponse = Right(Some(otherEmploymentIncome))
 
       (listConnector.getEmploymentList(_: String, _: Int, _: Option[String])(_: HeaderCarrier))
         .expects(nino, taxYear, None, *)
@@ -92,6 +96,10 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
+
+      (otherEmploymentIncomeConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
+        .expects(nino, taxYear, *)
+        .returning(Future.successful(otherEmploymentIncomeExpectedResult))
 
       val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
@@ -197,6 +205,8 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
 
+      val otherEmploymentIncomeExpectedResult: OtherEmploymentIncomeResponse = Right(Some(otherEmploymentIncome))
+
       (listConnector.getEmploymentList(_: String, _: Int, _: Option[String])(_: HeaderCarrier))
         .expects(nino, taxYear, None, *)
         .returning(Future.successful(listExpectedResult))
@@ -225,6 +235,10 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "CUSTOMER", *)
         .returning(Future.successful(customerExpensesExpectedResult))
 
+      (otherEmploymentIncomeConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
+        .expects(nino, taxYear, *)
+        .returning(Future.successful(otherEmploymentIncomeExpectedResult))
+
       val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
       result mustBe Right(allEmploymentData.copy(customerEmploymentData = Seq()))
@@ -242,6 +256,8 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
 
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
+
+      val otherEmploymentIncomeExpectedResult: OtherEmploymentIncomeResponse = Right(Some(otherEmploymentIncome))
 
       (listConnector.getEmploymentList(_: String, _: Int, _: Option[String])(_: HeaderCarrier))
         .expects(nino, taxYear, None, *)
@@ -262,6 +278,10 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "HMRC-HELD", *)
         .returning(Future.successful(hmrcExpensesExpectedResult))
+
+      (otherEmploymentIncomeConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
+        .expects(nino, taxYear, *)
+        .returning(Future.successful(otherEmploymentIncomeExpectedResult))
 
       val result = await(service.getAllEmploymentData(nino, taxYear, mtditid))
 
