@@ -22,7 +22,7 @@ import connectors.parsers.GetEmploymentBenefitsHttpParser.GetEmploymentBenefitsR
 import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import connectors.parsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.parsers.GetEmploymentListHttpParser.GetEmploymentListResponse
-import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector}
+import connectors._
 import models._
 import models.frontend.{AllEmploymentData, EmploymentSource, HmrcEmploymentSource}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
@@ -36,7 +36,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEmploymentListConnector,
                                                getEmploymentDataConnector: GetEmploymentDataConnector,
                                                getEmploymentBenefitsConnector: GetEmploymentBenefitsConnector,
-                                               getEmploymentExpensesConnector: GetEmploymentExpensesConnector) {
+                                               getEmploymentExpensesConnector: GetEmploymentExpensesConnector,
+                                               otherEmploymentIncomeConnector: OtherEmploymentIncomeConnector) {
 
   def getAllEmploymentData(nino: String, taxYear: Int, mtditid: String)
                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ApiError, AllEmploymentData]] = {
@@ -60,17 +61,24 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
             val hmrcEmployments: Seq[HmrcEmploymentSource] = hmrcResponse.collect { case Right(employment) => employment }
             orchestrateCustomerEmploymentDataRetrieval(nino, taxYear, customer, mtditid).flatMap { customerResponse => {
               if (customerResponse.forall(_.isRight)) {
-                getExpenses(nino, taxYear, CUSTOMER, mtditid).map { customerExpenses =>
+                getExpenses(nino, taxYear, CUSTOMER, mtditid).flatMap { customerExpenses =>
                   if (customerExpenses.isRight) {
-                    val customerEmployments: Seq[EmploymentSource] = customerResponse.collect { case Right(employment) => employment }
-                    Right(AllEmploymentData(
-                      hmrcEmployments,
-                      hmrcExpenses.toOption.get.map(_.toEmploymentExpenses),
-                      customerEmployments,
-                      customerExpenses.toOption.get.map(_.toEmploymentExpenses)
-                    ))
+                    otherEmploymentIncomeConnector.getOtherEmploymentIncome(nino, taxYear).map { otherEmploymentIncome =>
+                      if(otherEmploymentIncome.isRight) {
+                        val customerEmployments: Seq[EmploymentSource] = customerResponse.collect { case Right(employment) => employment }
+                        Right(AllEmploymentData(
+                          hmrcEmployments,
+                          hmrcExpenses.toOption.get.map(_.toEmploymentExpenses),
+                          customerEmployments,
+                          customerExpenses.toOption.get.map(_.toEmploymentExpenses),
+                          otherEmploymentIncome.toOption.get
+                        ))
+                      } else {
+                        returnError(Seq(otherEmploymentIncome))
+                      }
+                    }
                   } else {
-                    returnError(Seq(customerExpenses))
+                    Future(returnError(Seq(customerExpenses)))
                   }
                 }
               } else {

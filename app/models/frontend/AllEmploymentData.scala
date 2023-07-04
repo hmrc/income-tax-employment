@@ -16,12 +16,14 @@
 
 package models.frontend
 
+import models.api.OtherEmploymentIncome
 import play.api.libs.json.{Json, OFormat}
 
 case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
                              hmrcExpenses: Option[EmploymentExpenses],
                              customerEmploymentData: Seq[EmploymentSource],
-                             customerExpenses: Option[EmploymentExpenses])
+                             customerExpenses: Option[EmploymentExpenses],
+                             otherEmploymentIncome: Option[OtherEmploymentIncome])
 
 object AllEmploymentData {
   implicit val format: OFormat[AllEmploymentData] = Json.format[AllEmploymentData]

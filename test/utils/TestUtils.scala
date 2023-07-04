@@ -23,6 +23,7 @@ import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.{AppConfig, MockAppConfig}
 import controllers.predicates.AuthorisedAction
 import models._
+import models.api.{LumpSum, OtherEmploymentIncome, TaxableLumpSumsAndCertainIncome}
 import models.frontend._
 import models.shared._
 import org.scalamock.handlers.CallHandler4
@@ -151,6 +152,21 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         ))
       )
     )
+
+  val otherEmploymentIncome = OtherEmploymentIncome(
+    lumpSums = Some(Set(
+      LumpSum(
+        employerName = "Business",
+        employerRef = "666/66666",
+        taxableLumpSumsAndCertainIncome = Some(TaxableLumpSumsAndCertainIncome(
+          amount = 100
+        )),
+        benefitFromEmployerFinancedRetirementScheme = None,
+        redundancyCompensationPaymentsOverExemption = None,
+        redundancyCompensationPaymentsUnderExemption = None
+      )
+    ))
+  )
 
   val allEmploymentData: AllEmploymentData =
     AllEmploymentData(
@@ -308,6 +324,9 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
             Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
           ))
         )
+      ),
+      otherEmploymentIncome = Some(
+        otherEmploymentIncome
       )
     )
 

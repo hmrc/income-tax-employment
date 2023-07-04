@@ -248,6 +248,15 @@ class AllEmploymentDataModelSpec extends TestUtils {
         "vehicleExpenses" -> 100,
         "mileageAllowanceRelief" -> 100
       )
+    ),
+    "otherEmploymentIncome" -> Json.obj(
+      "lumpSums" -> Json.arr(Json.obj(
+        "employerName" -> "Business",
+        "employerRef" -> "666/66666",
+        "taxableLumpSumsAndCertainIncome" -> Json.obj(
+          "amount" -> 100
+        )
+      ))
     )
   )
 
