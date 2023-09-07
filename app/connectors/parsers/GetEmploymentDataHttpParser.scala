@@ -36,7 +36,9 @@ object GetEmploymentDataHttpParser extends DESParser with Logging{
       response.status match {
         case OK => response.json.validate[EmploymentData].fold[GetEmploymentDataResponse](
           _ => badSuccessJsonFromDES,
-          parsedModel => Right(Some(parsedModel))
+          parsedModel => {
+            Right(Some(parsedModel))
+          }
         )
         case NOT_FOUND =>
           logger.info(logMessage(response))

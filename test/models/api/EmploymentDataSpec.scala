@@ -38,6 +38,7 @@ class EmploymentDataSpec extends TestUtils {
       "cessationDate" -> "2020-03-11",
       "occPen" -> false,
       "disguisedRemuneration" -> false,
+      "offPayrollWorker" -> false,
       "employer" -> Json.obj(
         "employerRef" -> "223/AB12399",
         "employerName" -> "Business 1"

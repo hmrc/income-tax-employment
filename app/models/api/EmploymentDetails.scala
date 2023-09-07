@@ -28,6 +28,7 @@ case class EmploymentDetails(employmentSequenceNumber: Option[String],
                              cessationDate: Option[String],
                              occPen: Option[Boolean],
                              disguisedRemuneration: Option[Boolean],
+                             offPayrollWorker: Option[Boolean],
                              employer: Employer,
                              pay: Option[Pay],
                              deductions: Option[Deductions])

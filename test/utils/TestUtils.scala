@@ -191,6 +191,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
                 directorshipCeasedDate = Some("2020-02-12"),
                 occPen = Some(false),
                 disguisedRemuneration = Some(false),
+                offPayrollWorker = Some(false),
                 Some(Pay(
                   taxablePayToDate = Some(34234.15),
                   totalTaxToDate = Some(6782.92),
@@ -228,6 +229,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
                 directorshipCeasedDate = Some("2020-02-12"),
                 occPen = Some(false),
                 disguisedRemuneration = Some(false),
+                offPayrollWorker = Some(false),
                 Some(Pay(
                   taxablePayToDate = Some(34234.15),
                   totalTaxToDate = Some(6782.92),
@@ -287,6 +289,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
               directorshipCeasedDate = Some("2020-02-12"),
               occPen = Some(false),
               disguisedRemuneration = Some(false),
+              offPayrollWorker = Some(false),
               Some(Pay(
                 taxablePayToDate = Some(34234.15),
                 totalTaxToDate = Some(6782.92),
@@ -382,6 +385,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         cessationDate = Some("2020-03-11"),
         occPen = Some(false),
         disguisedRemuneration = Some(false),
+        offPayrollWorker = Some(false),
         employer = api.Employer(
           employerRef = Some("223/AB12399"),
           employerName = "Business 1"
@@ -419,6 +423,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         cessationDate = Some("2020-03-11"),
         occPen = Some(false),
         disguisedRemuneration = Some(false),
+        offPayrollWorker = Some(false),
         employer = api.Employer(
           employerRef = Some("223/AB12399"),
           employerName = "Business 1"
@@ -504,6 +509,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         cessationDate = None,
         occPen = None,
         disguisedRemuneration = None,
+        offPayrollWorker = None,
         employer = api.Employer(
           employerRef = None,
           employerName = "maggie"

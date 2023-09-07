@@ -44,6 +44,7 @@ class AllEmploymentDataModelSpec extends TestUtils {
             "directorshipCeasedDate" -> "2020-02-12",
             "occPen" -> false,
             "disguisedRemuneration" -> false,
+            "offPayrollWorker" -> false,
             "pay" -> Json.obj(
               "taxablePayToDate" -> 34234.15,
               "totalTaxToDate" -> 6782.92,
@@ -102,6 +103,7 @@ class AllEmploymentDataModelSpec extends TestUtils {
             "directorshipCeasedDate" -> "2020-02-12",
             "occPen" -> false,
             "disguisedRemuneration" -> false,
+            "offPayrollWorker" -> false,
             "pay" -> Json.obj(
               "taxablePayToDate" -> 34234.15,
               "totalTaxToDate" -> 6782.92,
@@ -185,6 +187,7 @@ class AllEmploymentDataModelSpec extends TestUtils {
             "directorshipCeasedDate" -> "2020-02-12",
             "occPen" -> false,
             "disguisedRemuneration" -> false,
+            "offPayrollWorker" -> false,
             "pay" -> Json.obj(
               "taxablePayToDate" -> 34234.15,
               "totalTaxToDate" -> 6782.92,
