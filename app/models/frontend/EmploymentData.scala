@@ -27,6 +27,7 @@ case class EmploymentData(submittedOn: String,
                           directorshipCeasedDate: Option[String],
                           occPen: Option[Boolean],
                           disguisedRemuneration: Option[Boolean],
+                          offPayrollWorker: Option[Boolean],
                           pay: Option[Pay],
                           deductions: Option[Deductions]
                          )
@@ -43,6 +44,7 @@ object EmploymentData {
       desEmploymentData.employment.directorshipCeasedDate,
       desEmploymentData.employment.occPen,
       desEmploymentData.employment.disguisedRemuneration,
+      desEmploymentData.employment.offPayrollWorker,
       desEmploymentData.employment.pay,
       desEmploymentData.employment.deductions
     )

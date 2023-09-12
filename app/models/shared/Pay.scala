@@ -28,3 +28,9 @@ case class Pay(taxablePayToDate: Option[BigDecimal],
 object Pay {
   implicit val formats: OFormat[Pay] = Json.format[Pay]
 }
+
+case class CustomerEstimatedPay(amount: Option[BigDecimal])
+
+object CustomerEstimatedPay {
+  implicit val formats: OFormat[CustomerEstimatedPay] = Json.format[CustomerEstimatedPay]
+}
