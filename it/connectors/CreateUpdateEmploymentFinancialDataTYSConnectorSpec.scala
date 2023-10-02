@@ -28,26 +28,26 @@ import play.api.libs.json.Json
 import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import utils.DESTaxYearHelper.desTaxYearConverter
+import utils.TaxYearUtils.toTaxYearParam
 
-class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec {
+class CreateUpdateEmploymentFinancialDataTYSConnectorSpec extends PlaySpec with WiremockSpec {
 
-  lazy val connector: CreateUpdateEmploymentFinancialDataConnector = app.injector.instanceOf[CreateUpdateEmploymentFinancialDataConnector]
+  lazy val connector: CreateUpdateEmploymentFinancialDataTYSConnector = app.injector.instanceOf[CreateUpdateEmploymentFinancialDataTYSConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
 
   val nino: String = "123456789"
-  val taxYear: Int = 1999
+  val specificTaxYear: Int = 2024
   val employmentId: String = "0000000-0000000-000000"
-  val minEmployment: Employment = Employment(pay = PayModel(taxablePayToDate = 100.00, totalTaxToDate = 100.00, tipsAndOtherPayments = None), None, None, None)
+  val minEmployment: Employment = Employment(pay = PayModel(taxablePayToDate = 100.00, totalTaxToDate = 100.00, tipsAndOtherPayments = None), None, None, Some(true))
   val minEmploymentFinancialData: api.EmploymentFinancialData = api.EmploymentFinancialData(minEmployment)
-  val stubUrl = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
+  val stubUrl = s"/income-tax/${toTaxYearParam(specificTaxYear)}/income/employments/$nino/$employmentId"
 
   def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
     override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
-  "PutEmploymentFinancialDataConnector" should {
+  "CreateUpdateEmploymentFinancialDataTYSConnector" should {
 
     val appConfigWithInternalHost = appConfig("localhost")
     val appConfigWithExternalHost = appConfig("127.0.0.1")
@@ -60,11 +60,11 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       "Integration Framework Returns a 204 with minimum data sent in the body when host is internal" in {
 
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new CreateUpdateEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
+        val connector = new CreateUpdateEmploymentFinancialDataTYSConnector(httpClient, appConfigWithInternalHost)
 
         stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT, headersToSend)
 
-        val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+        val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
         result mustBe Right(())
       }
@@ -72,11 +72,11 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       "Integration Framework Returns a 204 with minimum data sent in the body when host is external" in {
 
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new CreateUpdateEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
+        val connector = new CreateUpdateEmploymentFinancialDataTYSConnector(httpClient, appConfigWithExternalHost)
 
         stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT, headersToSend)
 
-        val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+        val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
         result mustBe Right(())
       }
@@ -85,10 +85,59 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), NO_CONTENT)
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+        val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
         result mustBe Right(())
       }
+    }
+
+    "returns a BAD_REQUEST response" in {
+      val expectedResult = ApiError(BAD_REQUEST, SingleErrorBody("INVALID_TAX_YEAR", "Submission has not passed validation. Invalid parameter taxYear."))
+
+      val responseBody = Json.obj(
+        "code" -> "INVALID_TAX_YEAR",
+        "reason" -> "Submission has not passed validation. Invalid parameter taxYear."
+      )
+
+      stubPutWithResponseBody(stubUrl, BAD_REQUEST, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
+
+      result mustBe Left(expectedResult)
+    }
+
+    "return a NOT_FOUND response" in {
+      val expectedResult = ApiError(NOT_FOUND, SingleErrorBody("NOT_FOUND", "The remote endpoint has indicated that Income Source not found."))
+
+      val responseBody = Json.obj(
+        "code" -> "NOT_FOUND",
+        "reason" -> "The remote endpoint has indicated that Income Source not found."
+      )
+
+      stubPutWithResponseBody(stubUrl, NOT_FOUND, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
+
+      result mustBe Left(expectedResult)
+    }
+
+    "return a UNPROCESSABLE_ENTITY response" in {
+      val expectedResult = ApiError(UNPROCESSABLE_ENTITY, SingleErrorBody("UNPROCESSABLE_ENTITY",
+        "The remote endpoint has indicated that this tax year is not supported."))
+
+      val responseBody = Json.obj(
+        "code" -> "UNPROCESSABLE_ENTITY",
+        "reason" -> "The remote endpoint has indicated that this tax year is not supported."
+      )
+
+      stubPutWithResponseBody(stubUrl, UNPROCESSABLE_ENTITY, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
+
+      result mustBe Left(expectedResult)
     }
 
     "return a Parsing error INTERNAL_SERVER_ERROR response" in {
@@ -96,25 +145,11 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
         "financialData" -> ""
       )
 
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
       stubPutWithResponseBody(stubUrl, OK, Json.toJson(minEmploymentFinancialData).toString(), invalidJson.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return a Forbidden" in {
-      val responseBody = Json.obj(
-        "code" -> "NOT_FOUND_INCOME_SOURCE",
-        "reason" -> "Can't find income source"
-      )
-      val expectedResult = ApiError(FORBIDDEN, SingleErrorBody("NOT_FOUND_INCOME_SOURCE", "Can't find income source"))
-
-      stubPutWithResponseBody(stubUrl, FORBIDDEN, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -128,7 +163,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
 
       stubPutWithResponseBody(stubUrl, INTERNAL_SERVER_ERROR, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -142,17 +177,17 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
 
       stubPutWithResponseBody(stubUrl, SERVICE_UNAVAILABLE, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
 
     "return an Internal Server Error when Integration Framework throws an unexpected result with no body" in {
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
-      stubPostWithoutResponseBody(stubUrl, NO_CONTENT, Json.toJson(minEmploymentFinancialData).toString())
+      stubPutWithoutResponseBody(stubUrl, Json.toJson(minEmploymentFinancialData).toString(), INTERNAL_SERVER_ERROR)
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -166,7 +201,7 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
 
       stubPutWithResponseBody(stubUrl, CONFLICT, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -175,11 +210,11 @@ class CreateUpdateEmploymentFinancialDataConnectorSpec extends PlaySpec with Wir
       val responseBody = Json.obj(
         "code" -> "SERVICE_UNAVAILABLE"
       )
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError())
+      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
       stubPutWithResponseBody(stubUrl, CONFLICT, Json.toJson(minEmploymentFinancialData).toString(), responseBody.toString())
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, minEmploymentFinancialData)(hc))
+      val result = await(connector.createUpdateEmploymentFinancialData(nino, specificTaxYear, employmentId, minEmploymentFinancialData)(hc))
 
       result mustBe Left(expectedResult)
     }

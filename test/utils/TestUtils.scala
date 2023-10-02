@@ -127,6 +127,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           None
         ),
         None,
+        None,
         None
       )
     )
@@ -149,7 +150,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
           Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
           Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
-        ))
+        )),
+        Some(true)
       )
     )
 

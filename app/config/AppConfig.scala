@@ -25,6 +25,7 @@ import javax.inject.Inject
 @ImplementedBy(classOf[BackendAppConfig])
 trait AppConfig {
 
+  val specificTaxYear: Int = 2024
   val authBaseUrl: String
   val auditingEnabled: Boolean
   val graphiteHost: String

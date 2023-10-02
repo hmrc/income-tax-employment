@@ -41,6 +41,7 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockIgnoreEmploymentConnector = mock[IgnoreEmploymentConnector]
   private val mockUnignoreEmploymentConnector = mock[UnignoreEmploymentConnector]
   private val mockCreateUpdateEmploymentFinancialDataConnector = mock[CreateUpdateEmploymentFinancialDataConnector]
+  private val mockCreateUpdateEmploymentFinancialDataTYSConnector = mock[CreateUpdateEmploymentFinancialDataTYSConnector]
 
   private val underTest = new EmploymentService(mockCreateEmploymentConnector,
     mockDeleteEmploymentConnector,
@@ -49,10 +50,12 @@ class EmploymentServiceSpec extends TestUtils {
     mockIgnoreEmploymentConnector,
     mockUnignoreEmploymentConnector,
     mockCreateUpdateEmploymentFinancialDataConnector,
+    mockCreateUpdateEmploymentFinancialDataTYSConnector,
     mockExecutionContext)
 
   private val nino = "entity_id"
   private val taxYear = 2022
+  private val specificTaxYear = 2024
   private val employmentId = "employment_id"
 
   private val serviceUnavailableErrorModel: SingleErrorBody = SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable")
@@ -65,6 +68,13 @@ class EmploymentServiceSpec extends TestUtils {
       .returning(Future.successful(Right(())))
   }
 
+  private def mockPutEmploymentFinancialDataTYSValid(): CallHandler5[String, Int, String, EmploymentFinancialData, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
+    (mockCreateUpdateEmploymentFinancialDataTYSConnector.createUpdateEmploymentFinancialData(
+      _: String, _: Int, _: String, _: EmploymentFinancialData)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
+      .returning(Future.successful(Right(())))
+  }
   private def mockCreateEmployment(nino: String,
                                    taxYear: Int,
                                    createUpdateEmployment: CreateUpdateEmployment,
@@ -89,10 +99,20 @@ class EmploymentServiceSpec extends TestUtils {
       .returning(Future.successful(invalidEmploymentFinancialData))
   }
 
+  private def mockPutEmploymentFinancialDataTYSServiceUnavailable(): CallHandler5[String, Int, String, EmploymentFinancialData, HeaderCarrier,
+    Future[Either[ApiError, Unit]]] = {
+    val invalidEmploymentFinancialDataTYS = Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+    (mockCreateUpdateEmploymentFinancialDataTYSConnector.createUpdateEmploymentFinancialData(
+      _: String, _: Int, _: String, _: EmploymentFinancialData)(_: HeaderCarrier))
+      .expects(*, *, *, *, *)
+      .returning(Future.successful(invalidEmploymentFinancialDataTYS))
+  }
+
   private val createUpdateEmploymentData: CreateUpdateEmploymentData = CreateUpdateEmploymentData(
     PayModel(564563456345.55, 34523523454.44, None),
     None,
-    benefitsInKind = Some(Benefits(Some(1231.33)))
+    benefitsInKind = Some(Benefits(Some(1231.33))),
+    None
   )
 
   private val createUpdateEmployment: CreateUpdateEmployment = CreateUpdateEmployment(
@@ -113,6 +133,14 @@ class EmploymentServiceSpec extends TestUtils {
   "updateEmploymentCalls" should {
     "return an error if no data supplied" in {
       val result = underTest.updateEmploymentCalls(nino, taxYear, "employmentId", None, None)
+
+      await(result) mustBe Left(invalidCreateUpdateRequest)
+    }
+  }
+
+  "updateEmploymentCalls for specific tax year" should {
+    "return an error if no data supplied" in {
+      val result = underTest.updateEmploymentCalls(nino, specificTaxYear, "employmentId", None, None)
 
       await(result) mustBe Left(invalidCreateUpdateRequest)
     }
@@ -271,6 +299,155 @@ class EmploymentServiceSpec extends TestUtils {
         mockPutEmploymentFinancialDataValid()
 
         val result = underTest.createUpdateEmployment(nino, taxYear, request.copy(employmentId = Some("employmentId"), employment = None))
+
+        await(result) mustBe Right(None)
+      }
+    }
+  }
+
+  "createUpdateEmployment for Specific Tax Year" should {
+    "orchestrate the different api calls based on the model" when {
+      "the employment id is a hmrc employment id" in {
+
+        mockPutEmploymentFinancialDataTYSValid()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employment = None, isHmrcEmploymentId = Some(true)))
+
+        await(result) mustBe Right(None)
+      }
+
+      "the employment id is a hmrc employment id but it fails" in {
+
+        mockPutEmploymentFinancialDataTYSServiceUnavailable()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employment = None, isHmrcEmploymentId = Some(true)))
+
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+      }
+
+      "there is a hmrc employment to ignore" in {
+        val addEmploymentRequestModel = request.employment.get
+        val addEmploymentResponseModel = AddEmploymentResponseModel("employmentId")
+
+        mockCreateEmployment(nino, specificTaxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", *)
+          .returning(Future.successful(Right(())))
+
+        mockPutEmploymentFinancialDataTYSValid()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+
+        await(result) mustBe Right(Some("employmentId"))
+      }
+
+      "there is a hmrc employment to ignore but doesn't have all employment data" in {
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", *)
+          .returning(Future.successful(Right(())))
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(
+          employmentId = None, employment = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+
+        await(result) mustBe Left(invalidCreateUpdateRequest)
+      }
+
+      "there is a hmrc employment to ignore but the final update fails" in {
+        val addEmploymentRequestModel = request.employment.get
+        val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
+
+        mockCreateEmployment(nino, specificTaxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", *)
+          .returning(Future.successful(Right(())))
+
+        mockPutEmploymentFinancialDataTYSServiceUnavailable()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+
+        await(result) mustBe Left(ApiError(INTERNAL_SERVER_ERROR, serviceUnavailableErrorModel))
+      }
+
+      "there is a hmrc employment to ignore but the create call fails" in {
+        val addEmploymentRequestModel = request.employment.get
+
+        mockCreateEmployment(nino, specificTaxYear, addEmploymentRequestModel, Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel)))
+
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", *)
+          .returning(Future.successful(Right(())))
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+      }
+
+      "there is a hmrc employment to ignore but fails to ignore" in {
+        (mockIgnoreEmploymentConnector.ignoreEmployment(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", *)
+          .returning(Future.successful(Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = None, hmrcEmploymentIdToIgnore = Some("employmentId")))
+
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+      }
+
+      "there is a no hmrc employment to ignore" in {
+        val addEmploymentRequestModel = request.employment.get
+        val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
+
+        mockCreateEmployment(nino, specificTaxYear, addEmploymentRequestModel, Right(addEmploymentResponseModel))
+        mockPutEmploymentFinancialDataTYSValid()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = None))
+
+        await(result) mustBe Right(Some("employerId"))
+      }
+
+      "it is an update to a previously submitted customer employment" in {
+        val employmentRequestModel = request.employment.get
+
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", employmentRequestModel, *)
+          .returning(Future.successful(Right(())))
+
+        mockPutEmploymentFinancialDataTYSValid()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = Some("employmentId")))
+
+        await(result) mustBe Right(None)
+      }
+
+      "it is an update to a previously submitted customer employment when the update fails" in {
+        val employmentRequestModel = request.employment.get
+
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", employmentRequestModel, *)
+          .returning(Future.successful(Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))))
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = Some("employmentId")))
+
+        await(result) mustBe Left(ApiError(SERVICE_UNAVAILABLE, serviceUnavailableErrorModel))
+      }
+
+      "it is an update to a previously submitted customer employment when only updating employment info" in {
+        val employmentRequestModel = request.employment.get
+
+        (mockUpdateEmploymentDataConnector.updateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmployment)(_: HeaderCarrier))
+          .expects(nino, specificTaxYear, "employmentId", employmentRequestModel, *)
+          .returning(Future.successful(Right(())))
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = Some("employmentId"), employmentData = None))
+
+        await(result) mustBe Right(None)
+      }
+
+      "it is an update to a previously submitted customer employment when only updating employment data info" in {
+        mockPutEmploymentFinancialDataTYSValid()
+
+        val result = underTest.createUpdateEmployment(nino, specificTaxYear, request.copy(employmentId = Some("employmentId"), employment = None))
 
         await(result) mustBe Right(None)
       }

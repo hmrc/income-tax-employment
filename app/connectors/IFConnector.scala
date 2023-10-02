@@ -30,6 +30,7 @@ trait IFConnector {
 
   val CREATE_EMPLOYMENT = "1661"
   val CREATE_UPDATE_EMPLOYMENT_DATA = "1643"
+  val CREATE_UPDATE_EMPLOYMENT_DATA_23_24 = "1935"
   val DELETE_EMPLOYMENT_FINANCIAL_DATA = "1644"
   val GET_EMPLOYMENT_DATA = "1647"
   val GET_EMPLOYMENT_DATA_23_24 = "1877"
@@ -42,14 +43,6 @@ trait IFConnector {
   lazy val baseUrl: String = appConfig.integrationFrameworkBaseUrl
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
-
-  protected def toTaxYearParam(taxYear: Int): String = {
-    if (taxYear - 1 >= 2023) {
-      s"${(taxYear - 1).toString takeRight 2}-${taxYear.toString takeRight 2}"
-    } else {
-      s"${taxYear - 1}-${taxYear.toString takeRight 2}"
-    }
-  }
 
   private[connectors] def integrationFrameworkHeaderCarrier(url: URL, apiNumber: String)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(url.getHost).matches())
