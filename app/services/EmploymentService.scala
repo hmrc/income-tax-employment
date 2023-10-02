@@ -33,6 +33,7 @@ import play.api.http.Status._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.PagerDutyHelper.PagerDutyKeys.INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST
 import utils.PagerDutyHelper.pagerDutyLog
+import utils.TaxYearUtils.specificTaxYear
 import utils.ViewParameterValidation._
 
 import javax.inject.{Inject, Singleton}
@@ -46,6 +47,7 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
                                   ignoreEmploymentConnector: IgnoreEmploymentConnector,
                                   unignoreEmploymentConnector: UnignoreEmploymentConnector,
                                   updateEmploymentFinancialDataConnector: CreateUpdateEmploymentFinancialDataConnector,
+                                  updateEmploymentFinancialDataTYSConnector: CreateUpdateEmploymentFinancialDataTYSConnector,
                                   implicit val executionContext: ExecutionContext) {
 
   def createUpdateEmployment(nino: String, taxYear: Int, createUpdateEmploymentRequest: CreateUpdateEmploymentRequest)
@@ -129,7 +131,11 @@ class EmploymentService @Inject()(createEmploymentConnector: CreateEmploymentCon
 
   def createOrUpdateFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: EmploymentFinancialData)
                                  (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataResponse] = {
-    updateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, employmentFinancialData)
+    if (taxYear >= specificTaxYear) {
+      updateEmploymentFinancialDataTYSConnector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, employmentFinancialData)
+    } else {
+      updateEmploymentFinancialDataConnector.createUpdateEmploymentFinancialData(nino, taxYear, employmentId, employmentFinancialData)
+    }
   }
 
   def ignoreEmployment(nino: String, taxYear: Int, employmentId: String)

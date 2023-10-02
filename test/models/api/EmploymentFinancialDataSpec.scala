@@ -74,7 +74,8 @@ class EmploymentFinancialDataSpec extends TestUtils {
         "travelAndSubsistence"-> 100,
         "vouchersAndCreditCards"-> 100,
         "nonCash"-> 100
-      )
+      ),
+      "offPayrollWorker" -> true
     )
   )
 

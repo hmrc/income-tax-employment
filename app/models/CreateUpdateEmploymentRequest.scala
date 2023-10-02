@@ -32,12 +32,14 @@ object CreateUpdateEmploymentRequest {
 
 case class CreateUpdateEmploymentData(pay: PayModel,
                                       deductions: Option[Deductions] = None,
-                                      benefitsInKind: Option[Benefits] = None){
+                                      benefitsInKind: Option[Benefits] = None,
+                                      offPayrollWorker: Option[Boolean] = None){
   def toDESModel: EmploymentFinancialData = {
     EmploymentFinancialData(employment = Employment(
       pay = pay,
       deductions = deductions,
-      benefitsInKind = benefitsInKind
+      benefitsInKind = benefitsInKind,
+      offPayrollWorker = offPayrollWorker
     ))
   }
 }

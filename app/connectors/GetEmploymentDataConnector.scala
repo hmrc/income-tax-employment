@@ -19,6 +19,7 @@ package connectors
 import config.AppConfig
 import connectors.parsers.GetEmploymentDataHttpParser.{GetEmploymentDataHttpReads, GetEmploymentDataResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import utils.TaxYearUtils._
 
 import java.net.URL
 import javax.inject.Inject

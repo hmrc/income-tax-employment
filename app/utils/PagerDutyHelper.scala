@@ -28,6 +28,11 @@ object PagerDutyHelper extends Logging {
     val UNEXPECTED_RESPONSE_FROM_DES: PagerDutyKeys.Value = Value
     val FOURXX_RESPONSE_FROM_DES: PagerDutyKeys.Value = Value
     val INVALID_TO_REMOVE_PARAMETER_BAD_REQUEST: PagerDutyKeys.Value = Value
+
+    val INTERNAL_SERVER_ERROR_FROM_API: PagerDutyKeys.Value = Value
+    val SERVICE_UNAVAILABLE_FROM_API: PagerDutyKeys.Value = Value
+    val UNEXPECTED_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
+    val FOURXX_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
   }
 
   def pagerDutyLog(pagerDutyKey: PagerDutyKeys.Value, otherDetail: String = ""): Unit = {

@@ -16,7 +16,7 @@
 
 package controllers
 
-import connectors.errors.{SingleErrorBody, ApiError}
+import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.PayModel
 import models.shared.{Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
@@ -28,7 +28,6 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
 import services.EmploymentService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
-
 import scala.concurrent.Future
 
 class CreateUpdateEmploymentControllerSpec extends TestUtils {
@@ -87,7 +86,8 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
           None,
           benefitsInKind = Some(Benefits(
             Some(1231.33)
-          ))
+          )),
+          Some(false)
         )
       ),
       hmrcEmploymentIdToIgnore = None
