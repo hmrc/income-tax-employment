@@ -21,7 +21,6 @@ import java.time.Month.APRIL
 
 object TaxYearUtils {
 
-  val specificTaxYear: Int = 2024
   private val dateNow: LocalDate = LocalDate.now()
   private val taxYearCutoffDate: LocalDate = LocalDate.of(dateNow.getYear, APRIL, 5)
 

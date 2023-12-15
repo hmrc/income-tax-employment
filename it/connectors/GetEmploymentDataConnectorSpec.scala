@@ -32,7 +32,7 @@ class GetEmploymentDataConnectorSpec extends ConnectorIntegrationTest {
   private val employmentId = "some-employment-id"
   private val view = "any-view-value"
   private val taxYear21_22 = 2022
-  private val specificTaxYear: Int = TaxYearUtils.specificTaxYear
+  private val specificTaxYear: Int = appConfigStub.specificTaxYear
   val specificTaxYearPlusOne: Int = specificTaxYear + 1
   val formattedTaxYear: String = TaxYearUtils.convertSpecificTaxYear(specificTaxYear)
   val formattedTaxYearPlusOne: String = TaxYearUtils.convertSpecificTaxYear(specificTaxYearPlusOne)

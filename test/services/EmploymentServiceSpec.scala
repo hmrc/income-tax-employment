@@ -16,6 +16,7 @@
 
 package services
 
+import config.AppConfig
 import connectors._
 import connectors.errors.SingleErrorBody.invalidCreateUpdateRequest
 import connectors.errors.{ApiError, SingleErrorBody}
@@ -42,6 +43,7 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockUnignoreEmploymentConnector = mock[UnignoreEmploymentConnector]
   private val mockCreateUpdateEmploymentFinancialDataConnector = mock[CreateUpdateEmploymentFinancialDataConnector]
   private val mockCreateUpdateEmploymentFinancialDataTYSConnector = mock[CreateUpdateEmploymentFinancialDataTYSConnector]
+  private val mockAppConfig = mock[AppConfig]
 
   private val underTest = new EmploymentService(mockCreateEmploymentConnector,
     mockDeleteEmploymentConnector,
@@ -51,11 +53,12 @@ class EmploymentServiceSpec extends TestUtils {
     mockUnignoreEmploymentConnector,
     mockCreateUpdateEmploymentFinancialDataConnector,
     mockCreateUpdateEmploymentFinancialDataTYSConnector,
+    mockAppConfig,
     mockExecutionContext)
 
   private val nino = "entity_id"
   private val taxYear = 2022
-  private val specificTaxYear = 2024
+  private val specificTaxYear = mockAppConfig.specificTaxYear
   private val employmentId = "employment_id"
 
   private val serviceUnavailableErrorModel: SingleErrorBody = SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable")

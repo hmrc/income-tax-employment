@@ -27,7 +27,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppConfig)
                                           (implicit ec: ExecutionContext) extends IFConnector {
-  val specificTaxYear: Int = 2024
 
   def getEmploymentData(nino: String,
                         taxYear: Int,
@@ -44,14 +43,14 @@ class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppC
   }
 
   private def getApiVersion(taxYear: Int): String = {
-    if (taxYear >= specificTaxYear) GET_EMPLOYMENT_DATA_23_24 else GET_EMPLOYMENT_DATA
+    if (taxYear >= appConfig.specificTaxYear) GET_EMPLOYMENT_DATA_23_24 else GET_EMPLOYMENT_DATA
   }
 
   private def getEmploymentDataUrl(nino: String,
                                    taxYear: Int,
                                    employmentId: String,
                                    view: String): URL = {
-    if (taxYear >= specificTaxYear) {
+    if (taxYear >= appConfig.specificTaxYear) {
       new URL(s"$baseUrl/income-tax/income/employments/${toTaxYearParam(taxYear)}/$nino/$employmentId?view=$view")
     } else {
       new URL(s"$baseUrl/income-tax/income/employments/$nino/${toTaxYearParam(taxYear)}/$employmentId?view=$view")

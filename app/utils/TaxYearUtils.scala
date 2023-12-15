@@ -18,8 +18,6 @@ package utils
 
 object TaxYearUtils {
 
-  val specificTaxYear: Int = 2024
-
   def toTaxYearParam(taxYear: Int): String = {
     if (taxYear - 1 >= 2023) {
       s"${(taxYear - 1).toString takeRight 2}-${taxYear.toString takeRight 2}"
