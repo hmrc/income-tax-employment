@@ -16,18 +16,24 @@
 
 package services
 
-import connectors.OtherEmploymentIncomeConnector
+import connectors.{OtherEmploymentIncomeConnector, OtherEmploymentIncomeIFConnector}
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.TaxYearUtils.specificTaxYear
 
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class OtherEmploymentIncomeService @Inject()(otherEmploymentConnector: OtherEmploymentIncomeConnector) {
+class OtherEmploymentIncomeService @Inject()(otherEmploymentConnector: OtherEmploymentIncomeConnector,
+                                             ifConnector: OtherEmploymentIncomeIFConnector) {
 
 
   def getOtherEmploymentIncome(nino: String, taxYear: Int, mtditid: String)
                               (implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponse] =
-    otherEmploymentConnector.getOtherEmploymentIncome(nino, taxYear)(hc.withExtraHeaders("mtditid" -> mtditid))
+    if (taxYear >= specificTaxYear) {
+      ifConnector.getOtherEmploymentIncome(nino, taxYear)(hc.withExtraHeaders("mtditid" -> mtditid))
+    } else {
+      otherEmploymentConnector.getOtherEmploymentIncome(nino, taxYear)(hc.withExtraHeaders("mtditid" -> mtditid))
+    }
 
 }

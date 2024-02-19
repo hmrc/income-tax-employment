@@ -39,6 +39,7 @@ trait IFConnector {
   val UNIGNORE_EMPLOYMENT = "1699"
   val UPDATE_EMPLOYMENT = "1662"
   val DELETE_EMPLOYMENT = "1663"
+  val GET_OTHER_EMPLOYMENT = "1794"
 
   lazy val baseUrl: String = appConfig.integrationFrameworkBaseUrl
 
