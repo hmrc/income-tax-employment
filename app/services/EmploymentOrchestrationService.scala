@@ -37,7 +37,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
                                                getEmploymentDataConnector: GetEmploymentDataConnector,
                                                getEmploymentBenefitsConnector: GetEmploymentBenefitsConnector,
                                                getEmploymentExpensesConnector: GetEmploymentExpensesConnector,
-                                               otherEmploymentIncomeConnector: OtherEmploymentIncomeConnector) {
+                                               otherEmploymentIncomeService: OtherEmploymentIncomeService) {
 
   def getAllEmploymentData(nino: String, taxYear: Int, mtditid: String)
                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ApiError, AllEmploymentData]] = {
@@ -63,7 +63,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
               if (customerResponse.forall(_.isRight)) {
                 getExpenses(nino, taxYear, CUSTOMER, mtditid).flatMap { customerExpenses =>
                   if (customerExpenses.isRight) {
-                    otherEmploymentIncomeConnector.getOtherEmploymentIncome(nino, taxYear).map { otherEmploymentIncome =>
+                    otherEmploymentIncomeService.getOtherEmploymentIncome(nino, taxYear, mtditid).map { otherEmploymentIncome =>
                       if(otherEmploymentIncome.isRight) {
                         val customerEmployments: Seq[EmploymentSource] = customerResponse.collect { case Right(employment) => employment }
                         Right(AllEmploymentData(
