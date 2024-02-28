@@ -109,11 +109,9 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
         val employmentId = hmrcEmployment.employmentId
         (for {
           hmrcEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, employmentId, HMRC_HELD))
-          hmrcBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, employmentId, HMRC_HELD, mtditid))
           customerEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, employmentId, CUSTOMER))
-          customerBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, employmentId, CUSTOMER, mtditid))
         } yield {
-          hmrcEmployment.toHmrcEmploymentSource(hmrcEmploymentData, hmrcBenefits, customerEmploymentData, customerBenefits)
+          hmrcEmployment.toHmrcEmploymentSource(hmrcEmploymentData, customerEmploymentData)
         }).value
     })
   }
@@ -137,9 +135,8 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
       customerEmployment =>
         (for {
           employmentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, customerEmployment.employmentId, view))
-          benefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, customerEmployment.employmentId, view, mtditid))
         } yield {
-          customerEmployment.toEmploymentSource(employmentData, benefits)
+          customerEmployment.toEmploymentSource(employmentData)
         }).value
     })
   }

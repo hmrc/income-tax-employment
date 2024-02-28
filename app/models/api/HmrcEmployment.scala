@@ -28,11 +28,10 @@ case class HmrcEmployment(employmentId: String,
                           occupationalPension: Option[Boolean],
                           dateIgnored: Option[String]) {
 
-  private def toEmploymentFinancialData(employmentData: Option[EmploymentData],
-                                        employmentBenefits: Option[DESEmploymentBenefits]): frontend.EmploymentFinancialData = {
+  private def toEmploymentFinancialData(employmentData: Option[EmploymentData]): frontend.EmploymentFinancialData = {
     frontend.EmploymentFinancialData(
       employmentData = employmentData.map(frontend.EmploymentData(_)),
-      employmentBenefits = employmentBenefits.map { e =>
+      employmentBenefits = employmentData.map { e =>
         frontend.EmploymentBenefits(
           submittedOn = e.submittedOn,
           benefits = e.employment.benefitsInKind
@@ -42,18 +41,16 @@ case class HmrcEmployment(employmentId: String,
   }
 
   def toHmrcEmploymentSource(hmrcEmploymentData: Option[EmploymentData],
-                             hmrcEmploymentBenefits: Option[DESEmploymentBenefits],
-                             customerEmploymentData: Option[EmploymentData],
-                             customerEmploymentBenefits: Option[DESEmploymentBenefits]): frontend.HmrcEmploymentSource = {
+                             customerEmploymentData: Option[EmploymentData]): frontend.HmrcEmploymentSource = {
 
-    val hmrcFinancials: Option[frontend.EmploymentFinancialData] = if (hmrcEmploymentData.isDefined || hmrcEmploymentBenefits.isDefined) {
-      Some(toEmploymentFinancialData(hmrcEmploymentData, hmrcEmploymentBenefits))
+    val hmrcFinancials: Option[frontend.EmploymentFinancialData] = if (hmrcEmploymentData.isDefined) {
+      Some(toEmploymentFinancialData(hmrcEmploymentData))
     } else {
       None
     }
 
-    val customerFinancials: Option[frontend.EmploymentFinancialData] = if (customerEmploymentData.isDefined || customerEmploymentBenefits.isDefined) {
-      Some(toEmploymentFinancialData(customerEmploymentData, customerEmploymentBenefits))
+    val customerFinancials: Option[frontend.EmploymentFinancialData] = if (customerEmploymentData.isDefined) {
+      Some(toEmploymentFinancialData(customerEmploymentData))
     } else {
       None
     }
