@@ -73,7 +73,7 @@ class EmploymentListSpec extends TestUtils {
         payrollId = None,
         startDate = None,
         cessationDate = None
-      ).toEmploymentSource(Some(customerEmploymentDataModelExample),Some(customerBenefits)) mustBe EmploymentSource(
+      ).toEmploymentSource(Some(customerEmploymentDataModelExample)) mustBe EmploymentSource(
         employmentId = customerEmploymentModel.employmentId,
         employerName = customerEmploymentModel.employerName,
         employerRef = customerEmploymentDataModelExample.employment.employer.employerRef,
@@ -91,7 +91,7 @@ class EmploymentListSpec extends TestUtils {
 
   ".toHmrcEmploymentSource" should {
     "return a hmrc source with empty financials" in {
-      hmrcEmploymentModel.toHmrcEmploymentSource(None,None,None,None) mustBe HmrcEmploymentSource(
+      hmrcEmploymentModel.toHmrcEmploymentSource(None, None) mustBe HmrcEmploymentSource(
         employmentId = hmrcEmploymentModel.employmentId,
         employerName = hmrcEmploymentModel.employerName,
         employerRef = hmrcEmploymentModel.employerRef,
@@ -106,7 +106,7 @@ class EmploymentListSpec extends TestUtils {
       )
     }
     "return a hmrc source with hmrc financials" in {
-      hmrcEmploymentModel.toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),Some(hmrcBenefits),None,None) mustBe HmrcEmploymentSource(
+      hmrcEmploymentModel.toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),None) mustBe HmrcEmploymentSource(
         employmentId = hmrcEmploymentModel.employmentId,
         employerName = hmrcEmploymentModel.employerName,
         employerRef = hmrcEmploymentModel.employerRef,
@@ -132,7 +132,7 @@ class EmploymentListSpec extends TestUtils {
         startDate = None,
         cessationDate = None,
         dateIgnored = None
-      ).toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),Some(hmrcBenefits),None,None) mustBe HmrcEmploymentSource(
+      ).toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),None) mustBe HmrcEmploymentSource(
         employmentId = hmrcEmploymentModel.employmentId,
         employerName = hmrcEmploymentModel.employerName,
         employerRef = hmrcEmploymentDataModelExample.employment.employer.employerRef,
@@ -152,8 +152,8 @@ class EmploymentListSpec extends TestUtils {
       )
     }
     "return a hmrc source with hmrc and customer financials" in {
-      hmrcEmploymentModel.toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),Some(hmrcBenefits),
-        Some(customerEmploymentDataModelExample),Some(customerBenefits)) mustBe HmrcEmploymentSource(
+      hmrcEmploymentModel.toHmrcEmploymentSource(Some(hmrcEmploymentDataModelExample),
+        Some(customerEmploymentDataModelExample)) mustBe HmrcEmploymentSource(
         employmentId = hmrcEmploymentModel.employmentId,
         employerName = hmrcEmploymentModel.employerName,
         employerRef = hmrcEmploymentModel.employerRef,
