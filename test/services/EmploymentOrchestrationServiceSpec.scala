@@ -53,9 +53,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
       val customerExpectedResult: GetEmploymentDataResponse = Right(Some(customerEmploymentDataModelExample))
 
-      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
-      val customerBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(customerBenefits))
-
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
 
@@ -76,18 +73,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       (dataConnector.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
         .returning(Future.successful(customerExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
-        .returning(Future.successful(customerBenefitsExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
-        .returning(Future.successful(customerBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "CUSTOMER", *)
@@ -119,7 +104,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
       val customerExpectedResult: GetEmploymentDataResponse = Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError()))
 
-      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
+     // val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
 
       (listConnector.getEmploymentList(_: String, _: Int, _: Option[String])(_: HeaderCarrier))
@@ -138,13 +123,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
         .returning(Future.successful(customerExpectedResult))
 
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "HMRC-HELD", *)
@@ -161,7 +139,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       val nino = "AA123456A"
 
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
-      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError()))
 
       (listConnector.getEmploymentList(_: String, _: Int, _: Option[String])(_: HeaderCarrier))
@@ -175,14 +152,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       (dataConnector.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
         .returning(Future.successful(hmrcExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "HMRC-HELD", *)
@@ -200,7 +169,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       val hmrcExpectedResult: GetEmploymentDataResponse = Right(Some(hmrcEmploymentDataModelExample))
 
-      val hmrcBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(hmrcBenefits))
 
       val hmrcExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(hmrcExpenses))
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
@@ -219,13 +187,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
         .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
         .returning(Future.successful(hmrcExpectedResult))
 
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "HMRC-HELD", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-1111-000000000000", "CUSTOMER", *)
-        .returning(Future.successful(hmrcBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "HMRC-HELD", *)
@@ -251,7 +212,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
       val customerExpectedResult: GetEmploymentDataResponse = Right(Some(customerEmploymentDataModelExample))
 
-      val customerBenefitsExpectedResult: GetEmploymentBenefitsResponse = Right(Some(customerBenefits))
 
       val customerExpensesExpectedResult: GetEmploymentExpensesResponse = Right(Some(customerExpenses))
 
@@ -266,10 +226,6 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
       (dataConnector.getEmploymentData(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
         .returning(Future.successful(customerExpectedResult))
-
-      (benefitsConnector.getEmploymentBenefits(_: String, _: Int, _: String, _: String)(_: HeaderCarrier))
-        .expects(nino, taxYear, "00000000-0000-0000-2222-000000000000", "CUSTOMER", *)
-        .returning(Future.successful(customerBenefitsExpectedResult))
 
       (expensesConnector.getEmploymentExpenses(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects(nino, taxYear, "CUSTOMER", *)
