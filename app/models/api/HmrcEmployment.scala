@@ -31,7 +31,7 @@ case class HmrcEmployment(employmentId: String,
   private def toEmploymentFinancialData(employmentData: Option[EmploymentData]): frontend.EmploymentFinancialData = {
     frontend.EmploymentFinancialData(
       employmentData = employmentData.map(frontend.EmploymentData(_)),
-      employmentBenefits = employmentData.map { e =>
+      employmentBenefits = employmentData.filter(_.employment.benefitsInKind.isDefined).map { e =>
         frontend.EmploymentBenefits(
           submittedOn = e.submittedOn,
           benefits = e.employment.benefitsInKind

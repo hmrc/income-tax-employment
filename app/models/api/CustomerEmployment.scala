@@ -41,7 +41,7 @@ case class CustomerEmployment(employmentId: String,
       occupationalPension = occupationalPension,
       submittedOn = Some(submittedOn),
       employmentData = employmentData.map(frontend.EmploymentData(_)),
-      employmentBenefits = employmentData.map { e =>
+      employmentBenefits = employmentData.filter(_.employment.benefitsInKind.isDefined).map { e =>
         frontend.EmploymentBenefits(
           submittedOn = e.submittedOn,
           benefits = e.employment.benefitsInKind
