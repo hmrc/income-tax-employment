@@ -37,7 +37,6 @@ All employment data is retrieved / updated via one of two downstream systems.
 ### Connected microservices
 We connect to two other microservices to fetch some data. These two services will ultimately call one of the two above downstream services for their data. 
 - income-tax-expenses (Gets employment expenses data)
-- income-tax-benefits (Gets employment benefits data)
 
 ### Employment Sources (HMRC-Held and Customer Data)
 Employment data can come from different sources: HMRC-Held and Customer. HMRC-Held data is employment data that HMRC have for the user within the tax year, prior to any updates made by the user. The employment data displayed in-year is HMRC-Held.
@@ -223,22 +222,22 @@ Customer data is provided by the user. At the end of the tax year, users can vie
 ## Ninos with stub data for employment
 
 ### In-Year
-| Nino | Employment data | Source |
-| --- | --- | --- |
-| AA123459A | Single employment - Employment details and expenses | HMRC-Held |
-| AA133742A | Single employment - Employment details, benefits and expenses | HMRC-Held |
-| BB444444A | Multiple employments - Employment details, benefits and expenses| HMRC-Held |
-| AA370773A | Multiple employments - `occPen` set to true | HMRC-Held |
+| Nino      | Employment data                                                  | Source    |
+|-----------|------------------------------------------------------------------|-----------|
+| AA123459A | Single employment - Employment details and expenses              | HMRC-Held |
+| AA133742A | Single employment - Employment details, benefits and expenses    | HMRC-Held |
+| BB444444A | Multiple employments - Employment details, benefits and expenses | HMRC-Held |
+| AA370773A | Multiple employments - `occPen` set to true                      | HMRC-Held |
 
 ### End of Year
-| Nino | Employment data | Source
-| --- | --- | --- |
-| AA123459A | Single employment - Employment details and expenses | HMRC-Held, Customer |
-| AA133742A | Single employment - Employment details and benefits | HMRC-Held, Customer|
+| Nino      | Employment data                                                  | Source              |
+|-----------|------------------------------------------------------------------|---------------------|
+| AA123459A | Single employment - Employment details and expenses              | HMRC-Held, Customer |
+| AA133742A | Single employment - Employment details and benefits              | HMRC-Held, Customer |
 | BB444444A | Multiple employments - Employment details, benefits and expenses | HMRC-Held, Customer |
-| AA370773A | Multiple employments - `occPen` set to true | HMRC-Held, Customer |
-| AA455555A | User with ignored hmrc data (Employments can be reinstated) | HMRC-Held |
-| AA333444A | User with only expenses data | HMRC-Held |
+| AA370773A | Multiple employments - `occPen` set to true                      | HMRC-Held, Customer |
+| AA455555A | User with ignored hmrc data (Employments can be reinstated)      | HMRC-Held           |
+| AA333444A | User with only expenses data                                     | HMRC-Held           |
 
 ### License
 

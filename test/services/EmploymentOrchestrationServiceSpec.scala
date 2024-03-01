@@ -23,7 +23,7 @@ import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import connectors.parsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.parsers.GetEmploymentListHttpParser.GetEmploymentListResponse
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
-import connectors.{GetEmploymentBenefitsConnector, GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector, OtherEmploymentIncomeConnector}
+import connectors.{GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector, OtherEmploymentIncomeConnector}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -37,10 +37,10 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
 
   val listConnector: GetEmploymentListConnector = mock[GetEmploymentListConnector]
   val dataConnector: GetEmploymentDataConnector = mock[GetEmploymentDataConnector]
-  val benefitsConnector: GetEmploymentBenefitsConnector = mock[GetEmploymentBenefitsConnector]
+
   val expensesConnector: GetEmploymentExpensesConnector = mock[GetEmploymentExpensesConnector]
   val otherEmploymentIncomeService: OtherEmploymentIncomeService = mock[OtherEmploymentIncomeService]
-  val service: EmploymentOrchestrationService = new EmploymentOrchestrationService(listConnector, dataConnector, benefitsConnector, expensesConnector, otherEmploymentIncomeService)
+  val service: EmploymentOrchestrationService = new EmploymentOrchestrationService(listConnector, dataConnector, expensesConnector, otherEmploymentIncomeService)
 
   "getAllEmploymentData" should {
 

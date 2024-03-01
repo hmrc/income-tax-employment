@@ -32,7 +32,6 @@ trait AppConfig {
 
   val desBaseUrl: String
   val integrationFrameworkBaseUrl: String
-  val benefitsBaseUrl: String
   val expensesBaseUrl: String
 
   val environment: String
@@ -51,7 +50,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
 
   lazy val desBaseUrl: String = servicesConfig.baseUrl("des")
   lazy val integrationFrameworkBaseUrl: String = servicesConfig.baseUrl("integration-framework")
-  lazy val benefitsBaseUrl: String = servicesConfig.baseUrl("income-tax-benefits")
+
   lazy val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
 
   lazy val environment: String = config.get[String]("microservice.services.des.environment")

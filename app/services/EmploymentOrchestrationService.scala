@@ -35,7 +35,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEmploymentListConnector,
                                                getEmploymentDataConnector: GetEmploymentDataConnector,
-                                               getEmploymentBenefitsConnector: GetEmploymentBenefitsConnector,
                                                getEmploymentExpensesConnector: GetEmploymentExpensesConnector,
                                                otherEmploymentIncomeService: OtherEmploymentIncomeService) {
 
@@ -119,11 +118,6 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
   def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)
                        (implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
     getEmploymentDataConnector.getEmploymentData(nino, taxYear, employmentId, view)
-  }
-
-  private def getBenefits(nino: String, taxYear: Int, employmentId: String, view: String, mtditid: String)
-                         (implicit hc: HeaderCarrier): Future[GetEmploymentBenefitsResponse] = {
-    getEmploymentBenefitsConnector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc.withExtraHeaders("mtditid" -> mtditid))
   }
 
   private def orchestrateCustomerEmploymentDataRetrieval(nino: String, taxYear: Int, customerEmploymentData: Seq[api.CustomerEmployment], mtditid: String)
