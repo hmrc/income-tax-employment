@@ -37,7 +37,6 @@ All employment data is retrieved / updated via one of two downstream systems.
 ### Connected microservices
 We connect to two other microservices to fetch some data. These two services will ultimately call one of the two above downstream services for their data. 
 - income-tax-expenses (Gets employment expenses data)
-- income-tax-benefits (Gets employment benefits data)
 
 ### Employment Sources (HMRC-Held and Customer Data)
 Employment data can come from different sources: HMRC-Held and Customer. HMRC-Held data is employment data that HMRC have for the user within the tax year, prior to any updates made by the user. The employment data displayed in-year is HMRC-Held.

@@ -28,7 +28,6 @@ class MockAppConfig extends AppConfig {
 
   override val integrationFrameworkBaseUrl: String = "/integrationFramework"
 
-  override val benefitsBaseUrl: String = "/benefits"
 
   override val expensesBaseUrl: String = "/expenses"
 
