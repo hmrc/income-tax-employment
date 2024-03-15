@@ -28,8 +28,7 @@ case class CustomerEmployment(employmentId: String,
                               occupationalPension: Option[Boolean],
                               submittedOn: String) {
 
-  def toEmploymentSource(employmentData: Option[EmploymentData],
-                         employmentBenefits: Option[DESEmploymentBenefits]): frontend.EmploymentSource = {
+  def toEmploymentSource(employmentData: Option[EmploymentData]): frontend.EmploymentSource = {
 
     val _employerRef: Option[String] = if (employerRef.isDefined) employerRef else employmentData.flatMap(_.employment.employer.employerRef)
     val _payrollId: Option[String] = if (payrollId.isDefined) payrollId else employmentData.flatMap(_.employment.payrollId)
@@ -42,7 +41,7 @@ case class CustomerEmployment(employmentId: String,
       occupationalPension = occupationalPension,
       submittedOn = Some(submittedOn),
       employmentData = employmentData.map(frontend.EmploymentData(_)),
-      employmentBenefits = employmentBenefits.map { e =>
+      employmentBenefits = employmentData.filter(_.employment.benefitsInKind.isDefined).map { e =>
         frontend.EmploymentBenefits(
           submittedOn = e.submittedOn,
           benefits = e.employment.benefitsInKind

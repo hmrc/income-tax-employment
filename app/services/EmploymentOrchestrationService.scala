@@ -35,9 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEmploymentListConnector,
                                                getEmploymentDataConnector: GetEmploymentDataConnector,
-                                               getEmploymentBenefitsConnector: GetEmploymentBenefitsConnector,
                                                getEmploymentExpensesConnector: GetEmploymentExpensesConnector,
-                                               otherEmploymentIncomeConnector: OtherEmploymentIncomeConnector) {
+                                               otherEmploymentIncomeService: OtherEmploymentIncomeService) {
 
   def getAllEmploymentData(nino: String, taxYear: Int, mtditid: String)
                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ApiError, AllEmploymentData]] = {
@@ -63,7 +62,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
               if (customerResponse.forall(_.isRight)) {
                 getExpenses(nino, taxYear, CUSTOMER, mtditid).flatMap { customerExpenses =>
                   if (customerExpenses.isRight) {
-                    otherEmploymentIncomeConnector.getOtherEmploymentIncome(nino, taxYear).map { otherEmploymentIncome =>
+                    otherEmploymentIncomeService.getOtherEmploymentIncome(nino, taxYear, mtditid).map { otherEmploymentIncome =>
                       if(otherEmploymentIncome.isRight) {
                         val customerEmployments: Seq[EmploymentSource] = customerResponse.collect { case Right(employment) => employment }
                         Right(AllEmploymentData(
@@ -109,11 +108,9 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
         val employmentId = hmrcEmployment.employmentId
         (for {
           hmrcEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, employmentId, HMRC_HELD))
-          hmrcBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, employmentId, HMRC_HELD, mtditid))
           customerEmploymentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, employmentId, CUSTOMER))
-          customerBenefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, employmentId, CUSTOMER, mtditid))
         } yield {
-          hmrcEmployment.toHmrcEmploymentSource(hmrcEmploymentData, hmrcBenefits, customerEmploymentData, customerBenefits)
+          hmrcEmployment.toHmrcEmploymentSource(hmrcEmploymentData, customerEmploymentData)
         }).value
     })
   }
@@ -121,11 +118,6 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
   def getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)
                        (implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
     getEmploymentDataConnector.getEmploymentData(nino, taxYear, employmentId, view)
-  }
-
-  private def getBenefits(nino: String, taxYear: Int, employmentId: String, view: String, mtditid: String)
-                         (implicit hc: HeaderCarrier): Future[GetEmploymentBenefitsResponse] = {
-    getEmploymentBenefitsConnector.getEmploymentBenefits(nino, taxYear, employmentId, view)(hc.withExtraHeaders("mtditid" -> mtditid))
   }
 
   private def orchestrateCustomerEmploymentDataRetrieval(nino: String, taxYear: Int, customerEmploymentData: Seq[api.CustomerEmployment], mtditid: String)
@@ -137,9 +129,8 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
       customerEmployment =>
         (for {
           employmentData <- FutureEitherOps[ApiError, Option[api.EmploymentData]](getEmploymentData(nino, taxYear, customerEmployment.employmentId, view))
-          benefits <- FutureEitherOps[ApiError, Option[api.DESEmploymentBenefits]](getBenefits(nino, taxYear, customerEmployment.employmentId, view, mtditid))
         } yield {
-          customerEmployment.toEmploymentSource(employmentData, benefits)
+          customerEmployment.toEmploymentSource(employmentData)
         }).value
     })
   }

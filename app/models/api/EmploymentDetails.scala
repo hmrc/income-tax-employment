@@ -16,7 +16,7 @@
 
 package models.api
 
-import models.shared.{Deductions, Pay}
+import models.shared.{Benefits, Deductions, Pay}
 import play.api.libs.json.{Json, OFormat}
 
 case class EmploymentDetails(employmentSequenceNumber: Option[String],
@@ -31,7 +31,8 @@ case class EmploymentDetails(employmentSequenceNumber: Option[String],
                              offPayrollWorker: Option[Boolean],
                              employer: Employer,
                              pay: Option[Pay],
-                             deductions: Option[Deductions])
+                             deductions: Option[Deductions],
+                             benefitsInKind: Option[Benefits])
 
 object EmploymentDetails {
   implicit val formats: OFormat[EmploymentDetails] = Json.format[EmploymentDetails]

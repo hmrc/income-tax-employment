@@ -405,6 +405,11 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
             uglDeductionAmount = Some(100.00),
             pglDeductionAmount = Some(100.00)
           ))
+        )),
+        benefitsInKind = Some(Benefits(
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100)
         ))
       )
     )
@@ -443,8 +448,14 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
             uglDeductionAmount = Some(100.00),
             pglDeductionAmount = Some(100.00)
           ))
+        )),
+        benefitsInKind = Some(Benefits(
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100)
         ))
-      )
+      ),
+
     )
 
   val hmrcBenefits: api.DESEmploymentBenefits = api.DESEmploymentBenefits(
@@ -524,7 +535,12 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           taxWeekNo = None,
           taxMonthNo = None,
         )),
-        None
+        None,
+        benefitsInKind = Some(Benefits(
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+          Some(100), Some(100), Some(100), Some(100)
+        ))
       )
     )
 }
