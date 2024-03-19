@@ -18,9 +18,8 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
-import connectors.errors.{SingleErrorBody, ApiError}
+import connectors.errors.{ApiError, SingleErrorBody}
 import models.shared.{AddEmploymentResponseModel, CreateUpdateEmployment}
-import org.joda.time.DateTime.now
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
@@ -29,6 +28,8 @@ import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
+
+import java.time.LocalDateTime
 
 class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
@@ -48,7 +49,7 @@ class CreateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
     val nino = "taxable_entity_id"
 
-    val addEmploymentModel = CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+    val addEmploymentModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
 
     val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom"
 

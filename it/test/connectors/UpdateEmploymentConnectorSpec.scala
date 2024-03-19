@@ -20,7 +20,6 @@ import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.shared.CreateUpdateEmployment
-import org.joda.time.DateTime.now
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status._
@@ -29,6 +28,7 @@ import support.helpers.WiremockSpec
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.DESTaxYearHelper.desTaxYearConverter
+import java.time.LocalDateTime
 
 class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
@@ -50,7 +50,7 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
     val nino = "taxable_entity_id"
     val employmentId = "employment_id"
     val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
-    val updateEmploymentModel = CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+    val updateEmploymentModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
 
 
     "include internal headers" when {
