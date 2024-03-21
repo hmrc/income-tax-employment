@@ -32,7 +32,7 @@ class DeleteEmploymentController @Inject()(service: EmploymentService,
 
   def deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int): Action[AnyContent] =
     authorisedAction.async { implicit user =>
-      service.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear).map {
+      service.deleteOrIgnoreEmployment(nino, employmentId, toRemove, taxYear, user.mtditid).map {
         case Right(_) => NoContent
         case Left(errorModel) => Status(errorModel.status)(Json.toJson(errorModel.toJson))
       }

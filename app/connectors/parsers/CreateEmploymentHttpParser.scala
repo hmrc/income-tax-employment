@@ -16,6 +16,7 @@
 
 package connectors.parsers
 
+import connectors.DownstreamErrorOr
 import connectors.errors.ApiError
 import models.shared.AddEmploymentResponseModel
 import play.api.Logging
@@ -24,34 +25,36 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object CreateEmploymentHttpParser extends DESParser with Logging {
+object CreateEmploymentHttpParser extends Parser with Logging {
   type CreateEmploymentResponse = Either[ApiError, AddEmploymentResponseModel]
 
   override val parserName: String = "CreateEmploymentHttpParser"
-  override val isDesAPI: Boolean = true
+  override val isDesAPI: Boolean  = true
 
-  implicit object AddEmploymentHttpReads extends HttpReads[CreateEmploymentResponse] {
+  implicit object AddEmploymentHttpReads extends HttpReads[DownstreamErrorOr[AddEmploymentResponseModel]] {
 
-    override def read(method: String, url: String, response: HttpResponse): CreateEmploymentResponse = {
+    override def read(method: String, url: String, response: HttpResponse): DownstreamErrorOr[AddEmploymentResponseModel] =
       response.status match {
-        case OK => response.json.validate[AddEmploymentResponseModel].fold[CreateEmploymentResponse](
-          _ => badSuccessJsonFromDES,
-          responseModel => Right(responseModel)
-        )
+        case OK =>
+          response.json
+            .validate[AddEmploymentResponseModel]
+            .fold[DownstreamErrorOr[AddEmploymentResponseModel]](
+              _ => badSuccessJsonFromDES,
+              responseModel => Right(responseModel)
+            )
         case UNPROCESSABLE_ENTITY | BAD_REQUEST =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
-          handleDESError(response)
+          handleDownstreamError(response)
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
-          handleDESError(response)
+          handleDownstreamError(response)
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
-          handleDESError(response)
+          handleDownstreamError(response)
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
-          handleDESError(response, Some(INTERNAL_SERVER_ERROR))
+          handleDownstreamError(response, Some(INTERNAL_SERVER_ERROR))
       }
-    }
   }
 
 }

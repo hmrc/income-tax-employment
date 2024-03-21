@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object OtherEmploymentIncomeIFHttpParser extends DESParser with Logging {
+object OtherEmploymentIncomeIFHttpParser extends Parser with Logging {
 
   type OtherEmploymentIncomeIFResponse = Either[ApiError, Option[OtherEmploymentIncome]]
 
@@ -39,7 +39,7 @@ object OtherEmploymentIncomeIFHttpParser extends DESParser with Logging {
           .fold[OtherEmploymentIncomeIFResponse](
             _ => badSuccessJsonFromDES,
             {
-              case OtherEmploymentIncome(None, None, None, None, None, None) => handleDESError(response)
+              case OtherEmploymentIncome(None, None, None, None, None, None) => handleDownstreamError(response)
               case otherEmploymentIncomeModel => Right(Some(otherEmploymentIncomeModel))
             }
           )
@@ -48,16 +48,16 @@ object OtherEmploymentIncomeIFHttpParser extends DESParser with Logging {
           Right(None)
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
-          handleDESError(response)
+          handleDownstreamError(response)
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
-          handleDESError(response)
+          handleDownstreamError(response)
         case BAD_REQUEST | UNPROCESSABLE_ENTITY =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
-          handleDESError(response)
+          handleDownstreamError(response)
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
-          handleDESError(response, Some(INTERNAL_SERVER_ERROR))
+          handleDownstreamError(response, Some(INTERNAL_SERVER_ERROR))
       }
     }
   }

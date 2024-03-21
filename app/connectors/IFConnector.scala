@@ -41,19 +41,19 @@ trait IFConnector {
   val DELETE_EMPLOYMENT = "1663"
   val GET_OTHER_EMPLOYMENT = "1794"
 
-  lazy val baseUrl: String = appConfig.integrationFrameworkBaseUrl
+  lazy val baseUrl: String = appConfig.ifsBaseUrl
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
   private[connectors] def integrationFrameworkHeaderCarrier(url: URL, apiNumber: String)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(url.getHost).matches())
 
-    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.integrationFrameworkAuthorisationToken(apiNumber)}")))
+    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthToken(apiNumber)}")))
 
     if (isInternalHost) {
-      hcWithAuth.withExtraHeaders("Environment" -> appConfig.integrationFrameworkEnvironment)
+      hcWithAuth.withExtraHeaders("Environment" -> appConfig.ifsEnv)
     } else {
-      hcWithAuth.withExtraHeaders(("Environment" -> appConfig.integrationFrameworkEnvironment) +: hcWithAuth.toExplicitHeaders: _*)
+      hcWithAuth.withExtraHeaders(("Environment" -> appConfig.ifsEnv) +: hcWithAuth.toExplicitHeaders: _*)
     }
   }
 }

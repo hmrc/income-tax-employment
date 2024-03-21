@@ -16,23 +16,23 @@
 
 package support.stubs
 
-import config.{AppConfig, BackendAppConfig}
+import config.{AppConfig, AppConfigImpl}
 import org.scalamock.scalatest.MockFactory
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class AppConfigStub extends MockFactory {
 
-  def config(): AppConfig = new BackendAppConfig(mock[Configuration], mock[ServicesConfig]) {
+  def config(): AppConfig = new AppConfigImpl(mock[Configuration], mock[ServicesConfig]) {
     private val wireMockPort = 11111
 
-    override lazy val integrationFrameworkBaseUrl: String = s"http://localhost:$wireMockPort"
-    override lazy val desBaseUrl: String = s"http://localhost:$wireMockPort"
+    override val ifsBaseUrl: String = s"http://localhost:$wireMockPort"
+    override val desBaseUrl: String = s"http://localhost:$wireMockPort"
 
-    override lazy val environment: String = "test"
-    override lazy val authorisationToken: String = "secret"
-    override lazy val integrationFrameworkEnvironment: String = "test"
+    override val desEnv: String       = "test"
+    override val desAuthToken: String = "secret"
+    override val ifsEnv: String       = "test"
 
-    override def integrationFrameworkAuthorisationToken(apiVersion: String): String = authorisationToken + s".$apiVersion"
+    override def ifsAuthToken(apiVersion: String): String = desAuthToken + s".$apiVersion"
   }
 }

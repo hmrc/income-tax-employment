@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
+import config.AppConfigImpl
 import connectors.GetEmploymentListConnectorSpec.{customerExpectedResponseBody, expectedResponseBody, filteredExpectedResponseBody, hmrcExpectedResponseBody}
 import connectors.errors.{SingleErrorBody, ApiError}
 import models.api.EmploymentList
@@ -36,9 +36,9 @@ class GetEmploymentListConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
 
-  private def appConfig(integrationFrameworkHost: String): BackendAppConfig =
-    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-      override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+  private def appConfig(integrationFrameworkHost: String): AppConfigImpl =
+    new AppConfigImpl(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+      override val ifsBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
     }
 
   val nino: String = "123456789"

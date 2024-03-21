@@ -40,18 +40,17 @@ class DeleteEmploymentControllerSpec extends TestUtils {
 
   "deleteEmployment" when {
 
-    def mockDeleteEmploymentSuccess(): CallHandler6[String, String, String, Int, HeaderCarrier, ExecutionContext, Future[Either[ApiError, Unit]]] = {
+    def mockDeleteEmploymentSuccess() = {
       val response: Either[ApiError, Unit] = Right(())
-      (employmentService.deleteOrIgnoreEmployment(_: String, _: String, _: String, _: Int)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *, *, *)
+      (employmentService.deleteOrIgnoreEmployment(_: String, _: String, _: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *, *, *, *, *)
         .returning(Future.successful(response))
     }
 
-    def mockDeleteEmploymentFailure(httpStatus: Int):
-    CallHandler6[String, String, String, Int, HeaderCarrier, ExecutionContext, Future[Either[ApiError, Unit]]] = {
+    def mockDeleteEmploymentFailure(httpStatus: Int)= {
       val error: Either[ApiError, Unit] = Left(ApiError(httpStatus, SingleErrorBody("DES_CODE", "DES_REASON")))
-      (employmentService.deleteOrIgnoreEmployment(_: String, _: String, _: String, _: Int)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *, *, *)
+      (employmentService.deleteOrIgnoreEmployment(_: String, _: String, _: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *, *, *, *, *)
         .returning(Future.successful(error))
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,36 +16,34 @@
 
 package connectors.parsers
 
-import connectors.errors.ApiError
+import connectors.DownstreamErrorOr
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object IgnoreEmploymentHttpParser extends Parser with Logging{
-  type IgnoreEmploymentResponse = Either[ApiError, Unit]
+object RefreshSubmissionCacheHttpParser extends Parser with Logging {
+  override val parserName: String = "RefreshSubmissionCacheHttpParser"
+  override val isDesAPI: Boolean  = false
 
-  override val parserName: String = "IgnoreEmploymentHttpParser"
-  override val isDesAPI: Boolean = true
-
-  implicit object IgnoreEmploymentHttpReads extends HttpReads[IgnoreEmploymentResponse] {
-    override def read(method: String, url: String, response: HttpResponse): IgnoreEmploymentResponse = {
+  implicit object RefreshSubmissionCacheHttpReads extends HttpReads[DownstreamErrorOr[Unit]] {
+    override def read(method: String, url: String, response: HttpResponse): DownstreamErrorOr[Unit] =
       response.status match {
-        case NO_CONTENT => Right(())
+        case NO_CONTENT | NOT_FOUND => Right(())
         case INTERNAL_SERVER_ERROR =>
-          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
+          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
           handleDownstreamError(response)
         case SERVICE_UNAVAILABLE =>
-          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
+          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
           handleDownstreamError(response)
-        case BAD_REQUEST | NOT_FOUND | FORBIDDEN | UNPROCESSABLE_ENTITY =>
-          pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
+        case BAD_REQUEST =>
+          pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
           handleDownstreamError(response)
         case _ =>
-          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
           handleDownstreamError(response, Some(INTERNAL_SERVER_ERROR))
       }
-    }
   }
+
 }

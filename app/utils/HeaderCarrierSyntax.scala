@@ -19,10 +19,21 @@ package utils
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 
 object HeaderCarrierSyntax {
+  val CorrelationIdHeaderKey = "CorrelationId"
 
   implicit class HeaderCarrierOps(hc: HeaderCarrier) {
 
-    def toExplicitHeaders: Seq[(String, String)] = {
+    private def maybeCorrelationId: Option[String] = hc.otherHeaders
+      .collectFirst {
+        case (key, value) if key == CorrelationIdHeaderKey => value
+      }
+
+    def toInternalHeaders: List[(String, String)] =
+      List(
+        CorrelationIdHeaderKey -> maybeCorrelationId
+      ).collect { case (k, Some(v)) => (k, v) }
+
+    def toExplicitHeaders: Seq[(String, String)] =
       Seq(
         HeaderNames.xRequestId            -> hc.requestId.map(_.value),
         HeaderNames.xSessionId            -> hc.sessionId.map(_.value),
@@ -34,9 +45,9 @@ object HeaderCarrierSyntax {
         HeaderNames.googleAnalyticTokenId -> hc.gaToken,
         HeaderNames.googleAnalyticUserId  -> hc.gaUserId,
         HeaderNames.deviceID              -> hc.deviceID,
-        HeaderNames.akamaiReputation      -> hc.akamaiReputation.map(_.value)
+        HeaderNames.akamaiReputation      -> hc.akamaiReputation.map(_.value),
+        CorrelationIdHeaderKey            -> maybeCorrelationId
       ).collect { case (k, Some(v)) => (k, v) }
-    }
   }
 
 }

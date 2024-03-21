@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package config
+import connectors.errors.ApiError
 
-import com.google.inject.AbstractModule
+import scala.concurrent.Future
 
-class Modules extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
-  }
-
+package object connectors {
+  type DownstreamErrorOr[A] = Either[ApiError, A]
+  type DownstreamOutcome[A] = Future[Either[ApiError, A]]
 }

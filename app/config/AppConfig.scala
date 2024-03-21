@@ -22,41 +22,54 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
 
-@ImplementedBy(classOf[BackendAppConfig])
+@ImplementedBy(classOf[AppConfigImpl])
 trait AppConfig {
 
-  val specificTaxYear: Int = 2024
-  val authBaseUrl: String
-  val auditingEnabled: Boolean
-  val graphiteHost: String
+  // Auth Config
+  def authBaseUrl: String
 
-  val desBaseUrl: String
-  val integrationFrameworkBaseUrl: String
-  val expensesBaseUrl: String
+  // DES Config
+  def desBaseUrl: String
+  def desEnv: String
+  def desAuthToken: String
 
-  val environment: String
-  val authorisationToken: String
-  val integrationFrameworkEnvironment: String
+  // IFS Config
+  def ifsBaseUrl: String
+  def ifsEnv: String
+  def ifsAuthToken(apiVersion: String): String
 
-  def integrationFrameworkAuthorisationToken(api: String): String
+  // Expenses Config
+  def expensesBaseUrl: String
+
+  // Submission Config
+  def submissionBaseUrl: String
+
+  def auditingEnabled: Boolean
+  def graphiteHost: String
 }
 
+class AppConfigImpl @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
 
-class BackendAppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
+  // Auth Config
+  val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
-  lazy val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  // DES Config
+  val desBaseUrl: String   = servicesConfig.baseUrl("des")
+  val desEnv: String       = config.get[String]("microservice.services.des.environment")
+  val desAuthToken: String = config.get[String]("microservice.services.des.authorisation-token")
+
+  // IFS Config
+  val ifsBaseUrl: String                       = servicesConfig.baseUrl("integration-framework")
+  val ifsEnv: String                           = config.get[String]("microservice.services.integration-framework.environment")
+  def ifsAuthToken(apiVersion: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
+
+  // Expenses Config
+  val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
+
+  // Submission Config
+  val submissionBaseUrl: String = s"${servicesConfig.baseUrl("income-tax-submission")}/income-tax-submission-service"
+
   lazy val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  lazy val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
+  lazy val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  lazy val desBaseUrl: String = servicesConfig.baseUrl("des")
-  lazy val integrationFrameworkBaseUrl: String = servicesConfig.baseUrl("integration-framework")
-
-  lazy val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
-
-  lazy val environment: String = config.get[String]("microservice.services.des.environment")
-  lazy val authorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")
-  lazy val integrationFrameworkEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
-
-  def integrationFrameworkAuthorisationToken(apiVersion: String): String =
-    config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
 }

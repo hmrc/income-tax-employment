@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
+import config.AppConfigImpl
 import connectors.errors.{SingleErrorBody, ApiError}
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
@@ -32,8 +32,8 @@ class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
   lazy val connector: DeleteEmploymentConnector = app.injector.instanceOf[DeleteEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+  def appConfig(integrationFrameworkHost: String): AppConfigImpl = new AppConfigImpl(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val ifsBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   val taxYear = 2022

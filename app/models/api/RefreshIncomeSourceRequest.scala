@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package config
+package models.api
 
-import com.google.inject.AbstractModule
+import play.api.libs.json.{Json, OFormat}
 
-class Modules extends AbstractModule {
+final case class RefreshIncomeSourceRequest(incomeSource: String)
 
-  override def configure(): Unit = {
-    bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
-  }
-
+object RefreshIncomeSourceRequest {
+  implicit val formats: OFormat[RefreshIncomeSourceRequest] = Json.format[RefreshIncomeSourceRequest]
 }
