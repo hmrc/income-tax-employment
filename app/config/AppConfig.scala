@@ -51,25 +51,26 @@ trait AppConfig {
 class AppConfigImpl @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
 
   // Auth Config
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  override def authBaseUrl: String = servicesConfig.baseUrl("auth")
 
   // DES Config
-  val desBaseUrl: String   = servicesConfig.baseUrl("des")
-  val desEnv: String       = config.get[String]("microservice.services.des.environment")
-  val desAuthToken: String = config.get[String]("microservice.services.des.authorisation-token")
+  override def desBaseUrl: String   = servicesConfig.baseUrl("des")
+  override def desEnv: String       = config.get[String]("microservice.services.des.environment")
+  override def desAuthToken: String = config.get[String]("microservice.services.des.authorisation-token")
 
   // IFS Config
-  val ifsBaseUrl: String                       = servicesConfig.baseUrl("integration-framework")
-  val ifsEnv: String                           = config.get[String]("microservice.services.integration-framework.environment")
-  def ifsAuthToken(apiVersion: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
+  override def ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
+  override def ifsEnv: String     = config.get[String]("microservice.services.integration-framework.environment")
+  override def ifsAuthToken(apiVersion: String): String =
+    config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
 
   // Expenses Config
-  val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
+  override def expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
 
   // Submission Config
-  val submissionBaseUrl: String = s"${servicesConfig.baseUrl("income-tax-submission")}/income-tax-submission-service"
+  override def submissionBaseUrl: String = s"${servicesConfig.baseUrl("income-tax-submission")}/income-tax-submission-service"
 
-  lazy val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  lazy val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  override def auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
+  override def graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
 }
