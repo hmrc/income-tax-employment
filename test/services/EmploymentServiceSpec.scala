@@ -530,12 +530,7 @@ class EmploymentServiceSpec extends TestUtils {
   }
 
   "createEmployment" should {
-<<<<<<< HEAD
-    val addEmploymentRequestModel =
-      CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
-=======
     val addEmploymentRequestModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
->>>>>>> origin/main
     val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
     "return Right containing employmentId" when {
@@ -559,13 +554,7 @@ class EmploymentServiceSpec extends TestUtils {
   }
 
   "updateEmployment" should {
-
-<<<<<<< HEAD
-    val updateEmploymentRequestModel =
-      CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
-=======
     val updateEmploymentRequestModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
->>>>>>> origin/main
 
     "return a right with no content" when {
 
