@@ -20,7 +20,7 @@ import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.PayModel
 import models.shared.{Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
-import org.scalamock.handlers.CallHandler4
+import org.scalamock.handlers.CallHandler5
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -28,42 +28,44 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
 import services.EmploymentService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
+
 import scala.concurrent.Future
 
 class CreateUpdateEmploymentControllerSpec extends TestUtils {
 
   val employmentService: EmploymentService = mock[EmploymentService]
-  val createEmploymentController = new CreateUpdateEmploymentController(employmentService, authorisedAction, mockControllerComponents)
+  val createEmploymentController           = new CreateUpdateEmploymentController(employmentService, authorisedAction, mockControllerComponents)
 
-  val nino = "tax_entity_id"
+  val nino    = "tax_entity_id"
   val taxYear = 2020
 
   "createEmployment" when {
 
-    def mockCreateEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
-      Future[Either[ApiError, Option[String]]]] = {
-      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
-        .expects(*, *, *, *)
+    def mockCreateEmploymentSuccess()
+        : CallHandler5[String, Int, String, CreateUpdateEmploymentRequest, HeaderCarrier, Future[Either[ApiError, Option[String]]]]#Derived =
+      (employmentService
+        .createUpdateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
+        .expects(*, *, *, *, *)
         .returning(Future.successful(Right(Some("employmentId"))))
-    }
 
-    def mockAmendEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
-      Future[Either[ApiError, Option[String]]]] = {
-      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
-        .expects(*, *, *, *)
+    def mockAmendEmploymentSuccess()
+        : CallHandler5[String, Int, String, CreateUpdateEmploymentRequest, HeaderCarrier, Future[Either[ApiError, Option[String]]]]#Derived =
+      (employmentService
+        .createUpdateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
+        .expects(*, *, *, *, *)
         .returning(Future.successful(Right(None)))
-    }
 
-    def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, CreateUpdateEmploymentRequest,
-      HeaderCarrier, Future[Either[ApiError, Option[String]]]] = {
+    def mockCreateOrAmendEmploymentFailure(httpStatus: Int)
+        : CallHandler5[String, Int, String, CreateUpdateEmploymentRequest, HeaderCarrier, Future[Either[ApiError, Option[String]]]]#Derived = {
       val error = Left(ApiError(httpStatus, SingleErrorBody("DES_CODE", "DES_REASON")))
-      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
-        .expects(*, *, *, *)
+      (employmentService
+        .createUpdateEmployment(_: String, _: Int, _: String, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
+        .expects(*, *, *, *, *)
         .returning(Future.successful(error))
     }
 
     val mtditid: String = "1234567890"
-    val fakeRequest = FakeRequest("POST", "/TBC").withHeaders("mtditid" -> mtditid)
+    val fakeRequest     = FakeRequest("POST", "/TBC").withHeaders("mtditid" -> mtditid)
 
     val requestBody = CreateUpdateEmploymentRequest(
       Some("employment_id"),
@@ -84,20 +86,20 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
             None
           ),
           None,
-          benefitsInKind = Some(Benefits(
-            Some(1231.33)
-          )),
+          benefitsInKind = Some(
+            Benefits(
+              Some(1231.33)
+            )),
           Some(false)
         )
       ),
       hmrcEmploymentIdToIgnore = None
     )
 
-    val requestBodyWithOnlyEmploymentData =requestBody.copy(employment = None)
+    val requestBodyWithOnlyEmploymentData = requestBody.copy(employment = None)
 
     val invalidRequestBody =
-      Json.parse(
-        """
+      Json.parse("""
           |{
           |  "unknown_key": "value"
           |}
@@ -148,7 +150,7 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
             createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
           }
           status(result) mustBe httpErrorCode
-          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
+          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE", "reason" -> "DES_REASON")
         }
       }
 
@@ -190,7 +192,7 @@ class CreateUpdateEmploymentControllerSpec extends TestUtils {
             createEmploymentController.createUpdateEmployment(nino, taxYear)(fakeRequest.withJsonBody(Json.toJson(requestBody)))
           }
           status(result) mustBe httpErrorCode
-          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE" , "reason" -> "DES_REASON")
+          contentAsJson(result) mustBe Json.obj("code" -> "DES_CODE", "reason" -> "DES_REASON")
         }
       }
     }

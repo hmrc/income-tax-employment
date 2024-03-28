@@ -30,13 +30,14 @@ trait Connector {
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
-  private[connectors] def headerCarrier(url : String)(implicit hc: HeaderCarrier): HeaderCarrier = {
+  private[connectors] def headerCarrier(url: String, extraHeaders: (String, String)*)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
 
-    if(isInternalHost) {
-      hc
-    } else {
-      hc.withExtraHeaders(hc.toExplicitHeaders: _*)
-    }
+    val explicitHeaders = if (isInternalHost) hc.toInternalHeaders else hc.toExplicitHeaders
+
+    val allHeaders = extraHeaders.toList ++ explicitHeaders
+
+    hc.withExtraHeaders(allHeaders: _*)
+
   }
 }

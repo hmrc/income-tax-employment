@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
+import config.AppConfigImpl
 import connectors.errors.{ApiError, SingleErrorBody}
 import models._
 import models.api.{Employment, PayModel}
@@ -43,8 +43,8 @@ class CreateUpdateEmploymentFinancialDataTYSConnectorSpec extends PlaySpec with 
   val minEmploymentFinancialData: api.EmploymentFinancialData = api.EmploymentFinancialData(minEmployment)
   val stubUrl = s"/income-tax/${toTaxYearParam(specificTaxYear)}/income/employments/$nino/$employmentId"
 
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
+  def appConfig(integrationFrameworkHost: String): AppConfigImpl = new AppConfigImpl(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val ifsBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
   }
 
   "CreateUpdateEmploymentFinancialDataTYSConnector" should {

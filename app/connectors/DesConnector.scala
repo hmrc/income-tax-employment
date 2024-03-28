@@ -35,12 +35,12 @@ trait DesConnector {
   private[connectors] def desHeaderCarrier(url: URL)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(url.getHost).matches())
 
-    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.authorisationToken}")))
+    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.desAuthToken}")))
 
     if (isInternalHost) {
-      hcWithAuth.withExtraHeaders("Environment" -> appConfig.environment)
+      hcWithAuth.withExtraHeaders("Environment" -> appConfig.desEnv)
     } else {
-      hcWithAuth.withExtraHeaders(("Environment" -> appConfig.environment) +: hcWithAuth.toExplicitHeaders: _*)
+      hcWithAuth.withExtraHeaders(("Environment" -> appConfig.desEnv) +: hcWithAuth.toExplicitHeaders: _*)
     }
   }
 }

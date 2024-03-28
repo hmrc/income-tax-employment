@@ -27,7 +27,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppConfig)
                                           (implicit ec: ExecutionContext) extends IFConnector {
-  val specificTaxYear: Int = 2024
 
   def getEmploymentData(nino: String,
                         taxYear: Int,

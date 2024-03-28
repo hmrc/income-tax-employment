@@ -37,7 +37,7 @@ class CreateUpdateEmploymentController @Inject()(service: EmploymentService,
   def createUpdateEmployment(nino: String, taxYear:Int): Action[AnyContent] = authorisedAction.async { implicit user =>
     user.request.body.asJson.map(_.validate[CreateUpdateEmploymentRequest]) match {
       case Some(JsSuccess(model@CreateUpdateEmploymentRequest(_, employment, employmentData, _, _), _)) if employment.isDefined || employmentData.isDefined =>
-        responseHandler(service.createUpdateEmployment(nino, taxYear, model))
+        responseHandler(service.createUpdateEmployment(nino, taxYear, user.mtditid, model))
       case _ =>
         logger.warn("[CreateUpdateEmploymentController][createUpdateEmployment] Create update employment request is invalid," +
           " neither employment information or employment financial data are supplied")

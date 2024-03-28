@@ -16,6 +16,7 @@
 
 package connectors.parsers
 
+import connectors.DownstreamErrorOr
 import connectors.errors.ApiError
 import models.shared.AddEmploymentResponseModel
 import play.api.Logging
@@ -28,16 +29,19 @@ object CreateEmploymentHttpParser extends DESParser with Logging {
   type CreateEmploymentResponse = Either[ApiError, AddEmploymentResponseModel]
 
   override val parserName: String = "CreateEmploymentHttpParser"
-  override val isDesAPI: Boolean = true
+  override val isDesAPI: Boolean  = true
 
-  implicit object AddEmploymentHttpReads extends HttpReads[CreateEmploymentResponse] {
+  implicit object AddEmploymentHttpReads extends HttpReads[DownstreamErrorOr[AddEmploymentResponseModel]] {
 
-    override def read(method: String, url: String, response: HttpResponse): CreateEmploymentResponse = {
+    override def read(method: String, url: String, response: HttpResponse): DownstreamErrorOr[AddEmploymentResponseModel] =
       response.status match {
-        case OK => response.json.validate[AddEmploymentResponseModel].fold[CreateEmploymentResponse](
-          _ => badSuccessJsonFromDES,
-          responseModel => Right(responseModel)
-        )
+        case OK =>
+          response.json
+            .validate[AddEmploymentResponseModel]
+            .fold[DownstreamErrorOr[AddEmploymentResponseModel]](
+              _ => badSuccessJsonFromDES,
+              responseModel => Right(responseModel)
+            )
         case UNPROCESSABLE_ENTITY | BAD_REQUEST =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response)
@@ -51,7 +55,6 @@ object CreateEmploymentHttpParser extends DESParser with Logging {
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
           handleDESError(response, Some(INTERNAL_SERVER_ERROR))
       }
-    }
   }
 
 }

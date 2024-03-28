@@ -26,16 +26,18 @@ class MockAppConfig extends AppConfig {
 
   override val desBaseUrl: String = "/des"
 
-  override val integrationFrameworkBaseUrl: String = "/integrationFramework"
+  override val ifsBaseUrl: String = "/integrationFramework"
 
 
   override val expensesBaseUrl: String = "/expenses"
 
-  override val environment: String = "dev"
+  override val desEnv: String = "dev"
 
-  override val authorisationToken: String = "someToken"
+  override val desAuthToken: String = "someToken"
 
-  override val integrationFrameworkEnvironment: String = "dev"
+  override val ifsEnv: String = "dev"
 
-  override def integrationFrameworkAuthorisationToken(api: String): String = "someToken"
+  override def ifsAuthToken(api: String): String = "someToken"
+
+  override val submissionBaseUrl: String = "/submission"
 }
