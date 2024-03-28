@@ -22,7 +22,7 @@ import play.api.libs.json.{JsValue, Json}
 import support.UnitTest
 import uk.gov.hmrc.http.HttpResponse
 
-class DeleteOtherEmploymentsIncomeHttpDESParserSpec extends UnitTest {
+class DeleteOtherEmploymentsIncomeHttpParserSpec extends UnitTest {
 
   private val anyHeaders: Map[String, Seq[String]] = Map.empty
   private val anyMethod: String = "DELETE"

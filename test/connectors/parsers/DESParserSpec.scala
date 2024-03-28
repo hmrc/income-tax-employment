@@ -23,7 +23,7 @@ import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 import utils.TestUtils
 
-class ParserSpec extends TestUtils{
+class DESParserSpec extends TestUtils{
 
   object FakeParser extends DESParser {
     override val parserName: String = "TestParser"

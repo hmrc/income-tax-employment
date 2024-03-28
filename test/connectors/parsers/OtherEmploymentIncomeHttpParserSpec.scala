@@ -20,41 +20,36 @@ import connectors.errors.{ApiError, SingleErrorBody}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import support.UnitTest
+import support.builders.api.OtherEmploymentIncomeBuilder.{anOtherEmploymentIncome, anOtherEmploymentIncomeJson}
 import uk.gov.hmrc.http.HttpResponse
 
-class CreateUpdateEmploymentFinancialDataTYSHttpDESParserSpec extends UnitTest {
+class OtherEmploymentIncomeHttpParserSpec extends UnitTest {
 
   private val anyHeaders: Map[String, Seq[String]] = Map.empty
-  private val anyMethod: String = "PUT"
+  private val anyMethod: String = "GET"
   private val anyUrl = "/any-url"
-  private val singleErrorBody: SingleErrorBody = SingleErrorBody("PARSING_ERROR", "Error parsing response from API")
+  private val singleErrorBody: SingleErrorBody = SingleErrorBody("PARSING_ERROR", "Error parsing response from DES")
   private val singleErrorBodyJson: JsValue = Json.toJson(singleErrorBody)
-  private val underTest = CreateUpdateEmploymentFinancialDataTYSHttpParser.CreateUpdateEmploymentFinancialDataTYSHttpReads
+  private val underTest = OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeHttpReads
 
-  "CreateUpdateEmploymentFinancialDataTYSHttpParserSpec" should {
-    "convert JsValue to CreateUpdateEmploymentFinancialDataTYSResponse" when {
-      "status is NO_CONTENT and any jsValue" in {
-        val httpResponse = HttpResponse.apply(NO_CONTENT, "", anyHeaders)
+  "OtherEmploymentIncomeHttpReads" should {
+    "convert JsValue to OtherEmploymentIncomeResponse" when {
+      "status is OK and source with deductions" in {
+        val httpResponse = HttpResponse.apply(OK, anOtherEmploymentIncomeJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Right(())
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Right(Some(anOtherEmploymentIncome))
       }
 
-      "status is BAD_REQUEST" in {
-        val httpResponse = HttpResponse.apply(BAD_REQUEST, singleErrorBodyJson, anyHeaders)
+      "status is OK and empty json" in {
+        val httpResponse = HttpResponse.apply(OK, """ {}""", anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(BAD_REQUEST, singleErrorBody))
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(OK, singleErrorBody))
       }
 
       "status is NOT_FOUND" in {
         val httpResponse = HttpResponse.apply(NOT_FOUND, singleErrorBodyJson, anyHeaders)
 
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(NOT_FOUND, singleErrorBody))
-      }
-
-      "status is UNPROCESSABLE_ENTITY" in {
-        val httpResponse = HttpResponse.apply(UNPROCESSABLE_ENTITY, singleErrorBodyJson, anyHeaders)
-
-        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, singleErrorBody))
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Right(None)
       }
 
       "status is INTERNAL_SERVER_ERROR" in {
@@ -73,6 +68,18 @@ class CreateUpdateEmploymentFinancialDataTYSHttpDESParserSpec extends UnitTest {
         val httpResponse = HttpResponse.apply(HTTP_VERSION_NOT_SUPPORTED, singleErrorBodyJson, anyHeaders)
 
         underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(INTERNAL_SERVER_ERROR, singleErrorBody))
+      }
+
+      "status is BAD_REQUEST" in {
+        val httpResponse = HttpResponse.apply(BAD_REQUEST, singleErrorBodyJson, anyHeaders)
+
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(BAD_REQUEST, singleErrorBody))
+      }
+      
+      "status is UNPROCESSABLE_ENTITY" in {
+        val httpResponse = HttpResponse.apply(UNPROCESSABLE_ENTITY, singleErrorBodyJson, anyHeaders)
+
+        underTest.read(anyMethod, anyUrl, httpResponse) shouldBe Left(ApiError(UNPROCESSABLE_ENTITY, singleErrorBody))
       }
     }
   }
