@@ -16,8 +16,6 @@
 
 package utils
 
-import akka.actor.ActorSystem
-import akka.stream.SystemMaterializer
 import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.{AppConfig, MockAppConfig}
@@ -26,6 +24,8 @@ import models._
 import models.api.{LumpSum, OtherEmploymentIncome, TaxableLumpSumsAndCertainIncome}
 import models.frontend._
 import models.shared._
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.SystemMaterializer
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach

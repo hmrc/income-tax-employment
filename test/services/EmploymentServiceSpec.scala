@@ -25,7 +25,7 @@ import connectors.parsers.UnignoreEmploymentHttpParser.UnignoreEmploymentRespons
 import models.api.{EmploymentFinancialData, PayModel}
 import models.shared.{AddEmploymentResponseModel, Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
-import org.joda.time.DateTime.now
+import java.time.LocalDateTime
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -530,8 +530,12 @@ class EmploymentServiceSpec extends TestUtils {
   }
 
   "createEmployment" should {
+<<<<<<< HEAD
     val addEmploymentRequestModel =
       CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+=======
+    val addEmploymentRequestModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
+>>>>>>> origin/main
     val addEmploymentResponseModel = AddEmploymentResponseModel("employerId")
 
     "return Right containing employmentId" when {
@@ -556,8 +560,12 @@ class EmploymentServiceSpec extends TestUtils {
 
   "updateEmployment" should {
 
+<<<<<<< HEAD
     val updateEmploymentRequestModel =
       CreateUpdateEmployment(Some("employerRef"), "employerName", now().toString, Some(now().toString), Some("payrollId"))
+=======
+    val updateEmploymentRequestModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
+>>>>>>> origin/main
 
     "return a right with no content" when {
 
