@@ -22,7 +22,7 @@ import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys.{BAD_SUCCESS_JSON_FROM_DES, UNEXPECTED_RESPONSE_FROM_DES}
 import utils.PagerDutyHelper.{getCorrelationId, pagerDutyLog}
 
-trait Parser {
+trait DESParser {
 
   val parserName: String
   val isDesAPI: Boolean
@@ -35,7 +35,7 @@ trait Parser {
     Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(isDesAPI)))
   }
 
-  def handleDownstreamError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[ApiError, Response] = {
+  def handleDESError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[ApiError, Response] = {
 
     val status = statusOverride.getOrElse(response.status)
 

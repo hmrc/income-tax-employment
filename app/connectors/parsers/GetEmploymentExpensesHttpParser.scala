@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object GetEmploymentExpensesHttpParser extends Parser with Logging {
+object GetEmploymentExpensesHttpParser extends DESParser with Logging {
   type GetEmploymentExpensesResponse = Either[ApiError, Option[EmploymentExpenses]]
 
   override val parserName: String = "GetEmploymentBenefitsHttpParser"
@@ -46,16 +46,16 @@ object GetEmploymentExpensesHttpParser extends Parser with Logging {
           Right(None)
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
-          handleDownstreamError(response)
+          handleDESError(response)
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
-          handleDownstreamError(response)
+          handleDESError(response)
         case BAD_REQUEST | UNPROCESSABLE_ENTITY=>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
-          handleDownstreamError(response)
+          handleDESError(response)
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
-          handleDownstreamError(response, Some(INTERNAL_SERVER_ERROR))
+          handleDESError(response, Some(INTERNAL_SERVER_ERROR))
       }
     }
   }

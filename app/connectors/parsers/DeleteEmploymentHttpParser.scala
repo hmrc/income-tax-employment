@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-object DeleteEmploymentHttpParser extends Parser with Logging {
+object DeleteEmploymentHttpParser extends DESParser with Logging {
   type DeleteEmploymentResponse = Either[ApiError, Unit]
 
   override val parserName: String = "DeleteEmploymentHttpParser"
@@ -36,16 +36,16 @@ object DeleteEmploymentHttpParser extends Parser with Logging {
         case NO_CONTENT => Right(())
         case NOT_FOUND | BAD_REQUEST | UNPROCESSABLE_ENTITY =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
-          handleDownstreamError(response)
+          handleDESError(response)
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_DES, logMessage(response))
-          handleDownstreamError(response)
+          handleDESError(response)
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_DES, logMessage(response))
-          handleDownstreamError(response)
+          handleDESError(response)
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_DES, logMessage(response))
-          handleDownstreamError(response, Some(INTERNAL_SERVER_ERROR))
+          handleDESError(response, Some(INTERNAL_SERVER_ERROR))
       }
     }
   }
