@@ -21,6 +21,7 @@ import connectors.parsers.IgnoreEmploymentHttpParser.{IgnoreEmploymentHttpReads,
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
+import utils.TaxYearUtils.{isAfter2324Api, toTaxYearParam}
 
 import java.net.URL
 import javax.inject.Inject
@@ -32,12 +33,16 @@ class IgnoreEmploymentConnector @Inject()(val http: HttpClient,
   def ignoreEmployment(nino: String, taxYear: Int, employmentId: String)
                       (implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
 
-    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore")
+    val (url, apiVersion) = if (isAfter2324Api(taxYear)) {
+      (new URL(s"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/income/employments/$nino/$employmentId/ignore"), IGNORE_EMPLOYMENT_23_34)
+    } else {
+      (new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId/ignore"), IGNORE_EMPLOYMENT)
+    }
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[IgnoreEmploymentResponse] = {
       http.PUT[JsValue, IgnoreEmploymentResponse](url, Json.parse("""{}"""))
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, IGNORE_EMPLOYMENT))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, apiVersion))
   }
 }
