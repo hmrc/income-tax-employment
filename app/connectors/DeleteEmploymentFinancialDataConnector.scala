@@ -20,6 +20,7 @@ import config.AppConfig
 import connectors.parsers.DeleteEmploymentFinancialDataHttpParser.{DeleteEmploymentFinancialDataHttpReads, DeleteEmploymentFinancialDataResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.DESTaxYearHelper.desTaxYearConverter
+import utils.TaxYearUtils.{isAfter2324Api, toTaxYearParam}
 
 import java.net.URL
 import javax.inject.Inject
@@ -30,12 +31,17 @@ class DeleteEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
 
   def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
                                    (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
-    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId")
+
+    val (url, apiVersion) = if (isAfter2324Api(taxYear)) {
+      (new URL(s"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/income/employments/$nino/$employmentId"), DELETE_EMPLOYMENT_FINANCIAL_DATA_23_24)
+    } else {
+      (new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"), DELETE_EMPLOYMENT_FINANCIAL_DATA)
+    }
 
     def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
       http.DELETE[DeleteEmploymentFinancialDataResponse](url)
     }
 
-    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, DELETE_EMPLOYMENT_FINANCIAL_DATA))
+    integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, apiVersion))
   }
 }
