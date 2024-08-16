@@ -28,8 +28,9 @@ class MockAppConfig extends AppConfig {
 
   override val integrationFrameworkBaseUrl: String = "/integrationFramework"
 
-
   override val expensesBaseUrl: String = "/expenses"
+
+  override val employmentFEBaseUrl: String = "http://localhost:9317"
 
   override val environment: String = "dev"
 
@@ -38,4 +39,5 @@ class MockAppConfig extends AppConfig {
   override val integrationFrameworkEnvironment: String = "dev"
 
   override def integrationFrameworkAuthorisationToken(api: String): String = "someToken"
+
 }

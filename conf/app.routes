@@ -11,3 +11,5 @@ DELETE  /income-tax/nino/:nino/sources/:employmentId/:toRemove      controllers.
 POST    /income-tax/nino/:nino/sources                              controllers.CreateUpdateEmploymentController.createUpdateEmployment(nino: String, taxYear: Int)
 
 GET     /income-tax/nino/:nino/income/other/employments             controllers.OtherEmploymentIncomeController.getOtherEmploymentIncome(nino: String, taxYear: Int)
+
+GET     /:taxYear/tasks/:nino                                       controllers.CommonTaskListController.getCommonTaskList(taxYear: Int, nino: String)

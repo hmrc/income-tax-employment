@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package models.shared
+package models.tasklist
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AddEmploymentResponseModel(employmentId: String)
+case class TaskListSectionItem(title: TaskTitle, status: TaskStatus, href: Option[String])
 
-object AddEmploymentResponseModel {
-  implicit val format: OFormat[AddEmploymentResponseModel] = Json.format[AddEmploymentResponseModel]
+object TaskListSectionItem {
+  implicit val format: OFormat[TaskListSectionItem] = Json.format[TaskListSectionItem]
 }

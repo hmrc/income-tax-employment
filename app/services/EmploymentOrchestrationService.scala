@@ -16,13 +16,12 @@
 
 package services
 
+import connectors._
 import connectors.errors.ApiError
 import connectors.errors.SingleErrorBody.parsingError
-import connectors.parsers.GetEmploymentBenefitsHttpParser.GetEmploymentBenefitsResponse
 import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import connectors.parsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.parsers.GetEmploymentListHttpParser.GetEmploymentListResponse
-import connectors._
 import models._
 import models.frontend.{AllEmploymentData, EmploymentSource, HmrcEmploymentSource}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
