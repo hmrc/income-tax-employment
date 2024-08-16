@@ -31,7 +31,7 @@ class CreateUpdateEmploymentFinancialDataTYSConnector @Inject()(val http: HttpCl
   def createUpdateEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String, employmentFinancialData: EmploymentFinancialData)
                                          (implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataTYSResponse] = {
     val url: URL = new URL(s"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/income/employments/$nino/$employmentId")
-    println("$$$$$$$" + employmentFinancialData)
+
     def call(implicit hc: HeaderCarrier): Future[CreateUpdateEmploymentFinancialDataTYSResponse] = {
       http.PUT[EmploymentFinancialData, CreateUpdateEmploymentFinancialDataTYSResponse](url, employmentFinancialData)
     }
