@@ -18,12 +18,11 @@ package services
 
 import com.codahale.metrics.SharedMetricRegistries
 import connectors.errors.{ApiError, SingleErrorBody}
-import connectors.parsers.GetEmploymentBenefitsHttpParser.GetEmploymentBenefitsResponse
 import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import connectors.parsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesResponse
 import connectors.parsers.GetEmploymentListHttpParser.GetEmploymentListResponse
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
-import connectors.{GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector, OtherEmploymentIncomeConnector}
+import connectors.{GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils

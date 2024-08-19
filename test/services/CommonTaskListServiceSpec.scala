@@ -17,7 +17,7 @@
 package services
 
 import connectors.errors.{ApiError, SingleErrorBody}
-import models.frontend.{AllEmploymentData, EmploymentData, EmploymentFinancialData, HmrcEmploymentSource}
+import models.frontend.{AllEmploymentData, EmploymentFinancialData, HmrcEmploymentSource}
 import models.tasklist._
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status.NOT_FOUND
@@ -45,6 +45,13 @@ class CommonTaskListServiceSpec extends TestUtils with AppConfigStubProvider {
   val cyaPageUrl: String = s"http://localhost:9317/update-and-submit-income-tax-return/employment-income/$taxYear/employment-summary"
 
   val fullResult: Right[Nothing, AllEmploymentData] = Right(allEmploymentData)
+
+  val hmrcLatestResult: Right[Nothing, AllEmploymentData] = Right(
+    allEmploymentData.copy(Seq(allEmploymentData.hmrcEmploymentData.head.copy(
+      hmrcEmploymentFinancialData =
+        Some(EmploymentFinancialData(Some(models.frontend.EmploymentData(models.api.EmploymentData("2023-01-04T05:01:01Z", None, None, None, EmploymentDetailsBuilder.anEmploymentDetails))), None))
+    )))
+  )
 
   val customerLatestResult: Right[Nothing, AllEmploymentData] = Right(
     allEmploymentData.copy(Seq(allEmploymentData.hmrcEmploymentData.head.copy(
@@ -83,18 +90,18 @@ class CommonTaskListServiceSpec extends TestUtils with AppConfigStubProvider {
 
   "CommonTaskListService.get" should {
 
-    "return the employment task list section" in {
+    "return task as check now when hmrc data is latest" in {
 
-      mockGetAllEmploymentData(fullResult)
+      mockGetAllEmploymentData(hmrcLatestResult)
 
-      val underTest = service.get(taxYear, nino, mtditid)
+      val underTest: Future[TaskListSection] = service.get(taxYear, nino, mtditid)
 
       await(underTest) mustBe checkNowTaskSection
     }
 
     "return an empty task list section when API response is NOT_FOUND" in {
 
-      val response = Left(ApiError(NOT_FOUND, SingleErrorBody("NOT_FOUND", "No data was found")))
+      val response: Left[ApiError, Nothing] = Left(ApiError(NOT_FOUND, SingleErrorBody("NOT_FOUND", "No data was found")))
 
       mockGetAllEmploymentData(response)
 
@@ -105,7 +112,11 @@ class CommonTaskListServiceSpec extends TestUtils with AppConfigStubProvider {
 
     "return an empty task list section with empty data" in {
 
-      val response = Right(AllEmploymentData(Seq.empty, None, Seq.empty, None, None))
+      val emptyFinancialData: Seq[HmrcEmploymentSource] = Seq(fullResult.value.hmrcEmploymentData.head.copy(
+        hmrcEmploymentFinancialData = None,
+        customerEmploymentFinancialData = None))
+
+      val response: Right[Nothing, AllEmploymentData] = Right(AllEmploymentData(emptyFinancialData, None, Seq.empty, None, None))
 
       mockGetAllEmploymentData(response)
 
@@ -118,7 +129,7 @@ class CommonTaskListServiceSpec extends TestUtils with AppConfigStubProvider {
 
       mockGetAllEmploymentData(customerLatestResult)
 
-      val underTest = service.get(taxYear, nino, mtditid)
+      val underTest: Future[TaskListSection] = service.get(taxYear, nino, mtditid)
 
       await(underTest) mustBe completedTaskSection
     }
@@ -127,7 +138,7 @@ class CommonTaskListServiceSpec extends TestUtils with AppConfigStubProvider {
 
       mockGetAllEmploymentData(customerAddedOnlyResult)
 
-      val underTest = service.get(taxYear, nino, mtditid)
+      val underTest: Future[TaskListSection] = service.get(taxYear, nino, mtditid)
 
       await(underTest) mustBe completedTaskSection
     }

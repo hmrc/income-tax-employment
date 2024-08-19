@@ -53,7 +53,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   lazy val integrationFrameworkBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
   lazy val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
-  lazy val employmentFEBaseUrl: String = servicesConfig.getString("microservice.services.income-tax-employment-frontend")
+  lazy val employmentFEBaseUrl: String = config.get[String]("microservice.services.income-tax-employment-frontend.url")
 
   lazy val environment: String = config.get[String]("microservice.services.des.environment")
   lazy val authorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")

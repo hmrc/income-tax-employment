@@ -46,17 +46,22 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
     def employmentTask(taskStatus: TaskStatus): Option[Seq[TaskListSectionItem]] =
       Some(Seq(TaskListSectionItem(TaskTitle.PayeEmployment, taskStatus, Some(employmentUrl))))
 
-    val hmrcSubmittedOn =
-      employments.hmrcEmploymentData.map { employment =>
-        val submittedOn = employment.hmrcEmploymentFinancialData.flatMap(_.employmentData.map(_.submittedOn)).getOrElse("")
-        getSubmittedOnEpoch(submittedOn)
+    val hmrcSubmittedOn: Seq[Long] = {
+        employments.hmrcEmploymentData.map { employment =>
+          val submittedOn: String = employment.hmrcEmploymentFinancialData.flatMap(_.employmentData.map(_.submittedOn))
+            .getOrElse(Instant.MIN.toString)
+
+          getSubmittedOnEpoch(submittedOn)
+        }
       }
 
-    val customerSubmittedOn =
+    val customerSubmittedOn: Seq[Long] =
       employments.hmrcEmploymentData.map { employment =>
-      val submittedOn = employment.customerEmploymentFinancialData.flatMap(_.employmentData.map(_.submittedOn)).getOrElse("")
-      getSubmittedOnEpoch(submittedOn)
-    }
+        val submittedOn: String  = employment.customerEmploymentFinancialData.flatMap(_.employmentData.map(_.submittedOn))
+          .getOrElse(Instant.MIN.toString)
+
+        getSubmittedOnEpoch(submittedOn)
+      }
 
     val hasCustomerData: Boolean = employments.customerEmploymentData.exists(_.employmentData.nonEmpty)
 
@@ -64,7 +69,7 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
       hmrc <- hmrcSubmittedOn
       customer <- customerSubmittedOn
     } yield {
-      hmrc >= customer
+      customer < hmrc
     }
 
     (hasHmrcLatest.contains(true), hasCustomerData) match {
@@ -74,6 +79,7 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
     }
   }
 
-  private def getSubmittedOnEpoch(timeAsString: String): Long =
-    Instant.parse(timeAsString).getEpochSecond
+  private def getSubmittedOnEpoch(time: String): Long = {
+    Instant.parse(time).getEpochSecond
+  }
 }

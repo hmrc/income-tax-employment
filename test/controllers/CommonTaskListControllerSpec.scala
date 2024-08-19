@@ -17,7 +17,7 @@
 package controllers
 
 import models.tasklist.{SectionTitle, TaskListSection}
-import org.scalamock.handlers.{CallHandler4, CallHandler5}
+import org.scalamock.handlers.CallHandler5
 import play.api.http.Status.OK
 import services.CommonTaskListService
 import support.utils.TaxYearUtils
