@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package models.shared
+package models.tasklist
 
-import play.api.libs.json.{Json, OFormat}
+import enumeratum._
 
-case class AddEmploymentResponseModel(employmentId: String)
+sealed abstract class SectionTitle(override val entryName: String) extends EnumEntry {
+  override def toString: String = entryName
+}
 
-object AddEmploymentResponseModel {
-  implicit val format: OFormat[AddEmploymentResponseModel] = Json.format[AddEmploymentResponseModel]
+object SectionTitle extends Enum[SectionTitle] with PlayJsonEnum[SectionTitle] {
+
+  val values: IndexedSeq[SectionTitle] = findValues
+
+  case object EmploymentTitle extends SectionTitle("Employment")
 }

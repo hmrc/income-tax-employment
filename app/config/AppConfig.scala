@@ -33,6 +33,7 @@ trait AppConfig {
   val desBaseUrl: String
   val integrationFrameworkBaseUrl: String
   val expensesBaseUrl: String
+  val employmentFEBaseUrl: String
 
   val environment: String
   val authorisationToken: String
@@ -52,6 +53,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   lazy val integrationFrameworkBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
   lazy val expensesBaseUrl: String = servicesConfig.baseUrl("income-tax-expenses")
+  lazy val employmentFEBaseUrl: String = config.get[String]("microservice.services.income-tax-employment-frontend.url")
 
   lazy val environment: String = config.get[String]("microservice.services.des.environment")
   lazy val authorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")
@@ -59,4 +61,6 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
 
   def integrationFrameworkAuthorisationToken(apiVersion: String): String =
     config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
+
+
 }
