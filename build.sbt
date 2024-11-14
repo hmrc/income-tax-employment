@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.DefaultBuildSettings
 
 val appName = "income-tax-employment"
@@ -54,6 +55,7 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
+  .settings(RoutesKeys.routesImport ++= Seq("models.TaxYearPathBindable._", "models.TaxYearPathBindable.TaxYear"))
   .settings(PlayKeys.playDefaultPort := 9315)
   .settings(resolvers += Resolver.jcenterRepo)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)

@@ -40,4 +40,9 @@ class MockAppConfig extends AppConfig {
 
   override def integrationFrameworkAuthorisationToken(api: String): String = "someToken"
 
+  override val encryptionKey: String = "dummyEncryptionKey"
+
+  override val mongoJourneyAnswersTTL: Int = 1000
+
+  override val replaceJourneyAnswersIndexes: Boolean = true
 }
