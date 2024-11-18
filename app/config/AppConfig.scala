@@ -21,6 +21,7 @@ import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
+import scala.concurrent.duration.Duration
 
 @ImplementedBy(classOf[BackendAppConfig])
 trait AppConfig {
@@ -40,6 +41,10 @@ trait AppConfig {
   val integrationFrameworkEnvironment: String
 
   def integrationFrameworkAuthorisationToken(api: String): String
+
+  val encryptionKey: String
+  val mongoJourneyAnswersTTL: Int
+  val replaceJourneyAnswersIndexes: Boolean
 }
 
 
@@ -62,5 +67,8 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   def integrationFrameworkAuthorisationToken(apiVersion: String): String =
     config.get[String](s"microservice.services.integration-framework.authorisation-token.$apiVersion")
 
-
+// Mongo config
+  lazy val encryptionKey: String = servicesConfig.getString("mongodb.encryption.key")
+  lazy val mongoJourneyAnswersTTL: Int = Duration(servicesConfig.getString("mongodb.journeyAnswersTimeToLive")).toDays.toInt
+  lazy val replaceJourneyAnswersIndexes: Boolean = servicesConfig.getBoolean("mongodb.replaceJourneyAnswersIndexes")
 }
