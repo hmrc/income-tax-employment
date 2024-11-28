@@ -35,6 +35,7 @@ object AppDependencies {
     "uk.gov.hmrc"                   %% "crypto-json-play-30"        % "7.6.0",
     "com.beachape"                  %% "enumeratum"                 % "1.7.3",
     "com.beachape"                  %% "enumeratum-play-json"       % "1.7.3" excludeAll (jacksonAndPlayExclusions *),
+    "org.typelevel"                 %% "cats-core"                  % "2.12.0"
   )
 
   val test: Seq[ModuleID] = Seq(

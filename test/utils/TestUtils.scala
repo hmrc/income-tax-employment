@@ -155,7 +155,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       )
     )
 
-  val otherEmploymentIncome = OtherEmploymentIncome(
+  val otherEmploymentIncome: OtherEmploymentIncome = OtherEmploymentIncome(
     lumpSums = Some(Set(
       LumpSum(
         employerName = "Business",
@@ -169,6 +169,77 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
       )
     ))
   )
+
+  val hmrcOnlyEmploymentData: AllEmploymentData =
+    AllEmploymentData(
+      hmrcEmploymentData = Seq(
+        HmrcEmploymentSource(
+          employmentId = "00000000-0000-0000-1111-000000000000",
+          employerRef = Some("666/66666"),
+          employerName = "Business",
+          payrollId = Some("1234567890"),
+          startDate = Some("2020-01-01"),
+          cessationDate = Some("2020-01-01"),
+          occupationalPension = Some(false),
+          dateIgnored = Some("2020-01-01T10:00:38Z"),
+          submittedOn = None,
+          hmrcEmploymentFinancialData = Some(
+            EmploymentFinancialData(
+              employmentData = Some(EmploymentData(
+                "2020-01-04T05:01:01Z",
+                employmentSequenceNumber = Some("1002"),
+                companyDirector = Some(false),
+                closeCompany = Some(true),
+                directorshipCeasedDate = Some("2020-02-12"),
+                occPen = Some(false),
+                disguisedRemuneration = Some(false),
+                offPayrollWorker = Some(false),
+                Some(Pay(
+                  taxablePayToDate = Some(34234.15),
+                  totalTaxToDate = Some(6782.92),
+                  payFrequency = Some("CALENDAR MONTHLY"),
+                  paymentDate = Some("2020-04-23"),
+                  taxWeekNo = Some(32),
+                  taxMonthNo = Some(2)
+                )),
+                Some(Deductions(
+                  studentLoans = Some(StudentLoans(
+                    uglDeductionAmount = Some(100),
+                    pglDeductionAmount = Some(100)
+                  ))
+                ))
+              )),
+              employmentBenefits = Some(
+                EmploymentBenefits(
+                  "2020-01-04T05:01:01Z",
+                  benefits = Some(Benefits(
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100),
+                    Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
+                  ))
+                )
+              )
+            )
+          ),
+          customerEmploymentFinancialData = None
+        )
+      ),
+      hmrcExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100), Some(100)
+          ))
+        )
+      ),
+      customerEmploymentData = Nil,
+      customerExpenses = None,
+      otherEmploymentIncome = Some(
+        otherEmploymentIncome
+      )
+    )
 
   val allEmploymentData: AllEmploymentData =
     AllEmploymentData(

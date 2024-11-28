@@ -45,6 +45,8 @@ trait AppConfig {
   val encryptionKey: String
   val mongoJourneyAnswersTTL: Int
   val replaceJourneyAnswersIndexes: Boolean
+
+  val sectionCompletedQuestionEnabled: Boolean
 }
 
 
@@ -71,4 +73,6 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   lazy val encryptionKey: String = servicesConfig.getString("mongodb.encryption.key")
   lazy val mongoJourneyAnswersTTL: Int = Duration(servicesConfig.getString("mongodb.journeyAnswersTimeToLive")).toDays.toInt
   lazy val replaceJourneyAnswersIndexes: Boolean = servicesConfig.getBoolean("mongodb.replaceJourneyAnswersIndexes")
+
+  lazy val sectionCompletedQuestionEnabled: Boolean = servicesConfig.getBoolean("feature-switch.sectionCompletedQuestionEnabled")
 }

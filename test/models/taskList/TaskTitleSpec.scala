@@ -16,8 +16,8 @@
 
 package models.taskList
 
-import models.tasklist.TaskTitle
-import models.tasklist.TaskTitle.PayeEmployment
+import models.taskList.TaskTitle
+import models.taskList.TaskTitle.PayeEmployment
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import play.api.libs.json.{JsPath, JsSuccess, JsValue, Json}
