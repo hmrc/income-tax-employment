@@ -1,15 +1,15 @@
 # microservice specific routes
 
-GET         /income-tax/nino/:nino/sources/:employmentId                controllers.GetEmploymentDataController.getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)
-GET         /income-tax/nino/:nino/sources                              controllers.GetEmploymentsController.getEmployments(nino: String, taxYear: Int)
-DELETE      /income-tax/nino/:nino/sources/:employmentId/unignore       controllers.UnignoreEmploymentController.unignoreEmployment(nino: String, employmentId: String, taxYear: Int)
-DELETE      /income-tax/nino/:nino/sources/:employmentId/:toRemove      controllers.DeleteEmploymentController.deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int)
-POST        /income-tax/nino/:nino/sources                              controllers.CreateUpdateEmploymentController.createUpdateEmployment(nino: String, taxYear: Int)
-GET         /income-tax/nino/:nino/income/other/employments             controllers.OtherEmploymentIncomeController.getOtherEmploymentIncome(nino: String, taxYear: Int)
-GET         /:taxYear/tasks/:nino                                       controllers.CommonTaskListController.getCommonTaskList(taxYear: Int, nino: String)
+GET         /income-tax/nino/:nino/sources/:employmentId                       controllers.GetEmploymentDataController.getEmploymentData(nino: String, taxYear: Int, employmentId: String, view: String)
+GET         /income-tax/nino/:nino/sources                                     controllers.GetEmploymentsController.getEmployments(nino: String, taxYear: Int)
+DELETE      /income-tax/nino/:nino/sources/:employmentId/unignore              controllers.UnignoreEmploymentController.unignoreEmployment(nino: String, employmentId: String, taxYear: Int)
+DELETE      /income-tax/nino/:nino/sources/:employmentId/:toRemove             controllers.DeleteEmploymentController.deleteOrIgnoreEmployment(nino: String, employmentId: String, toRemove: String, taxYear: Int)
+POST        /income-tax/nino/:nino/sources                                     controllers.CreateUpdateEmploymentController.createUpdateEmployment(nino: String, taxYear: Int)
+GET         /income-tax/nino/:nino/income/other/employments                    controllers.OtherEmploymentIncomeController.getOtherEmploymentIncome(nino: String, taxYear: Int)
+GET         /:taxYear/tasks/:nino                                              controllers.CommonTaskListController.getCommonTaskList(taxYear: Int, nino: String)
 
 # Journey answers endpoints
-GET         /journey-answers/:journeyKey/:taxYear                       controllers.JourneyAnswersController.get(journeyKey: String, taxYear: TaxYear)
-POST        /journey-answers                                            controllers.JourneyAnswersController.set
-DELETE	    /journey-answers/:journeyKey/:taxYear                       controllers.JourneyAnswersController.clear(journeyKey: String, taxYear: TaxYear)
-POST        /journey-answers/keep-alive/:journeyKey/:taxYear            controllers.JourneyAnswersController.keepAlive(journeyKey: String, taxYear: TaxYear)
+GET         /income-tax/journey-answers/:journeyKey/:taxYear                   controllers.JourneyAnswersController.get(journeyKey: String, taxYear: TaxYear)
+POST        /income-tax/journey-answers                                        controllers.JourneyAnswersController.set
+DELETE	    /income-tax/journey-answers/:journeyKey/:taxYear                   controllers.JourneyAnswersController.clear(journeyKey: String, taxYear: TaxYear)
+POST        /income-tax/journey-answers/keep-alive/:journeyKey/:taxYear        controllers.JourneyAnswersController.keepAlive(journeyKey: String, taxYear: TaxYear)
