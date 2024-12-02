@@ -62,7 +62,8 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
     val hasHmrcData: Boolean = employments.hmrcEmploymentData.exists(_.hmrcEmploymentFinancialData.nonEmpty)
 
     (hasHmrcData, hasCustomerData, journeyAnswersOpt) match {
-      case (true, _, _) if isHmrcLatest => employmentTask(CheckNow)
+      case (true, false, _) => employmentTask(CheckNow)
+      case (true, true, _) if isHmrcLatest => employmentTask(CheckNow)
       case (_, _, Some(JourneyAnswers(_, _, _, data, _))) =>
         val status = data.value("status").validate[TaskStatus].asOpt.getOrElse {
           logger.info("[CommonTaskListService][getStatus] status stored in an invalid format, setting as 'Not yet started'.")
@@ -71,7 +72,7 @@ class CommonTaskListService @Inject()(appConfig: AppConfig,
 
         employmentTask(status)
       case (_, true, _) => employmentTask(if(appConfig.sectionCompletedQuestionEnabled) InProgress else Completed)
-      case (_, _, _) => None
+      case (_, _, _) => None //If there is no data we should return None so the tasklist does not populate anything
     }
   }
 
