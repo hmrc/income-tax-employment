@@ -16,10 +16,15 @@
 
 package services
 
+import cats.data.EitherT
 import config.AppConfig
-import models.frontend.AllEmploymentData
-import models.tasklist._
+import connectors.errors.ApiError
+import models.frontend.{AllEmploymentData, EmploymentFinancialData}
+import models.mongo.JourneyAnswers
+import models.taskList.TaskStatus.{CheckNow, Completed, InProgress, NotStarted}
+import models.taskList._
 import play.api.Logging
+import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -27,59 +32,64 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CommonTaskListService @Inject()(appConfig: AppConfig,
-                                      service: EmploymentOrchestrationService) extends Logging {
+                                      service: EmploymentOrchestrationService,
+                                      repository: JourneyAnswersRepository) extends Logging {
 
-  def get(taxYear: Int, nino: String, mtditid: String)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[TaskListSection] = {
+  private def getEmploymentTask(employments: AllEmploymentData,
+                                taxYear: Int,
+                                journeyAnswersOpt: Option[JourneyAnswers]): Option[Seq[TaskListSectionItem]] = {
 
-    service.getAllEmploymentData(nino, taxYear, mtditid).map {
-      case Left(_) => None
-      case Right(employments) => getTask(employments, taxYear)
-    }.map { optionalTask =>
-      TaskListSection(SectionTitle.EmploymentTitle, optionalTask)
-    }
-  }
-
-  private def getTask(employments: AllEmploymentData, taxYear: Int): Option[Seq[TaskListSectionItem]] = {
-
-    val employmentUrl: String = s"${appConfig.employmentFEBaseUrl}/update-and-submit-income-tax-return/employment-income/$taxYear/employment-summary"
+    val baseUrl = s"${appConfig.employmentFEBaseUrl}/update-and-submit-income-tax-return"
+    val employmentUrl: String = s"$baseUrl/employment-income/$taxYear/employment-summary"
 
     def employmentTask(taskStatus: TaskStatus): Option[Seq[TaskListSectionItem]] =
       Some(Seq(TaskListSectionItem(TaskTitle.PayeEmployment, taskStatus, Some(employmentUrl))))
 
-    val hmrcSubmittedOn: Seq[Long] = {
-        employments.hmrcEmploymentData.map { employment =>
-          val submittedOn: String = employment.hmrcEmploymentFinancialData.flatMap(_.employmentData.map(_.submittedOn))
-            .getOrElse(Instant.MIN.toString)
+    def toSubmittedOn(financialDataOpt: Option[EmploymentFinancialData]): Instant =
+      financialDataOpt.flatMap(
+        _.employmentData.map(
+          data => Instant.parse(data.submittedOn)
+        )
+      ).getOrElse(Instant.MIN)
 
-          getSubmittedOnEpoch(submittedOn)
-        }
-      }
-
-    val customerSubmittedOn: Seq[Long] =
-      employments.hmrcEmploymentData.map { employment =>
-        val submittedOn: String  = employment.customerEmploymentFinancialData.flatMap(_.employmentData.map(_.submittedOn))
-          .getOrElse(Instant.MIN.toString)
-
-        getSubmittedOnEpoch(submittedOn)
-      }
+    def isHmrcLatest = employments.hmrcEmploymentData.exists(employment => {
+      val hmrcHeldSubmittedOn = toSubmittedOn(employment.hmrcEmploymentFinancialData)
+      val customerHeldSubmittedOn = toSubmittedOn(employment.customerEmploymentFinancialData)
+      hmrcHeldSubmittedOn.isAfter(customerHeldSubmittedOn)
+    })
 
     val hasCustomerData: Boolean = employments.customerEmploymentData.exists(_.employmentData.nonEmpty)
+    val hasHmrcData: Boolean = employments.hmrcEmploymentData.exists(_.hmrcEmploymentFinancialData.nonEmpty)
 
-    val hasHmrcLatest = for {
-      hmrc <- hmrcSubmittedOn
-      customer <- customerSubmittedOn
-    } yield {
-      customer < hmrc
-    }
+    (hasHmrcData, hasCustomerData, journeyAnswersOpt) match {
+      case (true, false, _) => employmentTask(CheckNow)
+      case (true, true, _) if isHmrcLatest => employmentTask(CheckNow)
+      case (_, _, Some(JourneyAnswers(_, _, _, data, _))) =>
+        val status = data.value("status").validate[TaskStatus].asOpt.getOrElse {
+          logger.info("[CommonTaskListService][getStatus] status stored in an invalid format, setting as 'Not yet started'.")
+          NotStarted
+        }
 
-    (hasHmrcLatest.contains(true), hasCustomerData) match {
-      case (true, _) => employmentTask(TaskStatus.CheckNow)
-      case (false, true) => employmentTask(TaskStatus.Completed)
-      case (_, _) => None
+        employmentTask(status)
+      case (_, true, _) => employmentTask(if(appConfig.sectionCompletedQuestionEnabled) InProgress else Completed)
+      case (_, _, _) => None //If there is no data we should return None so the tasklist does not populate anything
     }
   }
 
-  private def getSubmittedOnEpoch(time: String): Long = {
-    Instant.parse(time).getEpochSecond
+  def get(taxYear: Int, nino: String, mtdItId: String)
+         (implicit ec: ExecutionContext, hc: HeaderCarrier): Future[TaskListSection] = {
+
+    def taskListSection(tasksOpt: Option[Seq[TaskListSectionItem]]) =
+      TaskListSection(SectionTitle.EmploymentTitle, tasksOpt)
+
+    val result: EitherT[Future, ApiError, Option[Seq[TaskListSectionItem]]] = for {
+      dataResult <- EitherT(service.getAllEmploymentData(nino, taxYear, mtdItId))
+      jaResult <- EitherT.right(repository.get(mtdItId, taxYear, "employment-summary"))
+    } yield getEmploymentTask(dataResult, taxYear, jaResult)
+
+    result
+      .leftMap(_ => Option.empty[Seq[TaskListSectionItem]])
+      .merge
+      .map(taskListSection)
   }
 }

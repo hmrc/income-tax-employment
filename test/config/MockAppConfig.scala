@@ -45,4 +45,6 @@ class MockAppConfig extends AppConfig {
   override val mongoJourneyAnswersTTL: Int = 1000
 
   override val replaceJourneyAnswersIndexes: Boolean = true
+
+  override lazy val sectionCompletedQuestionEnabled: Boolean = false
 }

@@ -16,131 +16,191 @@
 
 package services
 
+import config.{AppConfig, MockAppConfig}
 import connectors.errors.{ApiError, SingleErrorBody}
-import models.frontend.{AllEmploymentData, EmploymentFinancialData, HmrcEmploymentSource}
-import models.tasklist._
-import org.scalamock.handlers.CallHandler5
-import play.api.http.Status.NOT_FOUND
-import support.builders.api.EmploymentDetailsBuilder
+import fixtures.CommonTaskListServiceFixture
+import models.frontend.AllEmploymentData
+import models.mongo.JourneyAnswers
+import models.taskList.TaskStatus.{CheckNow, Completed, InProgress, NotStarted}
+import models.taskList._
+import play.api.libs.json.{JsObject, JsString, Json}
+import support.UnitTest
+import support.mocks.{MockEmploymentOrchestrationService, MockJourneyAnswersRepository}
 import support.providers.AppConfigStubProvider
 import support.utils.TaxYearUtils
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
+import scala.concurrent.ExecutionContext
 
-class CommonTaskListServiceSpec extends TestUtils with AppConfigStubProvider {
+class CommonTaskListServiceSpec extends UnitTest
+  with AppConfigStubProvider
+  with MockJourneyAnswersRepository
+  with MockEmploymentOrchestrationService {
 
-  implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  trait Test extends CommonTaskListServiceFixture {
+    implicit val ec: ExecutionContext = ExecutionContext.global
+    implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val employmentService: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
+    val mockAppConfig: AppConfig = new MockAppConfig
 
-  private val service: CommonTaskListService = new CommonTaskListService(mockAppConfig, employmentService)
-
-  private val nino: String = "12345678"
-  private val mtditid: String = "1234567890"
-  private val taxYear: Int = TaxYearUtils.taxYear
-
-  val cyaPageUrl: String = s"http://localhost:9317/update-and-submit-income-tax-return/employment-income/$taxYear/employment-summary"
-
-  val fullResult: Right[Nothing, AllEmploymentData] = Right(allEmploymentData)
-
-  val hmrcLatestResult: Right[Nothing, AllEmploymentData] = Right(
-    allEmploymentData.copy(Seq(allEmploymentData.hmrcEmploymentData.head.copy(
-      hmrcEmploymentFinancialData =
-        Some(EmploymentFinancialData(Some(models.frontend.EmploymentData(models.api.EmploymentData("2023-01-04T05:01:01Z", None, None, None, EmploymentDetailsBuilder.anEmploymentDetails))), None))
-    )))
-  )
-
-  val customerLatestResult: Right[Nothing, AllEmploymentData] = Right(
-    allEmploymentData.copy(Seq(allEmploymentData.hmrcEmploymentData.head.copy(
-      customerEmploymentFinancialData =
-        Some(EmploymentFinancialData(Some(models.frontend.EmploymentData(models.api.EmploymentData("2023-01-04T05:01:01Z", None, None, None, EmploymentDetailsBuilder.anEmploymentDetails))), None))
-    )))
-  )
-
-  val customerAddedOnlyResult: Right[Nothing, AllEmploymentData] =
-    Right(allEmploymentData.copy(
-      Seq.empty,
-      None,
-      Seq(customerEmploymentModel.toEmploymentSource(Some(models.api.EmploymentData("2023-01-04T05:01:01Z", None, None, None, EmploymentDetailsBuilder.anEmploymentDetails)))),
-      None,
-      None
-    ))
-
-  val checkNowTaskSection: TaskListSection =
-    TaskListSection(
-      SectionTitle.EmploymentTitle,
-      Some(List(TaskListSectionItem(TaskTitle.PayeEmployment, TaskStatus.CheckNow, Some(cyaPageUrl))))
+    val service: CommonTaskListService = new CommonTaskListService(
+      appConfig = mockAppConfig,
+      service = mockEmploymentOrchestrationService,
+      repository = mockJourneyAnswersRepo
     )
 
-  val completedTaskSection: TaskListSection =
-    TaskListSection(
-      SectionTitle.EmploymentTitle,
-      Some(List(TaskListSectionItem(TaskTitle.PayeEmployment, TaskStatus.Completed, Some(cyaPageUrl))))
+    val nino: String = "12345678"
+    val mtditid: String = "1234567890"
+    val taxYear: Int = TaxYearUtils.taxYear
+
+    val cyaPageUrl: String = s"http://localhost:9317/update-and-submit-income-tax-return/" +
+      s"employment-income/$taxYear/employment-summary"
+
+    def toTaskList(status: TaskStatus): TaskListSection = TaskListSection(
+      sectionTitle = SectionTitle.EmploymentTitle,
+      taskItems = Some(Seq(
+        TaskListSectionItem(TaskTitle.PayeEmployment, status, Some(cyaPageUrl))
+      ))
     )
 
-  val emptyTaskSection: TaskListSection = TaskListSection(SectionTitle.EmploymentTitle, None)
+    val emptyTaskListResult: TaskListSection = TaskListSection(SectionTitle.EmploymentTitle, None)
 
-  def mockGetAllEmploymentData(response: Either[ApiError, AllEmploymentData]): CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext, Future[Either[ApiError, AllEmploymentData]]] =
-    (employmentService.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *, *)
-      .returning(Future.successful(response))
+    def journeyAnswers(status: String): JourneyAnswers = JourneyAnswers(
+      mtdItId = mtditid,
+      taxYear = taxYear,
+      journey = "employment-summary",
+      data = Json.obj("status" -> JsString(status)),
+      lastUpdated = Instant.MIN
+    )
+  }
 
-  "CommonTaskListService.get" should {
+  "CommonTaskListService.get" when {
+    "errors occur" should {
+      "return an empty task list when call to retrieve employment summary returns an API error" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Left(ApiError(404, SingleErrorBody("DummyCode", "DummyReason"))))
 
-    "return task as check now when hmrc data is latest" in {
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
 
-      mockGetAllEmploymentData(hmrcLatestResult)
+        result shouldBe emptyTaskListResult
+      }
 
-      val underTest: Future[TaskListSection] = service.get(taxYear, nino, mtditid)
+      "throw an exception when call to retrieve employment summary fails" in new Test {
+        mockGetAllEmploymentDataException(nino, taxYear, mtditid, new RuntimeException("Dummy error"))
 
-      await(underTest) mustBe checkNowTaskSection
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
+
+        assertThrows[RuntimeException](result)
+      }
+
+      "throw an exception when call to retrieve Journey Answers fails" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(AllEmploymentData(Nil, None, Nil, None, None)))
+        mockGetJourneyAnswersException(mtditid, taxYear, "employment-summary", new RuntimeException("Dummy"))
+
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
+
+        assertThrows[RuntimeException](result)
+      }
     }
 
-    "return an empty task list section when API response is NOT_FOUND" in {
+    "Employments response contains only HMRC data" should {
+      "return expected task list with 'CheckNow' status" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(hmrcOnlyEmploymentData))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", None)
 
-      val response: Left[ApiError, Nothing] = Left(ApiError(NOT_FOUND, SingleErrorBody("NOT_FOUND", "No data was found")))
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
 
-      mockGetAllEmploymentData(response)
-
-      val underTest = service.get(taxYear, nino, mtditid)
-
-      await(underTest) mustBe emptyTaskSection
+        result shouldBe toTaskList(CheckNow)
+      }
     }
 
-    "return an empty task list section with empty data" in {
+    "HMRC data in employments response is newer than customer data" should {
+      "return expected task list with 'CheckNow' status" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(hmrcLatestResult))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", None)
 
-      val emptyFinancialData: Seq[HmrcEmploymentSource] = Seq(fullResult.value.hmrcEmploymentData.head.copy(
-        hmrcEmploymentFinancialData = None,
-        customerEmploymentFinancialData = None))
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
 
-      val response: Right[Nothing, AllEmploymentData] = Right(AllEmploymentData(emptyFinancialData, None, Seq.empty, None, None))
-
-      mockGetAllEmploymentData(response)
-
-      val underTest = service.get(taxYear, nino, mtditid)
-
-      await(underTest) mustBe emptyTaskSection
+        result shouldBe toTaskList(CheckNow)
+      }
     }
 
-    "return tasks as completed when customer data is more recent than hmrc data" in {
+    "HMRC data is omitted, or is not latest and Journey Answers are defined" should {
+      "return expected task list with status from Journey Answers data if it can be parsed" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(customerAddedOnlyResult))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", Some(journeyAnswers("completed")))
 
-      mockGetAllEmploymentData(customerLatestResult)
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
 
-      val underTest: Future[TaskListSection] = service.get(taxYear, nino, mtditid)
+        result shouldBe toTaskList(Completed)
+      }
 
-      await(underTest) mustBe completedTaskSection
+      "throw an exception if an error occurs while parsing Journey Answers status" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(customerLatestResult))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", Some(journeyAnswers("").copy(data = JsObject.empty)))
+
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
+
+        assertThrows[RuntimeException](result)
+      }
+
+      "return expected task list with 'NotStarted' status if Journey Answers status value is unexpected" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(customerAddedOnlyResult))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", Some(journeyAnswers("dummy")))
+
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
+
+        result shouldBe toTaskList(NotStarted)
+      }
     }
 
-    "return tasks as completed when only customer added data exists" in {
+    "HMRC data is omitted, or not latest, Journey Answers are not defined, and customer data exists" should {
+      "return expected task list with 'InProgress' status if section completed feature switch is enabled" in new Test {
+        override val service: CommonTaskListService = new CommonTaskListService(
+          appConfig = new MockAppConfig {
+            override lazy val sectionCompletedQuestionEnabled: Boolean = true
+            override val employmentFEBaseUrl: String = "http://localhost:9317"
+          },
+          service = mockEmploymentOrchestrationService,
+          repository = mockJourneyAnswersRepo
+        )
 
-      mockGetAllEmploymentData(customerAddedOnlyResult)
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(customerAddedOnlyResult))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", None)
 
-      val underTest: Future[TaskListSection] = service.get(taxYear, nino, mtditid)
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
 
-      await(underTest) mustBe completedTaskSection
+        result shouldBe toTaskList(InProgress)
+      }
+
+      "return expected task list with 'Completed' status if section completed feature switch is disabled" in new Test {
+        override val service: CommonTaskListService = new CommonTaskListService(
+          appConfig = new MockAppConfig {
+            override lazy val sectionCompletedQuestionEnabled: Boolean = false
+            override val employmentFEBaseUrl: String = "http://localhost:9317"
+          },
+          service = mockEmploymentOrchestrationService,
+          repository = mockJourneyAnswersRepo
+        )
+
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(customerLatestResult))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", None)
+
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
+
+        result shouldBe toTaskList(Completed)
+      }
+    }
+
+    "no data exists" should {
+      "return with an empty task list" in new Test {
+        mockGetAllEmploymentData(nino, taxYear, mtditid, Right(AllEmploymentData(Nil, None, Nil, None, None)))
+        mockGetJourneyAnswers(mtditid, taxYear, "employment-summary", None)
+
+        def result: TaskListSection = await(service.get(taxYear, nino, mtditid))
+
+        result shouldBe emptyTaskListResult
+      }
     }
   }
 }

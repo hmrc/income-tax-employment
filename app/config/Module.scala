@@ -18,6 +18,7 @@ package config
 
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
+import repositories.{JourneyAnswersRepository, JourneyAnswersRepositoryImpl}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import utils.AesGcmCryptoProvider
 
@@ -28,7 +29,8 @@ class Module extends play.api.inject.Module  {
     Seq(
       bind[AppConfig].to[BackendAppConfig].eagerly(),
       bind[Clock].toInstance(Clock.systemUTC()),
-      bind[Encrypter with Decrypter].toProvider[AesGcmCryptoProvider]
+      bind[Encrypter with Decrypter].toProvider[AesGcmCryptoProvider],
+      bind[JourneyAnswersRepository].to[JourneyAnswersRepositoryImpl].eagerly()
     )
   }
 }
