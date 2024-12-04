@@ -47,6 +47,7 @@ trait AppConfig {
   val replaceJourneyAnswersIndexes: Boolean
 
   val sectionCompletedQuestionEnabled: Boolean
+  val emaSupportingAgentsEnabled: Boolean
 }
 
 
@@ -75,4 +76,5 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   lazy val replaceJourneyAnswersIndexes: Boolean = servicesConfig.getBoolean("mongodb.replaceJourneyAnswersIndexes")
 
   lazy val sectionCompletedQuestionEnabled: Boolean = servicesConfig.getBoolean("feature-switch.sectionCompletedQuestionEnabled")
+  lazy val emaSupportingAgentsEnabled: Boolean = servicesConfig.getBoolean("feature-switch.ema-supporting-agents-enabled")
 }
