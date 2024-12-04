@@ -47,4 +47,6 @@ class MockAppConfig extends AppConfig {
   override val replaceJourneyAnswersIndexes: Boolean = true
 
   override lazy val sectionCompletedQuestionEnabled: Boolean = false
+
+  override val emaSupportingAgentsEnabled: Boolean = false
 }
