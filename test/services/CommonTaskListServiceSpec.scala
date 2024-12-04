@@ -28,10 +28,8 @@ import support.UnitTest
 import support.mocks.{MockEmploymentOrchestrationService, MockJourneyAnswersRepository}
 import support.providers.AppConfigStubProvider
 import support.utils.TaxYearUtils
-import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext
 
 class CommonTaskListServiceSpec extends UnitTest
   with AppConfigStubProvider
@@ -39,9 +37,6 @@ class CommonTaskListServiceSpec extends UnitTest
   with MockEmploymentOrchestrationService {
 
   trait Test extends CommonTaskListServiceFixture {
-    implicit val ec: ExecutionContext = ExecutionContext.global
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
     val mockAppConfig: AppConfig = new MockAppConfig
 
     val service: CommonTaskListService = new CommonTaskListService(

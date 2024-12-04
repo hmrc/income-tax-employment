@@ -47,7 +47,7 @@ trait AppConfig {
   val replaceJourneyAnswersIndexes: Boolean
 
   val sectionCompletedQuestionEnabled: Boolean
-  val emaSupportingAgentsEnabled: Boolean
+  def emaSupportingAgentsEnabled: Boolean
 }
 
 
