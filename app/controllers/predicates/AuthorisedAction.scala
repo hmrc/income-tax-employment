@@ -18,11 +18,9 @@ package controllers.predicates
 
 import common.{DelegatedAuthRules, EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
-
-import javax.inject.Inject
 import models.User
 import play.api.Logger
-import play.api.mvc.Results.Unauthorized
+import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -31,6 +29,7 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
@@ -126,10 +125,16 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
           case _: AuthorisationException =>
             logger.info(s"$agentAuthLogString - Agent does not have delegated primary or secondary authority for Client.")
             Unauthorized
+          case e =>
+            logger.info(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+            InternalServerError
         }
     case _: AuthorisationException =>
       logger.info(s"$agentAuthLogString - Agent does not have delegated authority for Client.")
       unauthorized
+    case e =>
+      logger.info(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+      Future(InternalServerError)
   }
 
   private def handleForValidAgent[A](block: User[A] => Future[Result],
