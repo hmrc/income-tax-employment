@@ -59,7 +59,7 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
             logger.info(s"[AuthorisedAction][async] - No active session.")
             Unauthorized
           case _: AuthorisationException =>
-            logger.info(s"[AuthorisedAction][async] - User failed to authenticate")
+            logger.warn(s"[AuthorisedAction][async] - User failed to authenticate")
             Unauthorized
         }
     )
@@ -81,19 +81,19 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
                 if enrolmentIdentifiers.exists(identifier => identifier.key == EnrolmentIdentifiers.individualId && identifier.value == requestMtdItId) =>
                 block(User(requestMtdItId, None))
             } getOrElse {
-              logger.info(s"[AuthorisedAction][individualAuthentication] Non-agent with an invalid MTDITID. " +
+              logger.warn(s"[AuthorisedAction][individualAuthentication] Non-agent with an invalid MTDITID. " +
                 s"MTDITID in auth matches MTDITID in request: ${authMTDITID == requestMtdItId}")
               unauthorized
             }
           case (_, None) =>
-            logger.info(s"[AuthorisedAction][individualAuthentication] - User has no nino.")
+            logger.warn(s"[AuthorisedAction][individualAuthentication] - User has no nino.")
             unauthorized
           case (None, _) =>
-            logger.info(s"[AuthorisedAction][individualAuthentication] - User has no MTD IT enrolment.")
+            logger.warn(s"[AuthorisedAction][individualAuthentication] - User has no MTD IT enrolment.")
             unauthorized
         }
       case _ =>
-        logger.info("[AuthorisedAction][individualAuthentication] User has confidence level below 250.")
+        logger.warn("[AuthorisedAction][individualAuthentication] User has confidence level below 250.")
         unauthorized
     }
   }
@@ -123,17 +123,17 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
         )
         .recover {
           case _: AuthorisationException =>
-            logger.info(s"$agentAuthLogString - Agent does not have delegated primary or secondary authority for Client.")
+            logger.warn(s"$agentAuthLogString - Agent does not have delegated primary or secondary authority for Client.")
             Unauthorized
           case e =>
-            logger.info(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+            logger.error(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
             InternalServerError
         }
     case _: AuthorisationException =>
-      logger.info(s"$agentAuthLogString - Agent does not have delegated authority for Client.")
+      logger.warn(s"$agentAuthLogString - Agent does not have delegated authority for Client.")
       unauthorized
     case e =>
-      logger.info(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+      logger.error(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
       Future(InternalServerError)
   }
 
