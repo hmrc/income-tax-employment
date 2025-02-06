@@ -25,8 +25,8 @@ object PrePopulationResponse {
   implicit val writes: Writes[PrePopulationResponse] = Json.writes[PrePopulationResponse]
 
   def fromData(data: AllEmploymentData): PrePopulationResponse = {
-    val employmentCustomer: Boolean = data.customerEmploymentData.nonEmpty
-    val employmentHmrc: Boolean = data.hmrcEmploymentData.nonEmpty
+    val employmentCustomer: Boolean = data.customerEmploymentData.exists(_.dateIgnored.isEmpty)
+    val employmentHmrc: Boolean = data.hmrcEmploymentData.exists(x => x.dateIgnored.isEmpty)
 
     PrePopulationResponse(
       hasEmployment = employmentCustomer || employmentHmrc

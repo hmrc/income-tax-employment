@@ -45,7 +45,7 @@ class PrePopulationService @Inject()(service: EmploymentOrchestrationService) ex
     } yield toPrePopulationResponse(allEmploymentData)
 
     def toPrePopulationResponse(data: AllEmploymentData): PrePopulationResponse = data match {
-      case AllEmploymentData(hmrcEmployments, None, customerEmployments, None, _)if hmrcEmployments.isEmpty && customerEmployments.isEmpty =>
+      case AllEmploymentData(hmrcEmployments, None, customerEmployments, None, _) if hmrcEmployments.isEmpty && customerEmployments.isEmpty =>
         getInfoLogger(s"No Employment data found in success response from $downstreamSource. Returning 'no pre-pop' response")
         PrePopulationResponse.noPrePop
       case AllEmploymentData(_, _, _, _, _) =>
