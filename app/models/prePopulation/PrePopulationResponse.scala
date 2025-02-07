@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package connectors.errors
+package models.prePopulation
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{Json, Writes}
 
-case class ApiError(status: Int, body: ApiErrorBody) {
+case class PrePopulationResponse(hasEmployment: Boolean)
 
-  def toJson: JsValue = {
-    body match {
-      case error: SingleErrorBody => Json.toJson(error)
-      case errors: MultiErrorsBody => Json.toJson(errors)
-    }
-  }
+object PrePopulationResponse {
+  implicit val writes: Writes[PrePopulationResponse] = Json.writes[PrePopulationResponse]
 
-  def toLogString: String = s"with status: $status, and body: $body"
+  val noPrePop: PrePopulationResponse = PrePopulationResponse(
+    hasEmployment = false
+  )
+  val hasPrePop: PrePopulationResponse = PrePopulationResponse(
+    hasEmployment = true
+  )
+
 }

@@ -139,7 +139,7 @@ class EmploymentOrchestrationService @Inject()(getEmploymentListConnector: GetEm
     getEmploymentExpensesConnector.getEmploymentExpenses(nino, taxYear, view)(hc.withExtraHeaders("mtditid" -> mtditid))
   }
 
-  private def getEmploymentList(nino: String, taxYear: Int)
+  def getEmploymentList(nino: String, taxYear: Int)
                                (implicit hc: HeaderCarrier): Future[GetEmploymentListResponse] = {
     getEmploymentListConnector.getEmploymentList(nino, taxYear, None)
   }

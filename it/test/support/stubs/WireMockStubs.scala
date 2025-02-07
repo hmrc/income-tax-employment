@@ -41,6 +41,18 @@ trait WireMockStubs {
     getStubMapping(httpResponse, requestHeaders, mappingBuilder)
   }
 
+  def auditStubs(): Unit = {
+    val auditResponseCode = 204
+    stubPostWithoutResponseAndRequestBody("/write/audit", auditResponseCode)
+  }
+
+  def stubPostWithoutResponseAndRequestBody(url: String, status: Int): StubMapping =
+    stubFor(post(urlEqualTo(url))
+      .willReturn(
+        aResponse()
+          .withStatus(status)
+          .withHeader("Content-Type", "application/json; charset=utf-8")))
+
   def stubPutHttpClientCall(url: String,
                             httpRequestBodyJson: String,
                             httpResponse: HttpResponse,
