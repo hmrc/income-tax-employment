@@ -16,7 +16,7 @@
 
 package controllers
 
-import play.api.http.Status.{IM_A_TEAPOT, INTERNAL_SERVER_ERROR, NOT_FOUND}
+import play.api.http.Status.{IM_A_TEAPOT, INTERNAL_SERVER_ERROR}
 import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.Helpers.AUTHORIZATION
 import support.ControllerIntegrationTest
@@ -34,12 +34,11 @@ class PrePopulationControllerISpec extends ControllerIntegrationTest
     val mtdItId: String = "1234567890"
     val ifTaxYearParam = s"${(taxYear - 1).toString.takeRight(2)}-${taxYear.toString.takeRight(2)}"
 
-    def ifUrl(view: String): String =
-      s"/income-tax/income/employments/$nino/${ifTaxYearParam}/$mtdItId?view=$view"
+    def ifUrl(): String = s"/income-tax/income/employments/$nino/${ifTaxYearParam}"
 
     def request(): WSRequest = {
       authorised()
-      buildRequest(s"/pre-population/$nino/$taxYear")
+      buildRequest(s"/income-tax-employment/income-tax/pre-population/$nino/$taxYear")
         .withHttpHeaders(
           (AUTHORIZATION, "Bearer 123"),
           ("mtditid", mtdItId)
@@ -48,12 +47,11 @@ class PrePopulationControllerISpec extends ControllerIntegrationTest
   }
 
   "/pre-population/:nino/:taxYear" when {
-
     "IF returns a non-404 error when retrieving a user's Data employment" should {
       "return an INTERNAL SERVER ERROR response" in new Test {
 
         stubGetHttpClientCall(
-          ifUrl(ALL),
+          ifUrl(),
           HttpResponse(IM_A_TEAPOT, "teapot time")
         )
 
