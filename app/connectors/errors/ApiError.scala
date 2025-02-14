@@ -27,5 +27,5 @@ case class ApiError(status: Int, body: ApiErrorBody) {
     }
   }
 
-  def toLogString: String = s"with status: $status, and body: $body"
+  def toLogString: String = s"with status: $status"
 }
