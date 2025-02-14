@@ -19,7 +19,6 @@ package services
 import common.EnrolmentKeys.nino
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.EmploymentList
-import models.frontend.AllEmploymentData
 import models.prePopulation.PrePopulationResponse
 import play.api.http.Status.IM_A_TEAPOT
 import support.UnitTest
@@ -153,6 +152,17 @@ class PrePopulationServiceSpec extends UnitTest
         result shouldBe a[Right[_, _]]
         result.getOrElse(dummyData) shouldBe PrePopulationResponse(hasEmployment = true)
       }
+
+    "call to retrieve Employment data succeeds, but the response contains no relevant data when year before 2024" should {
+      "still return a 'no pre-pop' response" in new Test {
+        override val taxYear: Int = 2023
+        val orchestrationServiceResult:Either[ApiError, Option[EmploymentList]] =
+          Right(Option(employments(None,None)))
+        val result: Either[ApiError, PrePopulationResponse] = getResult
+        result shouldBe a[Right[_, _]]
+        result.getOrElse(dummyData) shouldBe PrePopulationResponse.noPrePop
+      }
+    }
 
   }
 }
