@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package connectors.errors
+package models.prePopulation
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
+import support.UnitTest
 
-case class ApiError(status: Int, body: ApiErrorBody) {
+class PrePopulationResponseSpec extends UnitTest {
 
-  def toJson: JsValue = {
-    body match {
-      case error: SingleErrorBody => Json.toJson(error)
-      case errors: MultiErrorsBody => Json.toJson(errors)
+  "PrePopulationResponse" when {
+    "written to JSON" should {
+      "return the expected JsValue" in {
+
+        Json.toJson(PrePopulationResponse.hasPrePop) shouldBe Json.parse(
+        """
+           |{
+           |  "hasEmployment": true
+           |}
+        """.stripMargin
+        )
+      }
     }
   }
-
-  def toLogString: String = s"with status: $status"
 }

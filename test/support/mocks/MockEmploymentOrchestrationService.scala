@@ -17,8 +17,9 @@
 package support.mocks
 
 import connectors.errors.ApiError
+import models.api.EmploymentList
 import models.frontend.AllEmploymentData
-import org.scalamock.handlers.CallHandler5
+import org.scalamock.handlers.{CallHandler3, CallHandler5}
 import org.scalamock.scalatest.MockFactory
 import services.EmploymentOrchestrationService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,6 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait MockEmploymentOrchestrationService extends MockFactory {
   protected val mockEmploymentOrchestrationService: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
   private type MockType = CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext, Future[Either[ApiError, AllEmploymentData]]]
+  private type EmploymentListResultMockType = CallHandler3[String, Int, HeaderCarrier, Future[Either[ApiError, Option[EmploymentList]]]]
 
   def mockGetAllEmploymentData(nino: String,
                                taxYear: Int,
@@ -43,6 +45,22 @@ trait MockEmploymentOrchestrationService extends MockFactory {
                                         result: Throwable): MockType =
     (mockEmploymentOrchestrationService.getAllEmploymentData(_: String, _: Int, _: String)(_: HeaderCarrier, _: ExecutionContext))
       .expects(nino, taxYear, mtdItId, *, *)
+      .returning(Future.failed(result))
+
+
+  def mockGetEmploymentList(nino: String,
+                               taxYear: Int,
+                               result: Either[ApiError, Option[EmploymentList]]): EmploymentListResultMockType =
+    (mockEmploymentOrchestrationService.getEmploymentList(_: String, _: Int)(_: HeaderCarrier))
+      .expects(nino, taxYear, *)
+      .returning(Future.successful(result))
+
+  def mockGetEmploymentListException(nino: String,
+                                        taxYear: Int,
+                                        mtdItId: String,
+                                        result: Throwable): EmploymentListResultMockType =
+    (mockEmploymentOrchestrationService.getEmploymentList(_: String, _: Int)(_: HeaderCarrier))
+      .expects(nino, taxYear, *)
       .returning(Future.failed(result))
 
 }
