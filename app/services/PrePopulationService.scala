@@ -43,8 +43,8 @@ class PrePopulationService @Inject()(service: EmploymentOrchestrationService) ex
     val result  = EitherT(service.getEmploymentList(nino,taxYear)).map{
       case None =>
         (Seq.empty,Seq.empty)
-      case Some(l) =>
-        (l.employments.getOrElse(Seq.empty), l.customerDeclaredEmployments.getOrElse(Seq.empty))
+      case Some(employmentList) =>
+        (employmentList.employments.getOrElse(Seq.empty), employmentList.customerDeclaredEmployments.getOrElse(Seq.empty))
     }.map{
       case (_, _ +: _ )  =>  //None Empty Customer data
         getInfoLogger(s"Valid Employment data found within success response from $downstreamSource. Determining correct pre-pop response")
@@ -52,7 +52,7 @@ class PrePopulationService @Inject()(service: EmploymentOrchestrationService) ex
       case (hmrcData, _) if hmrcData.exists(_.dateIgnored.isEmpty)=>
         getInfoLogger(s"Valid Employment data found within success response from $downstreamSource. Determining correct pre-pop response")
         PrePopulationResponse.hasPrePop
-      case _ =>
+      case _ => // either Hmrc data does not exist or if it exists then all had been ignored (this is captured by the match pattern above)
         getInfoLogger(s"No Employment data found in success response from $downstreamSource. Returning 'no pre-pop' response")
         PrePopulationResponse.noPrePop
     }
