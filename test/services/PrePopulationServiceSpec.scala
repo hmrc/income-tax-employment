@@ -25,6 +25,7 @@ import support.UnitTest
 import support.mocks.MockEmploymentOrchestrationService
 import support.utils.EmploymentListUtils
 import support.utils.EmploymentListUtils._
+import org.scalatest.EitherValues._
 
 class PrePopulationServiceSpec extends UnitTest
   with MockEmploymentOrchestrationService {
@@ -164,5 +165,15 @@ class PrePopulationServiceSpec extends UnitTest
       }
     }
 
+    "call to retrieve Employment data succeeds, but the response returns empty sequence for " should {
+      "return a 'no pre-pop' response" in new Test {
+
+        val orchestrationServiceResult: Either[ApiError, Option[EmploymentList]] =
+          Right(Option(employments(Some(Seq.empty), Some(Seq.empty))))
+        val result: Either[ApiError, PrePopulationResponse] = getResult
+        result shouldBe a[Right[_, _]]
+        result.value shouldBe PrePopulationResponse.noPrePop
+      }
+    }
   }
 }
