@@ -54,7 +54,7 @@ trait UnitTest extends AnyWordSpec
   implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
   implicit val mockAuthService: AuthService = new AuthService(mockAuthConnector)
   val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mockControllerComponents.parsers.default)
-  val authorisedAction = new AuthorisedAction()(mockAuthConnector, mockAppConfig, defaultActionBuilder, mockControllerComponents)
+  val authorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
 
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: SystemMaterializer = SystemMaterializer(actorSystem)
