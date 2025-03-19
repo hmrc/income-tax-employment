@@ -16,8 +16,8 @@
 
 package services
 
-import connectors.{OtherEmploymentIncomeConnector, OtherEmploymentIncomeIFConnector}
 import connectors.errors.{ApiError, SingleErrorBody}
+import connectors.{OtherEmploymentIncomeConnector, OtherEmploymentIncomeIFConnector}
 import play.api.http.Status.SERVICE_UNAVAILABLE
 import support.builders.api.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import uk.gov.hmrc.http.HeaderCarrier

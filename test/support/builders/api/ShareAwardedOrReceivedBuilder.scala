@@ -16,8 +16,8 @@
 
 package support.builders.api
 
-import models.api.SharesAwardedOrReceived
 import models.api.ShareAwardedShareSchemePlanType.SIP
+import models.api.SharesAwardedOrReceived
 
 import java.time.LocalDate
 

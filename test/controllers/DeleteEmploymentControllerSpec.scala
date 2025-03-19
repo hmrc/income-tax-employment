@@ -16,7 +16,7 @@
 
 package controllers
 
-import connectors.errors.{SingleErrorBody, ApiError}
+import connectors.errors.{ApiError, SingleErrorBody}
 import org.scalamock.handlers.CallHandler6
 import play.api.http.Status._
 import play.api.libs.json.Json

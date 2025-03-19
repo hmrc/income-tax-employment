@@ -16,8 +16,8 @@
 
 package controllers
 
-import controllers.predicates.AuthorisedAction
 import connectors.errors.SingleErrorBody.invalidView
+import controllers.predicates.AuthorisedAction
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}

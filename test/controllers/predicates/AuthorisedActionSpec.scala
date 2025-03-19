@@ -19,7 +19,7 @@ package controllers.predicates
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import models.User
-import org.scalamock.handlers.{CallHandler0, CallHandler4}
+import org.scalamock.handlers.CallHandler4
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.{HeaderNames, Status => TestStatus}
 import play.api.mvc.Results._

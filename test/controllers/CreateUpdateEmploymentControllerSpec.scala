@@ -28,6 +28,7 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
 import services.EmploymentService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
+
 import scala.concurrent.Future
 
 class CreateUpdateEmploymentControllerSpec extends TestUtils {

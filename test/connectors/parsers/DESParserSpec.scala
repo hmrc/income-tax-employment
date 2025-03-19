@@ -17,7 +17,6 @@
 package connectors.parsers
 
 import connectors.errors.{ApiError, MultiErrorsBody, SingleErrorBody}
-import connectors.parsers.DESParser
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse

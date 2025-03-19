@@ -24,12 +24,12 @@ import connectors.parsers.UnignoreEmploymentHttpParser.UnignoreEmploymentRespons
 import models.api.{EmploymentFinancialData, PayModel}
 import models.shared.{AddEmploymentResponseModel, Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
-import java.time.LocalDateTime
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
+import java.time.LocalDateTime
 import scala.concurrent.Future
 
 class EmploymentServiceSpec extends TestUtils {
