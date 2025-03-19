@@ -18,6 +18,7 @@ package utils
 
 import connectors.errors.ApiError
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 
 case class FutureEitherOps[E <: ApiError, R](value: Future[Either[E, R]])(implicit ec: ExecutionContext, hc: HeaderCarrier){

@@ -23,7 +23,6 @@ import support.ConnectorIntegrationTest
 import support.builders.api.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import support.providers.TaxYearProvider
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
-import utils.DESTaxYearHelper.desTaxYearConverter
 import utils.TaxYearUtils.toTaxYearParam
 
 import scala.concurrent.ExecutionContext.Implicits.global

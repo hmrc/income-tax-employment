@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{EmploymentFinancialData, Employment, PayModel}
+import models.api.{Employment, EmploymentFinancialData, PayModel}
 import models.shared.{Benefits, CreateUpdateEmployment, Deductions}
 import play.api.libs.json.{Json, OFormat}
 

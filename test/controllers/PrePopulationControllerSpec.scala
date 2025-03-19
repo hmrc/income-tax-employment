@@ -17,17 +17,17 @@
 package controllers
 
 import cats.data.EitherT
+import common.EnrolmentKeys.nino
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.prePopulation.PrePopulationResponse
 import org.scalamock.handlers.CallHandler5
 import play.api.http.{HeaderNames, Status => TestStatus}
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.{DefaultAwaitTimeout, ResultExtractors}
 import services.PrePopulationService
 import support.UnitTest
 import uk.gov.hmrc.http.HeaderCarrier
-import common.EnrolmentKeys.nino
-import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 

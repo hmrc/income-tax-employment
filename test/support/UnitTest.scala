@@ -32,7 +32,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -54,7 +54,7 @@ trait UnitTest extends AnyWordSpec
   implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
   implicit val mockAuthService: AuthService = new AuthService(mockAuthConnector)
   val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mockControllerComponents.parsers.default)
-  val authorisedAction = new AuthorisedAction()(mockAuthConnector, mockAppConfig, defaultActionBuilder, mockControllerComponents)
+  val authorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
 
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: SystemMaterializer = SystemMaterializer(actorSystem)

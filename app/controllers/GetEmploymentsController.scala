@@ -17,13 +17,13 @@
 package controllers
 
 import controllers.predicates.AuthorisedAction
-import javax.inject.Inject
 import models.frontend.AllEmploymentData
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.EmploymentOrchestrationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class GetEmploymentsController @Inject()(service: EmploymentOrchestrationService,

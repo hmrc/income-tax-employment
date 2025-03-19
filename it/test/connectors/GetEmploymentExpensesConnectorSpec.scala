@@ -19,7 +19,7 @@ package connectors
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.BackendAppConfig
 import connectors.GetEmploymentExpensesConnectorSpec.expectedResponseBody
-import connectors.errors.{SingleErrorBody, ApiError}
+import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.EmploymentExpenses
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration

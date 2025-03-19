@@ -16,8 +16,8 @@
 
 package services
 
-import connectors.{OtherEmploymentIncomeConnector, OtherEmploymentIncomeIFConnector}
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
+import connectors.{OtherEmploymentIncomeConnector, OtherEmploymentIncomeIFConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TaxYearUtils.specificTaxYear
 

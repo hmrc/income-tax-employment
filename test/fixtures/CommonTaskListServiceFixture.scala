@@ -18,8 +18,8 @@ package fixtures
 
 import models.api
 import models.api.{LumpSum, OtherEmploymentIncome, TaxableLumpSumsAndCertainIncome}
-import models.frontend.{AllEmploymentData, EmploymentBenefits, EmploymentData, EmploymentExpenses, EmploymentFinancialData, EmploymentSource, HmrcEmploymentSource}
-import models.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
+import models.frontend._
+import models.shared._
 import support.builders.api.EmploymentDetailsBuilder
 
 trait CommonTaskListServiceFixture {

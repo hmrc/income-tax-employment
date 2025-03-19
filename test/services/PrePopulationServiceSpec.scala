@@ -20,12 +20,12 @@ import common.EnrolmentKeys.nino
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.EmploymentList
 import models.prePopulation.PrePopulationResponse
+import org.scalatest.EitherValues._
 import play.api.http.Status.IM_A_TEAPOT
 import support.UnitTest
 import support.mocks.MockEmploymentOrchestrationService
 import support.utils.EmploymentListUtils
 import support.utils.EmploymentListUtils._
-import org.scalatest.EitherValues._
 
 class PrePopulationServiceSpec extends UnitTest
   with MockEmploymentOrchestrationService {

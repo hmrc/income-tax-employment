@@ -16,7 +16,7 @@
 
 package controllers
 
-import connectors.errors.{SingleErrorBody, ApiError}
+import connectors.errors.{ApiError, SingleErrorBody}
 import models.frontend.AllEmploymentData
 import org.scalamock.handlers.CallHandler5
 import play.api.http.Status._

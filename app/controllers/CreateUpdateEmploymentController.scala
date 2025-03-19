@@ -18,15 +18,15 @@ package controllers
 
 import connectors.errors.ApiError
 import controllers.predicates.AuthorisedAction
-import javax.inject.Inject
-import models.frontend.CreatedEmployment
 import models.CreateUpdateEmploymentRequest
+import models.frontend.CreatedEmployment
 import play.api.Logging
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.EmploymentService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CreateUpdateEmploymentController @Inject()(service: EmploymentService,

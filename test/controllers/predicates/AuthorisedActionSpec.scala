@@ -19,7 +19,7 @@ package controllers.predicates
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import models.User
-import org.scalamock.handlers.{CallHandler0, CallHandler4}
+import org.scalamock.handlers.CallHandler4
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.{HeaderNames, Status => TestStatus}
 import play.api.mvc.Results._
@@ -59,24 +59,8 @@ class AuthorisedActionSpec extends UnitTest
         .withIdentifier("MTDITID", mtdId)
         .withDelegatedAuthRule("mtd-it-auth")
 
-    def secondaryAgentPredicate(mtdId: String): Predicate =
-      Enrolment("HMRC-MTD-IT-SUPP")
-        .withIdentifier("MTDITID", mtdId)
-        .withDelegatedAuthRule("mtd-it-auth-supp")
-
-    def mockMultipleAgentsSwitch(bool: Boolean): CallHandler0[Boolean] =
-      (mockAppConfig.emaSupportingAgentsEnabled _: () => Boolean)
-        .expects()
-        .returning(bool)
-        .anyNumberOfTimes()
-
     val primaryAgentEnrolment: Enrolments = Enrolments(Set(
       Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtdItId)), "Activated"),
-      Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, arn)), "Activated")
-    ))
-
-    val supportingAgentEnrolment: Enrolments = Enrolments(Set(
-      Enrolment(EnrolmentKeys.Supporting, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtdItId)), "Activated"),
       Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, arn)), "Activated")
     ))
 
@@ -93,7 +77,6 @@ class AuthorisedActionSpec extends UnitTest
 
     def testAuth: AuthorisedAction = new AuthorisedAction()(
       authConnector = mockAuthConnector,
-      appConfig = mockAppConfig,
       defaultActionBuilder = defaultActionBuilder,
       cc = mockControllerComponents
     )
@@ -386,10 +369,8 @@ class AuthorisedActionSpec extends UnitTest
         }
       }
 
-      "[EMA disabled] results in an AuthorisationException error being returned from Auth" should {
+      "results in an AuthorisationException error being returned from Auth" should {
         "return an Unauthorised response" in new AgentTest {
-          mockMultipleAgentsSwitch(false)
-
           mockAuthReturnException(InsufficientEnrolments(), primaryAgentPredicate(mtdItId))
 
           val result: Future[Result] = testAuth.agentAuthentication(testBlock, mtdItId)(
@@ -399,52 +380,6 @@ class AuthorisedActionSpec extends UnitTest
 
           status(result) shouldBe UNAUTHORIZED
           contentAsString(result) shouldBe ""
-        }
-      }
-
-      "[EMA enabled] results in an AuthorisationException error being returned from Auth" should {
-        "return an Unauthorised response when secondary agent auth call also fails" in new AgentTest {
-          mockMultipleAgentsSwitch(true)
-
-          mockAuthReturnException(InsufficientEnrolments(), primaryAgentPredicate(mtdItId))
-          mockAuthReturnException(InsufficientEnrolments(), secondaryAgentPredicate(mtdItId))
-
-          lazy val result: Future[Result] = testAuth.agentAuthentication(testBlock, mtdItId)(
-            request = FakeRequest().withSession(fakeRequestWithMtditidAndNino.session.data.toSeq :_*),
-            hc = emptyHeaderCarrier
-          )
-
-          status(result) shouldBe UNAUTHORIZED
-          contentAsString(result) shouldBe ""
-        }
-
-        "return an ISE response when secondary agent auth call also fails (non-Auth related exception)" in new AgentTest {
-          mockMultipleAgentsSwitch(true)
-
-          mockAuthReturnException(InsufficientEnrolments(), primaryAgentPredicate(mtdItId))
-          mockAuthReturnException(new Exception("bang"), secondaryAgentPredicate(mtdItId))
-
-          lazy val result: Future[Result] = testAuth.agentAuthentication(testBlock, mtdItId)(
-            request = FakeRequest().withSession(fakeRequestWithMtditidAndNino.session.data.toSeq :_*),
-            hc = emptyHeaderCarrier
-          )
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-        }
-
-        "handle appropriately when a supporting agent is properly authorised" in new AgentTest {
-          mockMultipleAgentsSwitch(true)
-
-          mockAuthReturnException(InsufficientEnrolments(), primaryAgentPredicate(mtdItId))
-          mockAuthReturn(supportingAgentEnrolment, secondaryAgentPredicate(mtdItId))
-
-          lazy val result: Future[Result] = testAuth.agentAuthentication(testBlock, mtdItId)(
-            request = FakeRequest().withSession(fakeRequestWithMtditidAndNino.session.data.toSeq :_*),
-            hc = validHeaderCarrier
-          )
-
-          status(result) shouldBe OK
-          contentAsString(result) shouldBe s"$mtdItId $arn"
         }
       }
 

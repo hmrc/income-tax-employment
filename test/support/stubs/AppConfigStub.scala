@@ -34,7 +34,5 @@ class AppConfigStub extends MockFactory {
     override lazy val integrationFrameworkEnvironment: String = "test"
 
     override def integrationFrameworkAuthorisationToken(apiVersion: String): String = authorisationToken + s".$apiVersion"
-
-    override lazy val emaSupportingAgentsEnabled: Boolean = false
   }
 }

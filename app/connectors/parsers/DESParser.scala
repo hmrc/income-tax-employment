@@ -16,7 +16,7 @@
 
 package connectors.parsers
 
-import connectors.errors.{SingleErrorBody, MultiErrorsBody, ApiError}
+import connectors.errors.{ApiError, MultiErrorsBody, SingleErrorBody}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys.{BAD_SUCCESS_JSON_FROM_DES, UNEXPECTED_RESPONSE_FROM_DES}
