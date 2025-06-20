@@ -18,14 +18,15 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.GetEmploymentDataHttpParser.{GetEmploymentDataHttpReads, GetEmploymentDataResponse}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import utils.TaxYearUtils._
 
 import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppConfig)
+class GetEmploymentDataConnector @Inject()(http: HttpClientV2, val appConfig: AppConfig)
                                           (implicit ec: ExecutionContext) extends IFConnector {
   val specificTaxYear: Int = 2024
 
@@ -36,9 +37,8 @@ class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppC
                        (implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
     val url: URL = getEmploymentDataUrl(nino, taxYear, employmentId, view)
 
-    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] = {
-      http.GET[GetEmploymentDataResponse](url)
-    }
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[GetEmploymentDataResponse] =
+      http.get(url).execute
 
     integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, getApiVersion(taxYear)))
   }
@@ -52,9 +52,9 @@ class GetEmploymentDataConnector @Inject()(http: HttpClient, val appConfig: AppC
                                    employmentId: String,
                                    view: String): URL = {
     if (taxYear >= specificTaxYear) {
-      new URL(s"$baseUrl/income-tax/income/employments/${toTaxYearParam(taxYear)}/$nino/$employmentId?view=$view")
+      url"$baseUrl/income-tax/income/employments/${toTaxYearParam(taxYear)}/$nino/$employmentId?view=$view"
     } else {
-      new URL(s"$baseUrl/income-tax/income/employments/$nino/${toTaxYearParam(taxYear)}/$employmentId?view=$view")
+      url"$baseUrl/income-tax/income/employments/$nino/${toTaxYearParam(taxYear)}/$employmentId?view=$view"
     }
   }
 }

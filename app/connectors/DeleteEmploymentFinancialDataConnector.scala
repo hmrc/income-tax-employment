@@ -18,29 +18,28 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.DeleteEmploymentFinancialDataHttpParser.{DeleteEmploymentFinancialDataHttpReads, DeleteEmploymentFinancialDataResponse}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import utils.DESTaxYearHelper.desTaxYearConverter
 import utils.TaxYearUtils.{isAfter2324Api, toTaxYearParam}
 
-import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeleteEmploymentFinancialDataConnector @Inject()(val http: HttpClient,
+class DeleteEmploymentFinancialDataConnector @Inject()(val http: HttpClientV2,
                                                        val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def deleteEmploymentFinancialData(nino: String, taxYear: Int, employmentId: String)
                                    (implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
 
     val (url, apiVersion) = if (isAfter2324Api(taxYear)) {
-      (new URL(s"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/income/employments/$nino/$employmentId"), DELETE_EMPLOYMENT_FINANCIAL_DATA_23_24)
+      (url"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/income/employments/$nino/$employmentId", DELETE_EMPLOYMENT_FINANCIAL_DATA_23_24)
     } else {
-      (new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"), DELETE_EMPLOYMENT_FINANCIAL_DATA)
+      (url"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId", DELETE_EMPLOYMENT_FINANCIAL_DATA)
     }
 
-    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] = {
-      http.DELETE[DeleteEmploymentFinancialDataResponse](url)
-    }
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[DeleteEmploymentFinancialDataResponse] =
+      http.delete(url).execute
 
     integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, apiVersion))
   }

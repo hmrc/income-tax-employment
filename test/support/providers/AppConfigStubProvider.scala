@@ -18,9 +18,10 @@ package support.providers
 
 import config.AppConfig
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.wordspec.AnyWordSpec
 import support.stubs.AppConfigStub
 
-trait AppConfigStubProvider extends MockFactory {
+trait AppConfigStubProvider extends AnyWordSpec with MockFactory {
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
 }

@@ -21,12 +21,14 @@ import models.api.EmploymentList
 import models.frontend.AllEmploymentData
 import org.scalamock.handlers.{CallHandler3, CallHandler5}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import services.EmploymentOrchestrationService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MockEmploymentOrchestrationService extends MockFactory {
+  self: TestSuite =>
   protected val mockEmploymentOrchestrationService: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
   private type MockType = CallHandler5[String, Int, String, HeaderCarrier, ExecutionContext, Future[Either[ApiError, AllEmploymentData]]]
   private type EmploymentListResultMockType = CallHandler3[String, Int, HeaderCarrier, Future[Either[ApiError, Option[EmploymentList]]]]

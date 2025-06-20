@@ -19,24 +19,26 @@ package connectors
 import config.AppConfig
 import connectors.parsers.CreateUpdateOtherEmploymentsIncomeHttpParser.{CreateUpdateOtherEmploymentsIncomeHttpReads, CreateUpdateOtherEmploymentsIncomeResponse}
 import models.api.OtherEmploymentIncome
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
-import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CreateUpdateOtherEmploymentIncomeConnector @Inject()(val http: HttpClient,
+class CreateUpdateOtherEmploymentIncomeConnector @Inject()(val http: HttpClientV2,
                                                            val appConfig: AppConfig)(implicit ec: ExecutionContext) extends DesConnector {
   def createUpdateOtherEmploymentIncome(nino: String,
                                         taxYear: Int,
                                         otherEmploymentIncome: OtherEmploymentIncome)
                                        (implicit hc: HeaderCarrier): Future[CreateUpdateOtherEmploymentsIncomeResponse] = {
-    val url = new URL(s"$baseUrl/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}")
+    val url = url"$baseUrl/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}"
 
-    def desCall(implicit hc: HeaderCarrier): Future[CreateUpdateOtherEmploymentsIncomeResponse] = {
-      http.PUT[OtherEmploymentIncome, CreateUpdateOtherEmploymentsIncomeResponse](url, otherEmploymentIncome)
-    }
+    def desCall(implicit hc: HeaderCarrier): Future[CreateUpdateOtherEmploymentsIncomeResponse] =
+      http.put(url)
+        .withBody(Json.toJson(otherEmploymentIncome))
+        .execute
 
     desCall(desHeaderCarrier(url))
   }

@@ -18,10 +18,11 @@ package support.stubs
 
 import config.{AppConfig, BackendAppConfig}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class AppConfigStub extends MockFactory {
+class AppConfigStub extends AnyWordSpec with MockFactory {
 
   def config(): AppConfig = new BackendAppConfig(mock[Configuration], mock[ServicesConfig]) {
     private val wireMockPort = 11111

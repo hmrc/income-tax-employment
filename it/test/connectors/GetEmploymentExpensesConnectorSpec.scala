@@ -26,14 +26,15 @@ import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
 import support.helpers.WiremockSpec
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
 
   lazy val connector: GetEmploymentExpensesConnector = app.injector.instanceOf[GetEmploymentExpensesConnector]
 
-  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  lazy val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
 
   private def appConfig(expensesHost: String) =
     new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {

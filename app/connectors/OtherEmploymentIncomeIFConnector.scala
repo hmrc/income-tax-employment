@@ -18,13 +18,14 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.OtherEmploymentIncomeIFHttpParser.{OtherEmploymentIncomeIFHttpReads, OtherEmploymentIncomeIFResponse}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import utils.TaxYearUtils.toTaxYearParam
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class OtherEmploymentIncomeIFConnector @Inject()(val http: HttpClient,
+class OtherEmploymentIncomeIFConnector @Inject()(val http: HttpClientV2,
                                                  val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def getOtherEmploymentIncome(nino: String,
@@ -32,9 +33,8 @@ class OtherEmploymentIncomeIFConnector @Inject()(val http: HttpClient,
                               (implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeIFResponse] = {
     val url = url"$baseUrl/income-tax/income/other/employments/${toTaxYearParam(taxYear)}/$nino"
 
-    def call(implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeIFResponse] = {
-      http.GET[OtherEmploymentIncomeIFResponse](url)
-    }
+    def call(implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeIFResponse] =
+      http.get(url).execute
 
     call(integrationFrameworkHeaderCarrier(url, GET_OTHER_EMPLOYMENT))
   }
