@@ -33,7 +33,7 @@ class DeleteOtherEmploymentIncomeConnectorSpec extends ConnectorIntegrationTest
 
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  private val underTest = new DeleteOtherEmploymentIncomeConnector(httpClient, appConfigStub)
+  private val underTest = new DeleteOtherEmploymentIncomeConnector(httpClientV2, appConfigStub)
 
   ".deleteOtherEmploymentIncome" should {
     "return a successful response when the call is successful" in {

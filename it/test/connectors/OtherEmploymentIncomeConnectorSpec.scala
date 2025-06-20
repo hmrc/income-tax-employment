@@ -38,7 +38,7 @@ class OtherEmploymentIncomeConnectorSpec extends ConnectorIntegrationTest
       val httpResponse = HttpResponse(OK, Json.toJson(anOtherEmploymentIncome).toString())
       stubGetHttpClientCall(s"/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}", httpResponse)
 
-      val result = new OtherEmploymentIncomeConnector(httpClient, appConfigStub).getOtherEmploymentIncome(nino, taxYear)(hc)
+      val result = new OtherEmploymentIncomeConnector(httpClientV2, appConfigStub).getOtherEmploymentIncome(nino, taxYear)(hc)
       await(result) shouldBe Right(Some(anOtherEmploymentIncome))
     }
 
@@ -46,7 +46,7 @@ class OtherEmploymentIncomeConnectorSpec extends ConnectorIntegrationTest
       val httpResponse = HttpResponse(INTERNAL_SERVER_ERROR, Json.toJson(SingleErrorBody("some-code", "some-reason")).toString())
       stubGetHttpClientCall(s"/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}", httpResponse)
 
-      val result = new OtherEmploymentIncomeConnector(httpClient, appConfigStub).getOtherEmploymentIncome(nino, taxYear)(hc)
+      val result = new OtherEmploymentIncomeConnector(httpClientV2, appConfigStub).getOtherEmploymentIncome(nino, taxYear)(hc)
       await(result) shouldBe Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("some-code", "some-reason")))
     }
   }

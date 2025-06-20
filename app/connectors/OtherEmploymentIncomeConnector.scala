@@ -18,24 +18,23 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.OtherEmploymentIncomeHttpParser.{OtherEmploymentIncomeHttpReads, OtherEmploymentIncomeResponse}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
-import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class OtherEmploymentIncomeConnector @Inject()(val http: HttpClient,
+class OtherEmploymentIncomeConnector @Inject()(val http: HttpClientV2,
                                                val appConfig: AppConfig)(implicit ec: ExecutionContext) extends DesConnector {
 
   def getOtherEmploymentIncome(nino: String,
                                taxYear: Int)
                               (implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponse] = {
-    val url = new URL(s"$baseUrl/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}")
+    val url = url"$baseUrl/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}"
 
-    def desCall(implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponse] = {
-      http.GET[OtherEmploymentIncomeResponse](url)
-    }
+    def desCall(implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponse] =
+      http.get(url).execute
 
     desCall(desHeaderCarrier(url))
   }

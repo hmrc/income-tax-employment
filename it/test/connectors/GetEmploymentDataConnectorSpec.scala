@@ -38,7 +38,7 @@ class GetEmploymentDataConnectorSpec extends ConnectorIntegrationTest {
   val formattedTaxYearPlusOne: String = TaxYearUtils.convertSpecificTaxYear(specificTaxYearPlusOne)
   private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  private val underTest = new GetEmploymentDataConnector(httpClient, appConfigStub)
+  private val underTest = new GetEmploymentDataConnector(httpClientV2, appConfigStub)
 
   ".getEmploymentData" when {
     "specific tax year" should {

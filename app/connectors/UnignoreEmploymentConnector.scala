@@ -18,28 +18,27 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.UnignoreEmploymentHttpParser._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import utils.DESTaxYearHelper.desTaxYearConverter
 import utils.TaxYearUtils.{isAfter2324Api, toTaxYearParam}
 
-import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnignoreEmploymentConnector @Inject()(val http: HttpClient,
+class UnignoreEmploymentConnector @Inject()(val http: HttpClientV2,
                                             val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def unignoreEmployment(nino: String, taxYear: Int, employmentId: String)
                         (implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
     val (url, apiVersion) = if (isAfter2324Api(taxYear)) {
-      (new URL(s"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/employments/$nino/ignore/$employmentId"), UNIGNORE_EMPLOYMENT_23_24)
+      (url"$baseUrl/income-tax/${toTaxYearParam(taxYear)}/employments/$nino/ignore/$employmentId", UNIGNORE_EMPLOYMENT_23_24)
     } else {
-      (new URL(s"$baseUrl/income-tax/employments/$nino/${desTaxYearConverter(taxYear)}/ignore/$employmentId"), UNIGNORE_EMPLOYMENT)
+      (url"$baseUrl/income-tax/employments/$nino/${desTaxYearConverter(taxYear)}/ignore/$employmentId", UNIGNORE_EMPLOYMENT)
     }
 
-    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] = {
-      http.DELETE[UnignoreEmploymentResponse](url)
-    }
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UnignoreEmploymentResponse] =
+      http.delete(url).execute
 
     integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, apiVersion))
   }

@@ -19,23 +19,23 @@ package connectors
 import config.AppConfig
 import connectors.parsers.UpdateEmploymentDataHttpParser.{UpdateEmploymentDataHttpReads, UpdateEmploymentDataResponse}
 import models.shared.CreateUpdateEmployment
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
-import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UpdateEmploymentConnector @Inject()(val http: HttpClient,
+class UpdateEmploymentConnector @Inject()(val http: HttpClientV2,
                                           val appConfig: AppConfig)(implicit ec: ExecutionContext) extends IFConnector {
 
   def updateEmployment(nino: String, taxYear: Int, employmentId: String, employmentData: CreateUpdateEmployment)
                       (implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
-    val url = new URL(s"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId")
+    val url = url"$baseUrl/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
 
-    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] = {
-      http.PUT[CreateUpdateEmployment, UpdateEmploymentDataResponse](url, employmentData)
-    }
+    def integrationFrameworkCall(implicit hc: HeaderCarrier): Future[UpdateEmploymentDataResponse] =
+      http.put(url).withBody(Json.toJson(employmentData)).execute
 
     integrationFrameworkCall(integrationFrameworkHeaderCarrier(url, UPDATE_EMPLOYMENT))
   }
