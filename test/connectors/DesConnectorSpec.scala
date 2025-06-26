@@ -22,14 +22,14 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.http.HeaderNames.{authorisation, xRequestChain, xSessionId}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, SessionId}
 
-import java.net.URL
+import java.net.URI
 
 class DesConnectorSpec extends AnyWordSpec {
 
   val mockAppConfig: AppConfig = new MockAppConfig
 
   class FakeConnector(override val appConfig: AppConfig) extends DesConnector {
-    def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = desHeaderCarrier(new URL(url))(hc)
+    def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = desHeaderCarrier(URI.create(url).toURL)(hc)
   }
 
   val connector = new FakeConnector(appConfig = mockAppConfig)
