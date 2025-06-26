@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package support.stubs
+package support.helpers
 
 import config.{AppConfig, BackendAppConfig}
 import org.scalamock.scalatest.MockFactory
@@ -22,13 +22,14 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class AppConfigStub extends AnyWordSpec with MockFactory {
+class AppConfigHelper extends AnyWordSpec with MockFactory {
 
   def config(): AppConfig = new BackendAppConfig(mock[Configuration], mock[ServicesConfig]) {
     private val wireMockPort = 11111
 
     override lazy val integrationFrameworkBaseUrl: String = s"http://localhost:$wireMockPort"
     override lazy val desBaseUrl: String = s"http://localhost:$wireMockPort"
+    override lazy val expensesBaseUrl: String = s"http://localhost:$wireMockPort"
 
     override lazy val environment: String = "test"
     override lazy val authorisationToken: String = "secret"

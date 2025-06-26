@@ -16,31 +16,21 @@
 
 package connectors
 
-import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
 import connectors.errors.{ApiError, SingleErrorBody}
-import org.scalatestplus.play.PlaySpec
-import play.api.Configuration
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.Status._
-import support.helpers.WiremockSpec
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import support.ConnectorIntegrationTest
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 import utils.DESTaxYearHelper.desTaxYearConverter
 import utils.TaxYearUtils.toTaxYearParam
 
-class DeleteEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockSpec {
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val connector: DeleteEmploymentFinancialDataConnector = app.injector.instanceOf[DeleteEmploymentFinancialDataConnector]
+class DeleteEmploymentFinancialDataConnectorSpec extends ConnectorIntegrationTest {
 
-  lazy val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
+  private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  def appConfig(desHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override lazy val desBaseUrl: String = s"http://$desHost:$wireMockPort"
-  }
-
-  val appConfigWithInternalHost: BackendAppConfig = appConfig("localhost")
-  val appConfigWithExternalHost: BackendAppConfig = appConfig("127.0.0.1")
+  private val connector = new DeleteEmploymentFinancialDataConnector(httpClientV2, appConfigStub)
 
   val nino = "taxable_entity_id"
   val employmentId = "employment_id"
@@ -49,47 +39,18 @@ class DeleteEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockS
     val taxYear = 2022
     val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/$employmentId"
 
-    "include internal headers" when {
-      val headersSentToBenefits = Seq(
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
-      Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
-        s"the host for IF is 'Internal', the status is $status" in {
-          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
-
-          stubDeleteWithoutResponseBody(url, status, headersSentToBenefits)
-
-          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
-
-          result mustBe Right(())
-        }
-      }
-      Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
-        s"the host for IF is 'External', the status is $status" in {
-          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
-
-          stubDeleteWithoutResponseBody(url, status, headersSentToBenefits)
-
-          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
-
-          result mustBe Right(())
-        }
-      }
-    }
-
     "handle error" when {
       val desErrorBodyModel = SingleErrorBody("DES_CODE", "DES_REASON")
 
       Seq(BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"DES returns $status" in {
           val desError = ApiError(status, desErrorBodyModel)
-          implicit val hc: HeaderCarrier = HeaderCarrier()
 
-          stubDeleteWithResponseBody(url, status, desError.toJson.toString())
+          val httpResponse = HttpResponse(status, desError.toJson.toString())
 
-          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId))
+          stubDeleteHttpClientCall(url, httpResponse)
+
+          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
 
           result mustBe Left(desError)
         }
@@ -97,11 +58,11 @@ class DeleteEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockS
 
       s"IF returns unexpected error code - BAD_GATEWAY (502)" in {
         val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
-        implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        stubDeleteWithResponseBody(url, BAD_GATEWAY, desError.toJson.toString())
+        val httpResponse = HttpResponse(BAD_GATEWAY, desError.toJson.toString())
+        stubDeleteHttpClientCall(url, httpResponse)
 
-        val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId))
+        val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
 
         result mustBe Left(desError)
       }
@@ -112,36 +73,6 @@ class DeleteEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockS
     val taxYear = 2024
     val url = s"/income-tax/${toTaxYearParam(taxYear)}/income/employments/$nino/$employmentId"
 
-    "include internal headers" when {
-      val headersSentToBenefits = Seq(
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
-      Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
-        s"the host for IF is 'Internal', the status is $status" in {
-          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithInternalHost)
-
-          stubDeleteWithoutResponseBody(url, status, headersSentToBenefits)
-
-          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
-
-          result mustBe Right(())
-        }
-      }
-      Seq(NO_CONTENT, NOT_FOUND).foreach { status =>
-        s"the host for IF is 'External', the status is $status" in {
-          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val connector = new DeleteEmploymentFinancialDataConnector(httpClient, appConfigWithExternalHost)
-
-          stubDeleteWithoutResponseBody(url, status, headersSentToBenefits)
-
-          val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId)(hc))
-
-          result mustBe Right(())
-        }
-      }
-    }
-
     "handle error" when {
       val desErrorBodyModel = SingleErrorBody("DES_CODE", "DES_REASON")
 
@@ -150,7 +81,8 @@ class DeleteEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockS
           val desError = ApiError(status, desErrorBodyModel)
           implicit val hc: HeaderCarrier = HeaderCarrier()
 
-          stubDeleteWithResponseBody(url, status, desError.toJson.toString())
+          val httpResponse = HttpResponse(status, desError.toJson.toString())
+          stubDeleteHttpClientCall(url, httpResponse)
 
           val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId))
 
@@ -162,7 +94,8 @@ class DeleteEmploymentFinancialDataConnectorSpec extends PlaySpec with WiremockS
         val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        stubDeleteWithResponseBody(url, BAD_GATEWAY, desError.toJson.toString())
+        val httpResponse = HttpResponse(BAD_GATEWAY, desError.toJson.toString())
+        stubDeleteHttpClientCall(url, httpResponse)
 
         val result = await(connector.deleteEmploymentFinancialData(nino, taxYear, employmentId))
 
