@@ -19,16 +19,20 @@ package controllers
 import connectors.errors.{ApiError, SingleErrorBody}
 import connectors.parsers.GetEmploymentDataHttpParser.GetEmploymentDataResponse
 import org.scalamock.handlers.CallHandler5
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import services.EmploymentOrchestrationService
+import support.helpers.MockAuthHelper
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
+import utils.TestData.customerEmploymentDataModelExample
 
 import scala.concurrent.Future
 
-class GetEmploymentDataControllerSpec extends TestUtils {
+class GetEmploymentDataControllerSpec extends AnyWordSpec with MockAuthHelper {
 
   val getEmploymentDataService: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
   val getEmploymentDataController = new GetEmploymentDataController(getEmploymentDataService, authorisedAction, mockControllerComponents)
@@ -132,7 +136,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
         status(result) mustBe BAD_REQUEST
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"INVALID_NINO","reason":"Nino is invalid"}""".stripMargin)
+        Json.parse(contentAsString(result)) mustBe Json.parse("""{"code":"INVALID_NINO","reason":"Nino is invalid"}""".stripMargin)
       }
 
       "return a BadRequest response when called as an agent" in {
@@ -142,7 +146,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
         status(result) mustBe BAD_REQUEST
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"INVALID_NINO","reason":"Nino is invalid"}""".stripMargin)
+        Json.parse(contentAsString(result)) mustBe Json.parse("""{"code":"INVALID_NINO","reason":"Nino is invalid"}""".stripMargin)
       }
     }
 
@@ -154,7 +158,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, "invalid_view")(fakeGetRequest)
         }
         status(result) mustBe BAD_REQUEST
-        Json.parse(bodyOf(result)) mustBe
+        Json.parse(contentAsString(result)) mustBe
           Json.parse("""{"code":"INVALID_VIEW","reason":"Submission has not passed validation. Invalid query parameter view."}""".stripMargin)
       }
     }
@@ -168,7 +172,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"SERVER_ERROR","reason":"Internal server error"}""".stripMargin)
+        Json.parse(contentAsString(result)) mustBe Json.parse("""{"code":"SERVER_ERROR","reason":"Internal server error"}""".stripMargin)
       }
 
       "return an INTERNAL_SERVER_ERROR response when called as an agent" in {
@@ -178,7 +182,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"SERVER_ERROR","reason":"Internal server error"}""".stripMargin)
+        Json.parse(contentAsString(result)) mustBe Json.parse("""{"code":"SERVER_ERROR","reason":"Internal server error"}""".stripMargin)
       }
     }
 
@@ -191,7 +195,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
         status(result) mustBe SERVICE_UNAVAILABLE
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"SERVICE_UNAVAILABLE","reason":"Service is unavailable"}""".stripMargin)
+        Json.parse(contentAsString(result)) mustBe Json.parse("""{"code":"SERVICE_UNAVAILABLE","reason":"Service is unavailable"}""".stripMargin)
       }
 
       "return a Service_Unavailable response when called as an agent" in {
@@ -201,7 +205,7 @@ class GetEmploymentDataControllerSpec extends TestUtils {
           getEmploymentDataController.getEmploymentData(nino, taxYear, employmentId, view)(fakeGetRequest)
         }
         status(result) mustBe SERVICE_UNAVAILABLE
-        Json.parse(bodyOf(result)) mustBe Json.parse("""{"code":"SERVICE_UNAVAILABLE","reason":"Service is unavailable"}""".stripMargin)
+        Json.parse(contentAsString(result)) mustBe Json.parse("""{"code":"SERVICE_UNAVAILABLE","reason":"Service is unavailable"}""".stripMargin)
       }
     }
 

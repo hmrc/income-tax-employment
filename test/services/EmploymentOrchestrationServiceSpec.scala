@@ -23,13 +23,18 @@ import connectors.parsers.GetEmploymentExpensesHttpParser.GetEmploymentExpensesR
 import connectors.parsers.GetEmploymentListHttpParser.GetEmploymentListResponse
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
 import connectors.{GetEmploymentDataConnector, GetEmploymentExpensesConnector, GetEmploymentListConnector}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
+import utils.TestData.{allEmploymentData, customerEmploymentDataModelExample, customerExpenses, getEmploymentListModelExample, hmrcEmploymentDataModelExample, hmrcExpenses, otherEmploymentIncome}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EmploymentOrchestrationServiceSpec extends TestUtils {
+class EmploymentOrchestrationServiceSpec extends AnyWordSpec with MockFactory {
   SharedMetricRegistries.clear()
 
   val mtditid = "1234567890"
@@ -40,6 +45,7 @@ class EmploymentOrchestrationServiceSpec extends TestUtils {
   val expensesConnector: GetEmploymentExpensesConnector = mock[GetEmploymentExpensesConnector]
   val otherEmploymentIncomeService: OtherEmploymentIncomeService = mock[OtherEmploymentIncomeService]
   val service: EmploymentOrchestrationService = new EmploymentOrchestrationService(listConnector, dataConnector, expensesConnector, otherEmploymentIncomeService)
+  implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   "getAllEmploymentData" should {
 

@@ -18,10 +18,12 @@ package models.api
 
 import com.codahale.metrics.SharedMetricRegistries
 import models.frontend._
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsArray, JsObject, Json}
-import utils.TestUtils
+import utils.TestData.{customerBenefits, customerEmploymentDataModelExample, customerEmploymentModel, getEmploymentListModelExample, hmrcBenefits, hmrcEmploymentDataModelExample, hmrcEmploymentModel}
 
-class EmploymentListSpec extends TestUtils {
+class EmploymentListSpec extends AnyWordSpec {
   SharedMetricRegistries.clear()
 
   val jsonModel: JsObject = Json.obj(

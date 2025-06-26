@@ -18,17 +18,19 @@ package controllers
 
 import connectors.errors.{ApiError, SingleErrorBody}
 import org.scalamock.handlers.CallHandler6
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import services.EmploymentService
+import support.helpers.MockAuthHelper
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeleteEmploymentControllerSpec extends TestUtils {
+class DeleteEmploymentControllerSpec extends AnyWordSpec with MockAuthHelper {
 
   val employmentService: EmploymentService = mock[EmploymentService]
   val deleteEmploymentController = new DeleteEmploymentController(employmentService, authorisedAction, mockControllerComponents)

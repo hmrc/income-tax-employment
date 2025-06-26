@@ -73,7 +73,7 @@ class CreateEmploymentConnectorSpec extends ConnectorIntegrationTest {
     }
 
     "return error" when {
-      val expectedResult = Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(true)))
+      val expectedResult = Left(ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError()))
 
       "when Integration Framework returns 200 but the schema of the json response body is unexpected" in {
 

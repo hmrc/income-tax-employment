@@ -19,17 +19,19 @@ package controllers
 import connectors.errors.{ApiError, SingleErrorBody}
 import connectors.parsers.UnignoreEmploymentHttpParser.UnignoreEmploymentResponse
 import org.scalamock.handlers.CallHandler4
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import services.EmploymentService
+import support.helpers.MockAuthHelper
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
 import scala.concurrent.Future
 
-class UnignoreEmploymentControllerSpec extends TestUtils {
+class UnignoreEmploymentControllerSpec extends AnyWordSpec with MockAuthHelper {
 
   val employmentService: EmploymentService = mock[EmploymentService]
   val unignoreEmploymentController = new UnignoreEmploymentController(employmentService, authorisedAction, mockControllerComponents)

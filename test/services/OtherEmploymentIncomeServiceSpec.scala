@@ -18,14 +18,17 @@ package services
 
 import connectors.errors.{ApiError, SingleErrorBody}
 import connectors.{OtherEmploymentIncomeConnector, OtherEmploymentIncomeIFConnector}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.SERVICE_UNAVAILABLE
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import support.builders.api.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
 import scala.concurrent.Future
 
-class OtherEmploymentIncomeServiceSpec extends TestUtils {
+class OtherEmploymentIncomeServiceSpec extends AnyWordSpec  with MockFactory {
 
   private val nino: String = "AA123456A"
   private val mtdItID: String = "123123123"
@@ -34,6 +37,7 @@ class OtherEmploymentIncomeServiceSpec extends TestUtils {
 
   private val mockOtherEmploymentIncomeConnector = mock[OtherEmploymentIncomeConnector]
   private val mockOtherEmploymentIncomeIFConnector = mock[OtherEmploymentIncomeIFConnector]
+  implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
   private val underTest = new OtherEmploymentIncomeService(mockOtherEmploymentIncomeConnector, mockOtherEmploymentIncomeIFConnector)
 
   "getOtherEmploymentIncome from DES" should {
