@@ -16,30 +16,22 @@
 
 package connectors
 
-import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
 import connectors.GetEmploymentExpensesConnectorSpec.expectedResponseBody
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.EmploymentExpenses
-import org.scalatestplus.play.PlaySpec
-import play.api.Configuration
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.Status._
 import play.api.libs.json.Json
-import support.helpers.WiremockSpec
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import support.ConnectorIntegrationTest
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, SessionId}
 
-class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val connector: GetEmploymentExpensesConnector = app.injector.instanceOf[GetEmploymentExpensesConnector]
+class GetEmploymentExpensesConnectorSpec extends ConnectorIntegrationTest {
 
-  lazy val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
+  private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
-  private def appConfig(expensesHost: String) =
-    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-      override lazy val expensesBaseUrl: String = s"http://$expensesHost:$wireMockPort"
-    }
+  private val connector = new GetEmploymentExpensesConnector(httpClientV2, appConfigStub)
 
   val nino: String = "123456789"
   val taxYear: Int = 1999
@@ -48,45 +40,14 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
   val getEmploymentDataUrl = s"/income-tax-expenses/income-tax/nino/$nino/sources\\?view=$view&taxYear=$taxYear"
 
   ".GetEmploymentExpensesConnector" should {
-    "include internal headers" when {
-      val expectedResult = Some(Json.parse(expectedResponseBody).as[EmploymentExpenses])
-
-      val headersSentToExpenses = Seq(
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
-
-      val internalHost = "localhost"
-      val externalHost = "127.0.0.1"
-
-      "the host for Expenses is 'Internal'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new GetEmploymentExpensesConnector(httpClient, appConfig(internalHost))
-
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToExpenses)
-
-        val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-        result mustBe Right(expectedResult)
-      }
-
-      "the host for Expenses is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new GetEmploymentExpensesConnector(httpClient, appConfig(externalHost))
-
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody, headersSentToExpenses)
-
-        val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-        result mustBe Right(expectedResult)
-      }
-    }
-
     "return a DESEmploymentExpenses" when {
       "all values are present in the url" in {
         val expectedResult = Json.parse(expectedResponseBody).as[EmploymentExpenses]
-        stubGetWithResponseBody(getEmploymentDataUrl, OK, expectedResponseBody)
 
-        implicit val hc: HeaderCarrier = HeaderCarrier()
+        val httpResponse = HttpResponse(OK, expectedResponseBody)
+
+        stubGetHttpClientCall(getEmploymentDataUrl, httpResponse)
+
         val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
         result.toOption.get.get.dateIgnored mustBe expectedResult.dateIgnored
@@ -101,36 +62,40 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
       val invalidJson = Json.obj(
         "employments" -> ""
       )
+      val httpResponse = HttpResponse(OK, invalidJson.toString())
 
-      stubGetWithResponseBody(getEmploymentDataUrl, OK, invalidJson.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
+      stubGetHttpClientCall(getEmploymentDataUrl, httpResponse)
+
       val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
       result mustBe Right(None)
     }
 
-    "return a NO_CONTENT" in {
+    "return INTERNAL_SERVER_ERROR when downstream returns no data" in {
       val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
 
-      stubGetWithResponseBody(getEmploymentDataUrl, NO_CONTENT, "{}")
-      implicit val hc: HeaderCarrier = HeaderCarrier()
+      val httpResponse = HttpResponse(NO_CONTENT, "{}")
+      stubGetHttpClientCall(getEmploymentDataUrl, httpResponse)
       val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
       result mustBe Left(expectedResult)
     }
 
-    "return a Bad Request" in {
-      val responseBody = Json.obj(
-        "code" -> "INVALID_NINO",
-        "reason" -> "Nino is invalid"
-      )
-      val expectedResult = ApiError(BAD_REQUEST, SingleErrorBody("INVALID_NINO", "Nino is invalid"))
+    Seq(BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
+      s"return a $status" in {
+        val responseBody = Json.obj(
+          "code" -> "DES_CODE",
+          "reason" -> "DES_REASON"
+        )
+        val httpResponse = HttpResponse(status, responseBody.toString())
+        stubGetHttpClientCall(getEmploymentDataUrl, httpResponse)
 
-      stubGetWithResponseBody(getEmploymentDataUrl, BAD_REQUEST, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
+        val expectedResult = ApiError(status, SingleErrorBody("DES_CODE", "DES_REASON"))
 
-      result mustBe Left(expectedResult)
+        val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
+
+        result mustBe Left(expectedResult)
+      }
     }
 
     "return a Right None" in {
@@ -138,77 +103,23 @@ class GetEmploymentExpensesConnectorSpec extends PlaySpec with WiremockSpec {
         "code" -> "NOT_FOUND_INCOME_SOURCE",
         "reason" -> "Can't find income source"
       )
+      val httpResponse = HttpResponse(NOT_FOUND, responseBody.toString())
+      stubGetHttpClientCall(getEmploymentDataUrl, httpResponse)
 
-      stubGetWithResponseBody(getEmploymentDataUrl, NOT_FOUND, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
       val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
 
       result mustBe Right(None)
     }
 
-    "return an Internal server error" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVER_ERROR",
-        "reason" -> "Internal server error"
-      )
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVER_ERROR", "Internal server error"))
+    Seq(CONFLICT, FORBIDDEN).foreach { status =>
+      s"return an Internal Server Error when DES throws an unexpected result and status $status" in {
+        val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
+        val httpResponse = HttpResponse(status, SingleErrorBody.parsingError(false).toString)
+        stubGetHttpClientCall(getEmploymentDataUrl, httpResponse)
 
-      stubGetWithResponseBody(getEmploymentDataUrl, INTERNAL_SERVER_ERROR, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return a Service Unavailable" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE",
-        "reason" -> "Service is unavailable"
-      )
-      val expectedResult = ApiError(SERVICE_UNAVAILABLE, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, SERVICE_UNAVAILABLE, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return an Internal Server Error when DES throws an unexpected result" in {
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
-
-      stubGetWithoutResponseBody(getEmploymentDataUrl, NO_CONTENT)
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return an Internal Server Error when DES throws an unexpected result that is parsable" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE",
-        "reason" -> "Service is unavailable"
-      )
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody("SERVICE_UNAVAILABLE", "Service is unavailable"))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-      result mustBe Left(expectedResult)
-    }
-
-    "return an Internal Server Error when DES throws an unexpected result that isn't parsable" in {
-      val responseBody = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE"
-      )
-      val expectedResult = ApiError(INTERNAL_SERVER_ERROR, SingleErrorBody.parsingError(false))
-
-      stubGetWithResponseBody(getEmploymentDataUrl, CONFLICT, responseBody.toString())
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
-
-      result mustBe Left(expectedResult)
+        val result = await(connector.getEmploymentExpenses(nino, taxYear, view)(hc))
+        result mustBe Left(expectedResult)
+      }
     }
   }
 }

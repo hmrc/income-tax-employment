@@ -19,19 +19,23 @@ package controllers
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.frontend.AllEmploymentData
 import org.scalamock.handlers.CallHandler5
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
+import play.api.test.{FakeRequest, Helpers}
 import services.EmploymentOrchestrationService
+import support.helpers.MockAuthHelper
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
+import utils.TestData.allEmploymentData
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetEmploymentsControllerSpec extends TestUtils {
+class GetEmploymentsControllerSpec extends AnyWordSpec with MockAuthHelper {
 
   val service: EmploymentOrchestrationService = mock[EmploymentOrchestrationService]
-  val controller = new GetEmploymentsController(service,authorisedAction, mockControllerComponents)
+  val controller = new GetEmploymentsController(service,authorisedAction, Helpers.stubControllerComponents())
   val nino :String = "123456789"
   val mtdItID :String = "123123123"
   val taxYear: Int = 1234
@@ -100,7 +104,7 @@ class GetEmploymentsControllerSpec extends TestUtils {
         }
 
         status(result) mustBe OK
-        Json.parse(bodyOf(result)) mustBe Json.parse(
+        Json.parse(contentAsString(result)) mustBe Json.parse(
         """{
           |	"hmrcEmploymentData": [{
           |		"employmentId": "00000000-0000-0000-1111-000000000000",

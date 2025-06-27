@@ -17,69 +17,37 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
 import connectors.errors.{ApiError, SingleErrorBody}
-import org.scalatestplus.play.PlaySpec
-import play.api.Configuration
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.Status._
-import support.helpers.WiremockSpec
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import support.ConnectorIntegrationTest
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse, SessionId}
 import utils.DESTaxYearHelper.desTaxYearConverter
 import utils.TaxYearUtils.toTaxYearParam
 
-class UnignoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val connector: UnignoreEmploymentConnector = app.injector.instanceOf[UnignoreEmploymentConnector]
+class UnignoreEmploymentConnectorSpec extends ConnectorIntegrationTest {
 
-  lazy val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
-
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = {
-    new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-      override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
-    }
-  }
-
-  val appConfigWithInternalHost: BackendAppConfig = appConfig("localhost")
-  val appConfigWithExternalHost: BackendAppConfig = appConfig("127.0.0.1")
-
-  val nino = "AA123456B"
-  val employmentId = "436245634563456436456"
+  private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+  private val connector = new UnignoreEmploymentConnector(httpClientV2, appConfigStub)
+  private val nino = "AA123456B"
+  private val employmentId = "436245634563456436456"
+  private val headersSentToIntegrationFramework: Seq[HttpHeader] = Seq(
+    new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
+  )
 
   ".UnignoreEmploymentConnector before 23-24" should {
-
     val taxYear = 2022
     val url = s"/income-tax/employments/$nino/${desTaxYearConverter(taxYear)}/ignore/$employmentId"
 
-
-    "include internal headers" when {
-
-      val headersSentToIntegrationFramework = Seq(
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
-
       "the host for IF is 'Internal'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new UnignoreEmploymentConnector(httpClient, appConfigWithInternalHost)
-
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToIntegrationFramework)
+        val httpResponse = HttpResponse(NO_CONTENT, "{}")
+        stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
 
         val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
 
         result mustBe Right(())
-      }
-
-      "the host for IF is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new UnignoreEmploymentConnector(httpClient, appConfigWithExternalHost)
-
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToIntegrationFramework)
-
-        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
-
-        result mustBe Right(())
-      }
     }
 
     "handle error" when {
@@ -88,21 +56,20 @@ class UnignoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       Seq(BAD_REQUEST, FORBIDDEN, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"Integration Framework returns $status" in {
           val desError = ApiError(status, desErrorBodyModel)
-          implicit val hc: HeaderCarrier = HeaderCarrier()
+          val httpResponse = HttpResponse(status, desError.toJson.toString())
+          stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
 
-          stubDeleteWithResponseBody(url, status, desError.toJson.toString())
-          val result = await(connector.unignoreEmployment(nino, taxYear, employmentId))
+          val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
           result mustBe Left(desError)
         }
       }
 
       s"Integration Framework returns unexpected error code - BAD_GATEWAY (502)" in {
         val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
-        implicit val hc: HeaderCarrier = HeaderCarrier()
+        val httpResponse = HttpResponse(BAD_GATEWAY, desError.toJson.toString())
+        stubDeleteHttpClientCall(url, httpResponse)
 
-        stubDeleteWithResponseBody(url, BAD_GATEWAY, desError.toJson.toString())
-
-        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId))
+        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
 
         result mustBe Left(desError)
       }
@@ -112,34 +79,14 @@ class UnignoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
     val taxYear = 2024
     val url = s"/income-tax/${toTaxYearParam(taxYear)}/employments/$nino/ignore/$employmentId"
+    "return successful response" in {
 
-    "include internal headers" when {
+      val httpResponse = HttpResponse(NO_CONTENT, "{}")
+      stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
 
-      val headersSentToIntegrationFramework = Seq(
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
+      val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
 
-      "the host for IF is 'Internal'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new UnignoreEmploymentConnector(httpClient, appConfigWithInternalHost)
-
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToIntegrationFramework)
-
-        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
-
-        result mustBe Right(())
-      }
-
-      "the host for IF is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new UnignoreEmploymentConnector(httpClient, appConfigWithExternalHost)
-
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToIntegrationFramework)
-
-        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
-
-        result mustBe Right(())
-      }
+      result mustBe Right(())
     }
 
     "handle error" when {
@@ -148,21 +95,22 @@ class UnignoreEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       Seq(BAD_REQUEST, FORBIDDEN, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"Integration Framework returns $status" in {
           val desError = ApiError(status, desErrorBodyModel)
-          implicit val hc: HeaderCarrier = HeaderCarrier()
+          val httpResponse = HttpResponse(status, desError.toJson.toString())
+          stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
 
-          stubDeleteWithResponseBody(url, status, desError.toJson.toString())
-          val result = await(connector.unignoreEmployment(nino, taxYear, employmentId))
+          val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
           result mustBe Left(desError)
         }
       }
 
       s"Integration Framework returns unexpected error code - BAD_GATEWAY (502)" in {
         val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
-        implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        stubDeleteWithResponseBody(url, BAD_GATEWAY, desError.toJson.toString())
+        val httpResponse = HttpResponse(BAD_GATEWAY, desError.toJson.toString())
+        stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
 
-        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId))
+
+        val result = await(connector.unignoreEmployment(nino, taxYear, employmentId)(hc))
 
         result mustBe Left(desError)
       }

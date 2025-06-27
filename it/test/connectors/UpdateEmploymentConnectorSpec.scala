@@ -17,71 +17,42 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
 import connectors.errors.{ApiError, SingleErrorBody}
 import models.shared.CreateUpdateEmployment
-import org.scalatestplus.play.PlaySpec
-import play.api.Configuration
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.Status._
 import play.api.libs.json.Json
-import support.helpers.WiremockSpec
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import support.ConnectorIntegrationTest
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse, SessionId}
 import utils.DESTaxYearHelper.desTaxYearConverter
 
 import java.time.LocalDateTime
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
+class UpdateEmploymentConnectorSpec extends ConnectorIntegrationTest {
 
-  lazy val connector: UpdateEmploymentConnector = app.injector.instanceOf[UpdateEmploymentConnector]
-
-  lazy val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
-
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
-  }
-
-  val taxYear = 2022
+  private val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+  private val connector = new UpdateEmploymentConnector(httpClientV2, appConfigStub)
+  private val taxYear = 2022
 
   ".UpdateEmploymentConnector" should {
-
-    val appConfigWithInternalHost = appConfig("localhost")
-    val appConfigWithExternalHost = appConfig("127.0.0.1")
 
     val nino = "taxable_entity_id"
     val employmentId = "employment_id"
     val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
     val updateEmploymentModel = CreateUpdateEmployment(Some("employerRef"), "employerName", LocalDateTime.now().toString, Some(LocalDateTime.now().toString), Some("payrollId"))
+    val headersSentToIntegrationFramework = Seq(
+      new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
+    )
 
+    "return successful response" in {
+      implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+      val httpResponse = HttpResponse(NO_CONTENT, "{}")
+      stubPutHttpClientCall(url, Json.toJson(updateEmploymentModel).toString(), httpResponse, headersSentToIntegrationFramework)
 
-    "include internal headers" when {
+      val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
 
-      val headersSentToIntegrationFramework = Seq(
-        new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
-      )
-
-      "the host for Integration Framework is 'Internal'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new UpdateEmploymentConnector(httpClient, appConfigWithInternalHost)
-
-        stubPutWithoutResponseBody(url, Json.toJson(updateEmploymentModel).toString(), NO_CONTENT, headersSentToIntegrationFramework)
-
-        val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
-
-        result mustBe Right(())
-      }
-
-      "the host for Integration Framework is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new UpdateEmploymentConnector(httpClient, appConfigWithExternalHost)
-
-        stubPutWithoutResponseBody(url, Json.toJson(updateEmploymentModel).toString(), NO_CONTENT)
-
-        val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
-
-        result mustBe Right(())
-      }
+      result mustBe Right(())
     }
 
     "handle error" when {
@@ -90,10 +61,10 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, NOT_FOUND, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"DES returns $status" in {
           val desError = ApiError(status, desErrorBodyModel)
-          implicit val hc: HeaderCarrier = HeaderCarrier()
+          val httpResponse = HttpResponse(status, desError.toJson.toString())
 
-          stubPutWithResponseBody(url, status, Json.toJson(updateEmploymentModel).toString(), desError.toJson.toString())
-          val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel))
+          stubPutHttpClientCall(url, Json.toJson(updateEmploymentModel).toString(), httpResponse)
+          val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel)(hc))
           result mustBe Left(desError)
         }
       }
@@ -101,14 +72,12 @@ class UpdateEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       s"DES returns unexpected error code - BAD_GATEWAY (502)" in {
         val desError = ApiError(INTERNAL_SERVER_ERROR, desErrorBodyModel)
         implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        stubPutWithResponseBody(url, BAD_GATEWAY, Json.toJson(updateEmploymentModel).toString(), desError.toJson.toString())
+        val httpResponse = HttpResponse(BAD_GATEWAY, desError.toJson.toString())
+        stubPutHttpClientCall(url, Json.toJson(updateEmploymentModel).toString(), httpResponse)
 
         val result = await(connector.updateEmployment(nino, taxYear, employmentId, updateEmploymentModel))
-
         result mustBe Left(desError)
       }
-
     }
   }
 }

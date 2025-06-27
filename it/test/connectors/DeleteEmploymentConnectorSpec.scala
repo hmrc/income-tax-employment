@@ -17,64 +17,41 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.BackendAppConfig
 import connectors.errors.{ApiError, SingleErrorBody}
-import org.scalatestplus.play.PlaySpec
-import play.api.Configuration
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.Status._
-import support.helpers.WiremockSpec
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import support.ConnectorIntegrationTest
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse, SessionId}
 import utils.DESTaxYearHelper._
 
-class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val connector: DeleteEmploymentConnector = app.injector.instanceOf[DeleteEmploymentConnector]
+class DeleteEmploymentConnectorSpec extends ConnectorIntegrationTest {
 
-  lazy val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
-  def appConfig(integrationFrameworkHost: String): BackendAppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override lazy val integrationFrameworkBaseUrl: String = s"http://$integrationFrameworkHost:$wireMockPort"
-  }
+  implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+  private val connector = new DeleteEmploymentConnector(httpClientV2, appConfigStub)
+
 
   val taxYear = 2022
 
   ".DeleteEmploymentConnector" should {
 
-    val appConfigWithInternalHost = appConfig("localhost")
-    val appConfigWithExternalHost = appConfig("127.0.0.1")
-
     val nino = "taxable_entity_id"
     val employmentId = "employment_id"
     val url = s"/income-tax/income/employments/$nino/${desTaxYearConverter(taxYear)}/custom/$employmentId"
 
-    "include internal headers" when {
       val headersSentToIntegrationFramework = Seq(
         new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
       )
 
-      "the host for IF is 'Internal'" in {
+      "return a successful response when the call is successful" in {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new DeleteEmploymentConnector(httpClient, appConfigWithInternalHost)
-
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToIntegrationFramework)
-
+        val httpResponse = HttpResponse(NO_CONTENT, "")
+        stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
         val result = await(connector.deleteEmployment(nino, taxYear, employmentId)(hc))
 
         result mustBe Right(())
       }
-
-      "the host for IF is 'External'" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-        val connector = new DeleteEmploymentConnector(httpClient, appConfigWithExternalHost)
-
-        stubDeleteWithoutResponseBody(url, NO_CONTENT, headersSentToIntegrationFramework)
-
-        val result = await(connector.deleteEmployment(nino, taxYear, employmentId)(hc))
-
-        result mustBe Right(())
-      }
-    }
 
     "handle error" when {
       val IFErrorBodyModel = SingleErrorBody("IF_CODE", "IF_REASON")
@@ -82,9 +59,9 @@ class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
       Seq(BAD_REQUEST, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"IF returns $status" in {
           val IFError = ApiError(status, IFErrorBodyModel)
-          implicit val hc: HeaderCarrier = HeaderCarrier()
 
-          stubDeleteWithResponseBody(url, status, IFError.toJson.toString())
+          val httpResponse = HttpResponse(status, IFError.toJson.toString())
+          stubDeleteHttpClientCall(url, httpResponse, headersSentToIntegrationFramework)
 
           val result = await(connector.deleteEmployment(nino, taxYear, employmentId))
 
@@ -94,9 +71,8 @@ class DeleteEmploymentConnectorSpec extends PlaySpec with WiremockSpec {
 
       s"IF returns unexpected error code - BAD_GATEWAY (502)" in {
         val IFError = ApiError(INTERNAL_SERVER_ERROR, IFErrorBodyModel)
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        stubDeleteWithResponseBody(url, BAD_GATEWAY, IFError.toJson.toString())
+        val httpResponse = HttpResponse(BAD_GATEWAY, IFError.toJson.toString())
+        stubDeleteHttpClientCall(url, httpResponse)
 
         val result = await(connector.deleteEmployment(nino, taxYear, employmentId))
 

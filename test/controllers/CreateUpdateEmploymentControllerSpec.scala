@@ -16,52 +16,25 @@
 
 package controllers
 
-import connectors.errors.{ApiError, SingleErrorBody}
 import models.api.PayModel
 import models.shared.{Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
-import org.scalamock.handlers.CallHandler4
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
-import services.EmploymentService
-import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
+import support.helpers.{MockAuthHelper, MockEmploymentService}
 
-import scala.concurrent.Future
+class CreateUpdateEmploymentControllerSpec extends AnyWordSpec with MockAuthHelper with MockEmploymentService {
 
-class CreateUpdateEmploymentControllerSpec extends TestUtils {
-
-  val employmentService: EmploymentService = mock[EmploymentService]
   val createEmploymentController = new CreateUpdateEmploymentController(employmentService, authorisedAction, mockControllerComponents)
 
   val nino = "tax_entity_id"
   val taxYear = 2020
 
   "createEmployment" when {
-
-    def mockCreateEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
-      Future[Either[ApiError, Option[String]]]] = {
-      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(Right(Some("employmentId"))))
-    }
-
-    def mockAmendEmploymentSuccess(): CallHandler4[String, Int, CreateUpdateEmploymentRequest, HeaderCarrier,
-      Future[Either[ApiError, Option[String]]]] = {
-      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(Right(None)))
-    }
-
-    def mockCreateOrAmendEmploymentFailure(httpStatus: Int): CallHandler4[String, Int, CreateUpdateEmploymentRequest,
-      HeaderCarrier, Future[Either[ApiError, Option[String]]]] = {
-      val error = Left(ApiError(httpStatus, SingleErrorBody("DES_CODE", "DES_REASON")))
-      (employmentService.createUpdateEmployment(_: String, _: Int, _: CreateUpdateEmploymentRequest)(_: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(error))
-    }
 
     val mtditid: String = "1234567890"
     val fakeRequest = FakeRequest("POST", "/TBC").withHeaders("mtditid" -> mtditid)

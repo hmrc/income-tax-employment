@@ -19,18 +19,20 @@ package controllers
 import connectors.errors.{ApiError, SingleErrorBody}
 import connectors.parsers.OtherEmploymentIncomeHttpParser.OtherEmploymentIncomeResponse
 import org.scalamock.handlers.CallHandler4
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import services.OtherEmploymentIncomeService
 import support.builders.api.OtherEmploymentIncomeBuilder
+import support.helpers.MockAuthHelper
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
 import scala.concurrent.Future
 
-class OtherEmploymentIncomeControllerSpec extends TestUtils {
+class OtherEmploymentIncomeControllerSpec extends AnyWordSpec with MockAuthHelper {
 
   val mockOtherEmploymentIncomeService: OtherEmploymentIncomeService = mock[OtherEmploymentIncomeService]
   val otherEmploymentIncomeController = new OtherEmploymentIncomeController(mockOtherEmploymentIncomeService, authorisedAction, mockControllerComponents)

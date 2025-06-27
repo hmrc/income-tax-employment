@@ -17,10 +17,12 @@
 package models.api
 
 import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, Json}
-import utils.TestUtils
+import utils.TestData.{maxFinancialData, minFinancialData}
 
-class EmploymentFinancialDataSpec extends TestUtils {
+class EmploymentFinancialDataSpec extends AnyWordSpec {
   SharedMetricRegistries.clear()
 
   val minJsonModel: JsObject = Json.obj(

@@ -18,23 +18,29 @@ package controllers
 
 import models.taskList.{SectionTitle, TaskListSection}
 import org.scalamock.handlers.CallHandler5
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.OK
+import play.api.mvc.AnyContentAsEmpty
+import play.api.test.Helpers.{defaultAwaitTimeout, status}
+import play.api.test.{FakeRequest, Helpers}
 import services.CommonTaskListService
+import support.helpers.MockAuthHelper
 import support.utils.TaxYearUtils
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CommonTaskListControllerSpec extends TestUtils {
+class CommonTaskListControllerSpec extends AnyWordSpec with MockAuthHelper {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   val nino: String = "123456789"
   val taxYear: Int = TaxYearUtils.taxYear
+  implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("mtditid" -> "1234567890")
 
   val commonTaskListService: CommonTaskListService = mock[CommonTaskListService]
 
-  val controller = new CommonTaskListController(commonTaskListService, authorisedAction, mockControllerComponents)
+  val controller = new CommonTaskListController(commonTaskListService, authorisedAction, Helpers.stubControllerComponents())
 
   def mockEmploymentService(): CallHandler5[Int, String, String, ExecutionContext, HeaderCarrier, Future[TaskListSection]] = {
     (commonTaskListService.get(_: Int, _: String, _: String)(_: ExecutionContext, _: HeaderCarrier))

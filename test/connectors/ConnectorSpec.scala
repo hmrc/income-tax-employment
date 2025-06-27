@@ -16,12 +16,15 @@
 
 package connectors
 
-import config.AppConfig
+import config.{AppConfig, MockAppConfig}
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.http.HeaderNames.{xRequestChain, xSessionId}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
-import utils.TestUtils
 
-class ConnectorSpec extends TestUtils{
+class ConnectorSpec extends AnyWordSpec {
+
+  val mockAppConfig: AppConfig = new MockAppConfig
 
   class FakeConnector(override val appConfig: AppConfig) extends Connector {
     def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = headerCarrier(url)(hc)
@@ -54,5 +57,4 @@ class ConnectorSpec extends TestUtils{
       }
     }
   }
-
 }

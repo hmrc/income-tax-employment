@@ -17,6 +17,19 @@ Run the following command to start the remaining services locally:
 
 This service runs on port: `localhost:9315`
 
+## Development
+
+To build and test the project, run:
+
+```
+sbt clean compile test it/test
+```
+To run code coverage
+
+```
+sbt clean coverage test it/test coverageReport
+```
+
 ### Employment endpoints:
 
 - **GET     /income-tax/nino/:nino/sources/:employmentId**  (Gets employment data for particular employment id and source)          
@@ -28,11 +41,6 @@ This service runs on port: `localhost:9315`
 - **DELETE  /income-tax/nino/:nino/sources/:employmentId/:toRemove** (Removes a particular employment, this could result in numerous API calls to remove / ignore the relevant employment data)
 
 - **POST    /income-tax/nino/:nino/sources** (Creates or updates an employment based on the request body, this can also ignore hmrc data if an update is being made to employment details such as a change of name or employer reference etc.)                            
-
-### Downstream services
-All employment data is retrieved / updated via one of two downstream systems.
-- DES (Data Exchange Service)
-- IF (Integration Framework)
 
 ### Connected microservices
 We connect to two other microservices to fetch some data. These two services will ultimately call one of the two above downstream services for their data. 

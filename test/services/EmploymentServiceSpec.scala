@@ -25,14 +25,18 @@ import models.api.{EmploymentFinancialData, PayModel}
 import models.shared.{AddEmploymentResponseModel, Benefits, CreateUpdateEmployment}
 import models.{CreateUpdateEmploymentData, CreateUpdateEmploymentRequest}
 import org.scalamock.handlers.CallHandler5
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
 
 import java.time.LocalDateTime
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
-class EmploymentServiceSpec extends TestUtils {
+class EmploymentServiceSpec extends AnyWordSpec with MockFactory {
 
   private val mockCreateEmploymentConnector = mock[CreateEmploymentConnector]
   private val mockDeleteEmploymentConnector = mock[DeleteEmploymentConnector]
@@ -42,6 +46,7 @@ class EmploymentServiceSpec extends TestUtils {
   private val mockUnignoreEmploymentConnector = mock[UnignoreEmploymentConnector]
   private val mockCreateUpdateEmploymentFinancialDataConnector = mock[CreateUpdateEmploymentFinancialDataConnector]
   private val mockCreateUpdateEmploymentFinancialDataTYSConnector = mock[CreateUpdateEmploymentFinancialDataTYSConnector]
+  implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   private val underTest = new EmploymentService(mockCreateEmploymentConnector,
     mockDeleteEmploymentConnector,
@@ -51,7 +56,7 @@ class EmploymentServiceSpec extends TestUtils {
     mockUnignoreEmploymentConnector,
     mockCreateUpdateEmploymentFinancialDataConnector,
     mockCreateUpdateEmploymentFinancialDataTYSConnector,
-    mockExecutionContext)
+    ExecutionContext.Implicits.global)
 
   private val nino = "entity_id"
   private val taxYear = 2022
