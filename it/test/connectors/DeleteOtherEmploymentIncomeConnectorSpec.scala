@@ -41,7 +41,7 @@ class DeleteOtherEmploymentIncomeConnectorSpec extends ConnectorIntegrationTest
 
       stubDeleteHttpClientCall(s"/income-tax/income/other/employments/$nino/${desTaxYearConverter(taxYear)}", httpResponse)
 
-      await(underTest.deleteEmployment(nino, taxYear)(hc)) shouldBe Right()
+      await(underTest.deleteEmployment(nino, taxYear)(hc)) shouldBe Right((): Unit)
     }
 
     "return an error response when the call to the backend returns an error" in {
