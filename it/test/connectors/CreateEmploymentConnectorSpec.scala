@@ -89,8 +89,6 @@ class CreateEmploymentConnectorSpec extends ConnectorIntegrationTest {
     "handle error" when {
       val desErrorBodyModel = SingleErrorBody("DES_CODE", "DES_REASON")
 
-      val requestBody = Json.toJson(addEmploymentModel).toString()
-
       Seq(BAD_REQUEST, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { status =>
         s"DES returns $status" in {
           val desError = ApiError(status, desErrorBodyModel)
