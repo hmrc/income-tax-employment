@@ -17,7 +17,7 @@
 import sbt.*
 object AppDependencies {
 
-  private val bootstrapVersion = "10.6.0"
+  private val bootstrapVersion = "10.7.0"
   private val hmrcMongoPlay30Version = "2.12.0"
 
   private val jacksonAndPlayExclusions: Seq[InclusionRule] = Seq(
@@ -33,8 +33,8 @@ object AppDependencies {
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.21.1",
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-30"         % hmrcMongoPlay30Version,
     "uk.gov.hmrc"                   %% "crypto-json-play-30"        % "8.4.0",
-    "com.beachape"                  %% "enumeratum"                 % "1.9.5",
-    "com.beachape"                  %% "enumeratum-play-json"       % "1.9.5" excludeAll (jacksonAndPlayExclusions *),
+    "com.beachape"                  %% "enumeratum"                 % "1.9.6",
+    "com.beachape"                  %% "enumeratum-play-json"       % "1.9.6" excludeAll (jacksonAndPlayExclusions *),
     "org.typelevel"                 %% "cats-core"                  % "2.13.0"
   )
 
@@ -44,6 +44,6 @@ object AppDependencies {
     "com.vladsch.flexmark"    %  "flexmark-all"             % "0.64.8",
     "com.github.tomakehurst"  %  "wiremock-jre8-standalone" % "3.0.1",
     "org.scalamock"           %% "scalamock"                % "7.5.5",
-    "org.mockito"             %% "mockito-scala"            % "2.0.0"
+    "org.mockito"             %% "mockito-scala"            % "2.1.0"
   ).map(_ % "test")
 }
